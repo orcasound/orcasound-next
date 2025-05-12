@@ -87,11 +87,16 @@ interface Annotation {
 export interface Candidate {
   id: string;
   array: CombinedData[];
+  startTimestamp: string;
+  endTimestamp: string;
   whale: number;
   vessel: number;
   other: number;
   "whale (AI)": number;
   sightings: number;
   hydrophone: string;
+  feedId: string | undefined;
+  clipCount: string;
+  duration: string;
   descriptions: string;
 }
