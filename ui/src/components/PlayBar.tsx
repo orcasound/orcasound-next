@@ -6,7 +6,7 @@ import {
   Tooltip,
   useMediaQuery,
 } from "@mui/material";
-import React, { useMemo } from "react";
+import React, { MutableRefObject, useMemo } from "react";
 
 import { useData } from "@/context/DataContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
@@ -16,20 +16,26 @@ import { PlaybarPlayer } from "./Player/PlaybarPlayer";
 
 export default function PlayBar({
   mobileMenu,
+  masterPlayerTimeRef,
 }: {
   mobileMenu?: React.ReactNode;
+  masterPlayerTimeRef?: MutableRefObject<number>;
 }) {
   const { nowPlaying } = useNowPlaying();
-  const { feeds } = useData();
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
 
   const detections = nowPlaying?.array;
   const hydrophone = nowPlaying?.hydrophone;
+
+  const { feeds } = useData();
   const feed = feeds.find((feed) => feed.id === detections?.[0]?.feedId);
 
   const { playlistTimestamp, playlistStartTime, startOffset, endOffset } =
-    useComputedPlaybackFields(nowPlaying?.array, feed?.id);
+    useComputedPlaybackFields(nowPlaying, feed?.id);
+
+  console.log("nowPlaying.startTimestamp: " + nowPlaying?.startTimestamp);
+  console.log("nowPlaying.endTimestamp: " + nowPlaying?.endTimestamp);
 
   const clipDateTime = useMemo(() => {
     if (nowPlaying?.array) {
@@ -146,6 +152,7 @@ export default function PlayBar({
                 clipDateTime={clipDateTime}
                 clipNode={hydrophone || ""}
                 marks={marks}
+                masterPlayerTimeRef={masterPlayerTimeRef}
               />
             )}
           </>
