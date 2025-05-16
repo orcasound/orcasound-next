@@ -10,7 +10,6 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { useRouter } from "next/router";
 
 import Link from "@/components/Link";
 import { useData } from "@/context/DataContext";
@@ -93,12 +92,12 @@ export default function CandidateCard(props: { candidate: Candidate }) {
   const candidateTitle = formatTimestamp(firstCandidate.timestampString);
 
   // use these to set href on cards
-  const router = useRouter();
-  const basePath = router.pathname.replace(/\[.*?\]/g, "").replace(/\/$/, ""); // remove the query in [], then remove any trailing slash
+  // const router = useRouter();
+  // const basePath = router.pathname.replace(/\[.*?\]/g, "").replace(/\/$/, ""); // remove the query in [], then remove any trailing slash
   const candidateHref =
     firstTimestamp === lastTimestamp
-      ? `${basePath}/candidate/${firstTimestampString}`
-      : `${basePath}/candidate/${firstTimestampString}_${lastTimestampString}`;
+      ? `beta/candidate/${feed?.slug}/${firstTimestampString}`
+      : `beta/candidate/${feed?.slug}/${firstTimestampString}_${lastTimestampString}`;
 
   const handlePlay = (candidate: Candidate) => {
     setNowPlayingCandidate(candidate);

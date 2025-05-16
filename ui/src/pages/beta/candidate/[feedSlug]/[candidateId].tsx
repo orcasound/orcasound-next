@@ -8,6 +8,7 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
+import _ from "lodash";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -15,19 +16,51 @@ import { useEffect, useMemo, useState } from "react";
 import { getHalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import Link from "@/components/Link";
 import { useData } from "@/context/DataContext";
+import { Feed, useAudioImagesQuery } from "@/graphql/generated";
+import { useAudioImageUpdatedSubscription } from "@/hooks/useAudioImageUpdatedSubscription";
 import type { NextPageWithLayout } from "@/pages/_app";
 import { AIData, CombinedData, HumanData, Sighting } from "@/types/DataTypes";
 
 const CandidatePage: NextPageWithLayout = () => {
   const router = useRouter();
-  const { candidateId } = router.query;
+  const { feedSlug, candidateId } = router.query;
   const startEnd = useMemo(() => {
     return typeof candidateId === "string" ? candidateId?.split("_") : [];
   }, [candidateId]);
-  const startTime = new Date(startEnd[0]).getTime();
-  const endTime = new Date(startEnd[startEnd.length - 1]).getTime();
+  const startDate = new Date(startEnd[0]);
+  const endDate = new Date(startEnd[startEnd.length - 1]);
+  const startTime = startDate.getTime();
+  const endTime = endDate.getTime();
 
   const { filteredData, feeds } = useData();
+
+  const feed = feeds?.find((f) => f.slug == feedSlug) || ({} as Feed);
+
+  // Audio images
+
+  const updatedAudioImages = useAudioImageUpdatedSubscription(
+    feed.id,
+    startDate,
+    endDate,
+  );
+
+  const audioImagesQueryResult = useAudioImagesQuery({
+    feedId: feed.id,
+    startTime: startDate,
+    endTime: endDate,
+  });
+
+  const initialAudioImages =
+    audioImagesQueryResult.data?.audioImages?.results ?? [];
+
+  const audioImages = _.uniqBy(
+    [...updatedAudioImages, ...initialAudioImages].filter(
+      (audioImage) => audioImage !== undefined && audioImage !== null,
+    ),
+    ({ id }) => id,
+  );
+
+  //
 
   type DetectionStats = {
     all: CombinedData[];
@@ -55,7 +88,7 @@ const CandidatePage: NextPageWithLayout = () => {
     const arr: CombinedData[] = [];
     filteredData.forEach((d) => {
       const time = new Date(d.timestampString).getTime();
-      if (time >= startTime && time <= endTime) {
+      if (time >= startTime && time <= endTime && d.feedId === feed.id) {
         arr.push(d);
       }
     });
@@ -75,10 +108,10 @@ const CandidatePage: NextPageWithLayout = () => {
       hydrophone: sortedArr[0]?.hydrophone,
       startTime: new Date(startEnd[0]).toLocaleString(),
     });
-  }, [filteredData, feeds, startTime, endTime, startEnd]);
+  }, [filteredData, startTime, endTime, startEnd]);
 
   return (
-    <div style={{ overflowY: "scroll" }}>
+    <div style={{ overflowY: "scroll", flex: 1 }}>
       <Head>Report {candidateId} | Orcasound </Head>
       <Container
         maxWidth="xl"
@@ -99,7 +132,7 @@ const CandidatePage: NextPageWithLayout = () => {
               <Typography variant="h6">{detections.hydrophone}</Typography>
               <Typography variant="h4">{detections.startTime}</Typography>
             </Box>
-            <Link href="./">
+            <Link href="/beta">
               <Close />
             </Link>
           </Box>
@@ -129,7 +162,7 @@ const CandidatePage: NextPageWithLayout = () => {
                     }}
                   />
                 ))
-              : "spectrogram to come"}
+              : JSON.stringify(audioImages, null, 2)}
           </div>
           <Box p={2} />
           <Box
@@ -151,6 +184,8 @@ const CandidatePage: NextPageWithLayout = () => {
                   <ListItemText
                     className="list-item-text"
                     primary={
+                      el.hydrophone +
+                      " • " +
                       (el.newCategory !== "WHALE (AI)" ? userName : aiName) +
                       " • " +
                       new Date(el.timestampString).toLocaleTimeString()
