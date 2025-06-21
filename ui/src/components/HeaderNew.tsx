@@ -66,7 +66,10 @@ export default function HeaderNew({
             },
           }}
         >
-          TAKE ACTION!!!
+          ORCA CONSERVANCY —{" "}
+          <a style={{ textDecoration: "underline", color: "#fff" }}>
+            Salmon habitat restoration work party Jun 20.{" "}
+          </a>
         </Alert>
       </Collapse>{" "}
       <Toolbar>
