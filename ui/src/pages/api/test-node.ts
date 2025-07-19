@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  res.status(200).json({ message: "Node.js server is working!" });
+  res
+    .status(200)
+    .json({ message: "Node.js is working!", nodeVersion: process.version });
 }
