@@ -10,10 +10,12 @@ import {
 import { useRouter } from "next/router";
 import { ReactElement, ReactNode, useMemo, useRef } from "react";
 
+import { timeRangeSelect } from "@/components/CandidateList/CandidateListFilters";
 import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
 import { HydrophonesStack } from "@/components/CandidateList/HydrophonesStack";
 import { MobileDisplay } from "@/components/CandidateList/MobileDisplay";
 import HeaderNew from "@/components/HeaderNew";
+import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
 import HydrophoneCandidatesPage from "@/pages/beta/[feedSlug]/candidates";
 import { getPageContext } from "@/utils/pageContext";
@@ -29,7 +31,7 @@ function HalfMapLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { isFeedDetail } = getPageContext(router);
   const { playbarExpanded, headerHeight } = useLayout();
-
+  const { filters } = useData();
   const pageRoute = useMemo(() => router.route, [router.route]);
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
@@ -178,9 +180,13 @@ function HalfMapLayout({ children }: { children: ReactNode }) {
                   }}
                 >
                   <Typography component="h2" variant="h5" sx={{ mb: "1.5rem" }}>
-                    Listen Live
+                    {
+                      timeRangeSelect.find(
+                        (el) => el.value === filters.timeRange,
+                      )?.label
+                    }
                   </Typography>
-                  <HydrophonesStack />
+                  <CandidatesStack />
                 </Container>
               )}
               {/* </AnimatePresence> */}
@@ -207,9 +213,9 @@ function HalfMapLayout({ children }: { children: ReactNode }) {
                   }}
                 >
                   <Typography component="h2" variant="h5" sx={{ mb: "1rem" }}>
-                    Reports
+                    Listen Live
                   </Typography>
-                  <CandidatesStack />
+                  <HydrophonesStack />
                 </Container>
               )}
             </SideList>
