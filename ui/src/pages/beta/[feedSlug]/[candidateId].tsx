@@ -1,7 +1,6 @@
 import { ArrowBackIos, Close } from "@mui/icons-material";
 import {
   Box,
-  Button,
   Container,
   Stack,
   Theme,
@@ -10,126 +9,70 @@ import {
 } from "@mui/material";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
+import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
 import { DetectionsList } from "@/components/CandidateList/DetectionsList";
-import { getHalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
+import HydrophoneDetailTabs from "@/components/CandidateList/HydrophoneDetailTabs";
+import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
+import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import Link from "@/components/Link";
+import PlayBar from "@/components/PlayBar/PlayBar";
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Feed } from "@/graphql/generated";
 import { useComputedPlaybackFields } from "@/hooks/beta/useComputedPlaybackFields";
-import type { NextPageWithLayout } from "@/pages/_app";
-import { AIData, CombinedData, HumanData, Sighting } from "@/types/DataTypes";
+import useConcatenatedAudio from "@/hooks/beta/useConcatenatedAudio";
+import {
+  AIData,
+  Candidate,
+  CombinedData,
+  HumanData,
+  Sighting,
+} from "@/types/DataTypes";
 import formatDuration from "@/utils/masterDataHelpers";
-import { getPageContext } from "@/utils/pageContext";
 import { formatTimestamp } from "@/utils/time";
 
-const CandidatePage: NextPageWithLayout = () => {
-  const router = useRouter();
-  const { isFeedDetail } = getPageContext(router);
-  const { feeds, filters, autoPlayOnReady } = useData();
+function CandidatePage() {
+  return null;
+}
+
+type DetectionsProps = {
+  all: CombinedData[];
+  human: HumanData[];
+  ai: AIData[];
+  sightings: Sighting[];
+  hydrophone: string;
+  startTime: string;
+};
+
+const RightDetail = ({
+  candidate,
+  feed,
+  detections,
+  durationString,
+  onClose,
+}: {
+  candidate: Candidate | null;
+  feed?: Feed;
+  detections: DetectionsProps;
+  durationString: string | undefined | null;
+  onClose: () => void;
+  playbarExpanded: boolean;
+}) => {
+  const { filters } = useData();
   const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
 
-  const { candidateId, feedSlug } = router.query;
-  const startEnd = useMemo(() => {
-    return typeof candidateId === "string" ? candidateId?.split("_") : [];
-  }, [candidateId]);
-  const startTime = new Date(startEnd[0]).getTime();
-  const endTime = new Date(startEnd[startEnd.length - 1]).getTime();
-
-  const { setNowPlayingCandidate, setNowPlayingFeed } = useNowPlaying();
-  const { filteredData, sortedCandidates } = useData();
-  const {
-    playbarExpanded,
-    setPlaybarExpanded,
-    setMobileTab,
-    setCandidatePreview,
-  } = useLayout();
-
-  const feed = feeds?.find((f) => f.slug === feedSlug) || ({} as Feed);
-
-  const candidate =
-    sortedCandidates.find((c) => {
-      return candidateId === c.id;
-    }) ?? null;
-
-  // if the card is rendered on feed detail, show candidateFeedHref
-  const feedDetailHref = `/beta/${feed?.slug}/candidates`;
-  // const feedDetailCandidateHref = `/beta/${feed?.slug}/${candidate?.id}`;
-
-  // if the card is rendered on browse all candidates, show candidateBrowseHref
-  const allCandidatesHref = `/beta`;
-  // const allCandidatesDetailHref = `/beta/candidates/${feed?.slug}/${candidate?.id}`;
-
-  const closeHref = !isFeedDetail ? allCandidatesHref : feedDetailHref;
-
-  const { durationString } = useComputedPlaybackFields(candidate);
-
-  type DetectionStats = {
-    all: CombinedData[];
-    human: HumanData[];
-    ai: AIData[];
-    sightings: Sighting[];
-    hydrophone: string;
-    startTime: string;
-  };
-
-  const [detections, setDetections] = useState<DetectionStats>({
-    all: [],
-    human: [],
-    ai: [],
-    sightings: [],
-    hydrophone: "",
-    startTime: "",
-  });
-
-  useEffect(() => {
-    // select the detection array that matches the feed and start/end times in the page URL
-    const arr: CombinedData[] = [];
-    filteredData.forEach((d) => {
-      const time = new Date(d.timestamp.toString()).getTime();
-      if (time >= startTime && time <= endTime && d.feedId === feed.id) {
-        arr.push(d);
-      }
-    });
-    const sortedArr = arr.sort(
-      (a, b) =>
-        Date.parse(a.timestamp.toString()) - Date.parse(b.timestamp.toString()),
-    );
-
-    // store the array and separate human vs ai
-    const humanArr = sortedArr.filter((d) => d.type === "human");
-    const aiArr = sortedArr.filter((d) => d.type === "ai");
-    const sightingsArr = sortedArr.filter((d) => d.type === "sightings");
-    setDetections({
-      all: sortedArr,
-      human: humanArr,
-      ai: aiArr,
-      sightings: sightingsArr,
-      hydrophone: sortedArr[0]?.hydrophone,
-      startTime: new Date(startEnd[0]).toLocaleString(),
-    });
-  }, [filteredData, feeds, startTime, endTime, startEnd, feed.id]);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  useEffect(() => {
-    setNowPlayingCandidate(candidate);
-    setNowPlayingFeed(null);
-  }, [setNowPlayingCandidate, setNowPlayingFeed, candidate]);
-
-  const candidateStart = candidate?.startTimestamp ?? "";
   const currentTimeSeconds = new Date().getTime() / 1000;
-  const timestampSeconds = new Date(candidateStart).getTime() / 1000;
+  const timestampSeconds =
+    new Date(candidate?.startTimestamp ?? "").getTime() / 1000;
   const timeAgoString = formatDuration(timestampSeconds, currentTimeSeconds);
+  if (!detections?.startTime) return null;
 
   return (
     <div>
-      <Head>Report {candidateId} | Orcasound </Head>
+      <Head>Report {candidate?.id} | Orcasound </Head>
       <Container
         maxWidth="xl"
         sx={{
@@ -187,36 +130,13 @@ const CandidatePage: NextPageWithLayout = () => {
               </Typography>
             </Box>
             {!smDown && (
-              <Link
-                href={closeHref}
-                onClick={() => {
-                  setNowPlayingFeed(feed);
-                  setNowPlayingCandidate(null);
-                  autoPlayOnReady.current = false;
-                }}
-              >
+              <Link href={`/beta/${feed?.slug}`} onClick={onClose}>
                 <Close />
               </Link>
             )}
           </Box>
           <Stack gap={2} direction="column" sx={{ my: 3 }}>
-            {durationString !== "audio unavailable" ? (
-              <Button
-                variant="contained"
-                onClick={() => {
-                  setPlaybarExpanded(!playbarExpanded);
-                  setCandidatePreview(false);
-                }}
-                sx={{
-                  width: "100%",
-                }}
-              >
-                {playbarExpanded ? "Return to map" : "Open audio analyzer"}
-              </Button>
-            ) : (
-              <Box sx={{ my: "1rem" }}></Box>
-            )}
-            {smDown && (
+            {/* {smDown && (
               <Button
                 variant="outlined"
                 sx={{ width: "100%" }}
@@ -227,40 +147,10 @@ const CandidatePage: NextPageWithLayout = () => {
               >
                 Open map view
               </Button>
-            )}
+            )} */}
           </Stack>
           <Box className="main">
             {candidate && <DetectionsList candidate={candidate} />}
-            {/* <List>
-              {candidate &&
-                candidate.array?.map((el, index) => (
-                  <ListItemButton key={index}>
-                    <ListItemAvatar>
-                      <AccountCircle style={{ fontSize: 40, opacity: 0.9 }} />
-                    </ListItemAvatar>
-                    <ListItemText
-                      className="list-item-text"
-                      primary={
-                        el.hydrophone +
-                        " • " +
-                        (el.newCategory !== "WHALE (AI)" ? userName : aiName) +
-                        " • " +
-                        new Date(el.timestampString).toLocaleTimeString()
-                      }
-                      secondary={
-                        el.newCategory !== "WHALE (AI)"
-                          ? `${el.newCategory} • ${el.comments}`
-                          : `Moderator: ${el.comments}`
-                      }
-                    />
-                    <ListItemAvatar sx={{ display: "flex", opacity: "0.9" }}>
-                      <Edit />
-                      <Box sx={{ padding: "0 8px" }} />
-                      <Box sx={{ padding: "0 8px" }} />
-                    </ListItemAvatar>
-                  </ListItemButton>
-                ))}
-            </List> */}
           </Box>
         </Box>
       </Container>
@@ -268,6 +158,249 @@ const CandidatePage: NextPageWithLayout = () => {
   );
 };
 
-CandidatePage.getLayout = getHalfMapLayout;
+const LeftDetail = ({ feed }: { feed: Feed | undefined }) => {
+  return (
+    <HydrophoneDetailTabs showTabs={false}>
+      <CandidatesStack feed={feed} showChart={true}></CandidatesStack>
+    </HydrophoneDetailTabs>
+  );
+};
+
+const CenterDetail = ({
+  clipId,
+  audioUrl,
+  isProcessing,
+  error,
+  totalDurationMs,
+  droppedSeconds,
+}: {
+  clipId: string;
+  audioUrl: string | undefined;
+  isProcessing: boolean;
+  error: string | null;
+  totalDurationMs: string | null;
+  droppedSeconds: number;
+}) => {
+  return (
+    <Stack
+      sx={{
+        height: "100%",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <Box
+        className="drawer-controls"
+        sx={{
+          border: "1px solid orange",
+          height: "55px",
+        }}
+      >
+        <a href={audioUrl} download={`clip-${clipId}.mp3`}>
+          Download MP3
+        </a>
+      </Box>
+      <Box
+        className="spectrogram-container"
+        sx={{
+          border: "1px solid red",
+          flex: 1,
+        }}
+      ></Box>
+      <Box
+        className="waveform-container"
+        sx={{
+          border: "1px solid orange",
+          height: "200px",
+        }}
+      >
+        <Box>
+          {isProcessing ? (
+            <p>Processing audio...</p>
+          ) : error ? (
+            <p>Error: {error}</p>
+          ) : audioUrl ? (
+            <div>
+              <audio controls src={audioUrl} key={clipId}></audio>
+              <div>{totalDurationMs} ms</div>
+              {droppedSeconds > 0 && (
+                <div>Dropped {droppedSeconds} seconds from stream reset</div>
+              )}
+            </div>
+          ) : (
+            <p>No audio available.</p>
+          )}
+        </Box>
+      </Box>
+      <Box
+        className="drawer-actions"
+        sx={{
+          border: "1px solid blue",
+          height: "100px",
+        }}
+      >
+        <PlayBar />
+      </Box>
+    </Stack>
+  );
+};
+
+const CandidateLayout = ({ children }: { children: React.ReactNode }) => {
+  const router = useRouter();
+  const { feeds, sortedCandidates, filteredData, autoPlayOnReady } = useData();
+  const { setPlaybarExpanded } = useLayout();
+  const { setNowPlayingCandidate, setNowPlayingFeed } = useNowPlaying();
+
+  const { candidateId, feedSlug } = router.query;
+  const feed = feeds.find((f) => f.slug === feedSlug) ?? undefined;
+  const feedId = useMemo(() => {
+    return feeds.find((f) => f.slug === feedSlug)?.id ?? "";
+  }, [feeds, feedSlug]);
+  const candidate = sortedCandidates.find((c) => c.id === candidateId) ?? null;
+  const startEnd = useMemo(() => {
+    return typeof candidateId === "string" ? candidateId?.split("_") : [];
+  }, [candidateId]);
+  const startTimeString = startEnd[0];
+  const endTimeString = startEnd[startEnd.length - 1];
+  const startTimeMs = new Date(startEnd[0]).getTime();
+  const endTimeMs = new Date(startEnd[startEnd.length - 1]).getTime();
+
+  const { durationString } = useComputedPlaybackFields(candidate);
+
+  const [detections, setDetections] = useState<DetectionsProps>({
+    all: [],
+    human: [],
+    ai: [],
+    sightings: [],
+    hydrophone: "",
+    startTime: "",
+  });
+
+  const previousCandidateIdRef = useRef<string | string[] | undefined>();
+
+  // Playbar open/close logic on route change
+  useEffect(() => {
+    if (!candidateId) return;
+
+    if (previousCandidateIdRef.current === candidateId) return;
+    previousCandidateIdRef.current = candidateId;
+
+    setPlaybarExpanded(false);
+
+    const timeout = setTimeout(() => {
+      setPlaybarExpanded(true);
+    }, 700);
+
+    return () => clearTimeout(timeout);
+  }, [candidateId, setPlaybarExpanded]);
+
+  // Now Playing logic
+  useEffect(() => {
+    setNowPlayingCandidate(candidate);
+    setNowPlayingFeed(null);
+  }, [candidate, setNowPlayingCandidate, setNowPlayingFeed]);
+
+  // Detections lookup
+  useEffect(() => {
+    const arr: CombinedData[] = [];
+    filteredData.forEach((d) => {
+      const time = new Date(d.timestamp.toString()).getTime();
+      if (time >= startTimeMs && time <= endTimeMs && d.feedId === feed?.id) {
+        arr.push(d);
+      }
+    });
+    const sortedArr = arr.sort(
+      (a, b) =>
+        Date.parse(a.timestamp.toString()) - Date.parse(b.timestamp.toString()),
+    );
+
+    setDetections({
+      all: sortedArr,
+      human: sortedArr.filter((d) => d.type === "human"),
+      ai: sortedArr.filter((d) => d.type === "ai"),
+      sightings: sortedArr.filter((d) => d.type === "sightings"),
+      hydrophone: sortedArr[0]?.hydrophone,
+      startTime: new Date(startTimeString).toLocaleString(),
+    });
+  }, [filteredData, feed?.id, startTimeMs, endTimeMs, startTimeString]);
+
+  const handleClose = () => {
+    setNowPlayingFeed(feed ?? null);
+    setNowPlayingCandidate(null);
+    autoPlayOnReady.current = false;
+    setPlaybarExpanded(false);
+  };
+
+  const { audioBlob, isProcessing, error, totalDurationMs, droppedSeconds } =
+    useConcatenatedAudio({
+      feedId,
+      startTime: startTimeString,
+      endTime: endTimeString,
+    });
+
+  const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    setAudioUrl(undefined);
+  }, [router.asPath]);
+
+  useEffect(() => {
+    if (!startTimeString || !endTimeString) return;
+
+    let url: string | null = null;
+
+    if (audioBlob) {
+      url = URL.createObjectURL(audioBlob);
+      setAudioUrl(url);
+    } else {
+      setAudioUrl(undefined);
+    }
+
+    return () => {
+      if (url) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, [audioBlob, startTimeString, endTimeString]);
+
+  console.log("Rendering CandidateLayout");
+
+  return (
+    <HalfMapLayout
+      leftSlot={<LeftDetail feed={feed} />}
+      centerSlot={
+        <CenterDetail
+          clipId={startTimeString}
+          audioUrl={audioUrl}
+          isProcessing={isProcessing}
+          error={error}
+          totalDurationMs={totalDurationMs}
+          droppedSeconds={droppedSeconds}
+        />
+      }
+      rightSlot={
+        <RightDetail
+          candidate={candidate}
+          feed={feed}
+          detections={detections}
+          durationString={durationString}
+          onClose={handleClose}
+          playbarExpanded={true}
+        />
+      }
+    >
+      {children}
+    </HalfMapLayout>
+  );
+};
+
+CandidatePage.getLayout = function getLayout(page: React.ReactElement) {
+  return (
+    <MasterDataLayout>
+      <CandidateLayout>{page}</CandidateLayout>
+    </MasterDataLayout>
+  );
+};
 
 export default CandidatePage;

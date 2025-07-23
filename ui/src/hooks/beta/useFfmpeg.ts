@@ -1,133 +1,104 @@
 import type { FFmpeg as FFmpegType } from "@ffmpeg/ffmpeg";
-import { useEffect, useRef, useState } from "react";
-
-type ProgressHandler = (progress: { ratio: number }) => void;
-type LogHandler = (message: string) => void;
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type FileEntry = {
   name: string;
-  data: File | Blob | string; // Removed Uint8Array
+  data: File | Blob | string;
 };
 
 export function useFfmpeg() {
   const ffmpegRef = useRef<InstanceType<typeof FFmpegType> | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  async function loadFFmpeg() {
+  const load = useCallback(async () => {
     if (ffmpegRef.current) return;
+    const { FFmpeg } = await import("@ffmpeg/ffmpeg");
+    const ffmpeg = new FFmpeg();
+    await ffmpeg.load();
+    ffmpegRef.current = ffmpeg;
+    setIsReady(true);
+  }, []);
+
+  const clearFiles = useCallback(async () => {
+    const ffmpeg = ffmpegRef.current;
+    if (!ffmpeg) return;
+
     try {
-      setIsLoading(true);
-      const { FFmpeg } = await import("@ffmpeg/ffmpeg");
-      const ffmpeg = new FFmpeg();
-      await ffmpeg.load();
-      ffmpegRef.current = ffmpeg;
-      setIsReady(true);
+      const files = await ffmpeg.listDir?.("/");
+      if (!files) return;
+
+      for (const file of files) {
+        if (file.name !== "." && file.name !== "..") {
+          try {
+            await ffmpeg.deleteFile?.(file.name);
+          } catch {
+            // Ignore errors if file does not exist or cannot be deleted
+          }
+        }
+      }
     } catch (err) {
-      console.error("Failed to load FFmpeg:", err);
-      setError("Failed to load FFmpeg");
-    } finally {
-      setIsLoading(false);
+      console.warn("Failed to list FFmpeg FS:", err);
     }
-  }
+  }, []);
 
-  async function convertToMp3(
-    inputFile: File | Blob,
-    onProgress?: ProgressHandler,
-    onLog?: LogHandler,
-  ): Promise<Blob> {
-    if (!ffmpegRef.current) throw new Error("FFmpeg not loaded yet");
+  const convertMultipleToMp3 = useCallback(
+    async (files: FileEntry[]): Promise<Blob> => {
+      const { fetchFile } = await import("@ffmpeg/util");
+      const ffmpeg = ffmpegRef.current;
+      if (!ffmpeg) throw new Error("FFmpeg not loaded");
 
-    const { fetchFile } = await import("@ffmpeg/util");
-    const ffmpeg = ffmpegRef.current;
-    const inputName = "input.ts";
-    const outputName = "output.mp3";
+      await clearFiles();
 
-    await ffmpeg.writeFile(inputName, await fetchFile(inputFile));
+      for (const file of files) {
+        await ffmpeg.writeFile(file.name, await fetchFile(file.data));
+      }
 
-    ffmpeg.on("log", ({ message }: { message: string }) => {
-      onLog?.(message);
-    });
+      const listContent = files.map((file) => `file '${file.name}'`).join("\n");
+      await ffmpeg.writeFile("list.txt", listContent);
 
-    ffmpeg.on("progress", ({ progress }: { progress: number }) => {
-      onProgress?.({ ratio: progress });
-    });
+      await ffmpeg.exec([
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        "list.txt",
+        "-c",
+        "copy",
+        "temp.ts",
+      ]);
+      await ffmpeg.exec(["-i", "temp.ts", "-b:a", "192k", "output.mp3"]);
 
-    await ffmpeg.exec(["-i", inputName, "-b:a", "192k", outputName]);
+      const data = await ffmpeg.readFile("output.mp3");
+      return new Blob([data], { type: "audio/mpeg" });
+    },
+    [clearFiles],
+  );
 
-    const data = await ffmpeg.readFile(outputName);
-    return new Blob([data], { type: "audio/mpeg" });
-  }
-
-  async function convertMultipleToMp3(
-    files: FileEntry[],
-    onProgress?: ProgressHandler,
-    onLog?: LogHandler,
-  ): Promise<Blob> {
-    if (!ffmpegRef.current) throw new Error("FFmpeg not loaded yet");
-
-    const { fetchFile } = await import("@ffmpeg/util");
-    const ffmpeg = ffmpegRef.current;
-
-    // Write each input file to FS
-    for (const file of files) {
-      await ffmpeg.writeFile(file.name, await fetchFile(file.data));
-    }
-
-    // Create concat list file
-    const listContent = files.map((file) => `file '${file.name}'`).join("\n");
-    await ffmpeg.writeFile("list.txt", listContent);
-
-    ffmpeg.on("log", ({ message }: { message: string }) => {
-      onLog?.(message);
-    });
-
-    ffmpeg.on("progress", ({ progress }: { progress: number }) => {
-      onProgress?.({ ratio: progress });
-    });
-
-    const outputName = "output.mp3";
-    await ffmpeg.exec([
-      "-f",
-      "concat",
-      "-safe",
-      "0",
-      "-i",
-      "list.txt",
-      "-c",
-      "copy",
-      "temp.ts",
-    ]);
-
-    await ffmpeg.exec(["-i", "temp.ts", "-b:a", "192k", outputName]);
-
-    const data = await ffmpeg.readFile(outputName);
-    return new Blob([data], { type: "audio/mpeg" });
-  }
-
-  async function terminate() {
+  const terminate = useCallback(async () => {
     if (ffmpegRef.current) {
       await ffmpegRef.current.terminate();
       ffmpegRef.current = null;
       setIsReady(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
-    loadFFmpeg();
+    void load();
     return () => {
       void terminate();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [load, terminate]);
 
-  return {
-    isReady,
-    isLoading,
-    error,
-    convertToMp3,
-    convertMultipleToMp3,
-    terminate,
-  };
+  const cancelCurrentJob = useCallback(async () => {
+    if (ffmpegRef.current) {
+      console.log("Cancelling ffmpeg job by terminating instance...");
+      await ffmpegRef.current.terminate();
+      ffmpegRef.current = null;
+      setIsReady(false);
+      await load(); // reload the instance
+    }
+  }, [load]);
+
+  return { isReady, convertMultipleToMp3, clearFiles, cancelCurrentJob };
 }

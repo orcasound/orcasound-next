@@ -1,5 +1,4 @@
-import { ArrowBackIos, PauseCircle } from "@mui/icons-material";
-import { PlayCircle } from "@mui/icons-material";
+import { ArrowBackIos } from "@mui/icons-material";
 import {
   Box,
   Stack,
@@ -13,8 +12,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { ReactNode } from "react";
 
-import { timeRangeSelect } from "@/components/CandidateList/CandidateListFilters";
 import { useData } from "@/context/DataContext";
+import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Feed } from "@/graphql/generated";
 import darkTheme from "@/styles/darkTheme";
@@ -23,10 +22,14 @@ const HydrophoneDetailTabs = ({
   children,
   feed,
   drawer = false,
+  showHeading = true,
+  showTabs = true,
 }: {
   children: ReactNode;
   feed?: Feed;
   drawer?: boolean;
+  showHeading?: boolean;
+  showTabs?: boolean;
 }) => {
   const router = useRouter();
   const { feedSlug } = router.query;
@@ -34,15 +37,9 @@ const HydrophoneDetailTabs = ({
 
   // const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const theme = useTheme();
-  const {
-    setNowPlayingCandidate,
-    setNowPlayingFeed,
-    nowPlayingFeed,
-    masterPlayerRef,
-    masterPlayerStatus,
-  } = useNowPlaying();
-
-  const { feeds, filters, autoPlayOnReady } = useData();
+  const { setNowPlayingCandidate, setNowPlayingFeed } = useNowPlaying();
+  const { setPlaybarExpanded } = useLayout();
+  const { feeds } = useData();
 
   if (!feed && feedSlug) {
     feed = feeds.find((feed) => feed.slug === feedSlug);
@@ -69,13 +66,7 @@ const HydrophoneDetailTabs = ({
 
   const tabs = [
     { title: "About", slug: "" },
-    {
-      title:
-        timeRangeSelect.find((el) => el.value === filters.timeRange)?.label ??
-        "Candidates",
-      slug: "candidates",
-    },
-    { title: "Greatest Hits", slug: "#" },
+    { title: "Images", slug: "#" },
   ];
 
   const tabRow = (tabs: Tab[]) => (
@@ -119,117 +110,87 @@ const HydrophoneDetailTabs = ({
     </Stack>
   );
 
-  const active = feed?.id === nowPlayingFeed?.id;
-
-  const handlePlay = (feed: Feed) => {
-    autoPlayOnReady.current = true;
-    setNowPlayingFeed(feed);
-    setNowPlayingCandidate(null);
-  };
-
-  const playIcon = (
-    <PlayCircle
-      sx={{ height: 48, width: 48, zIndex: 1, position: "relative" }}
-      onClick={() => {
-        console.log("clicked");
-        if (feed) handlePlay(feed);
-      }}
-    />
-  );
-  const handlePause = () => {
-    masterPlayerRef?.current?.pause();
-  };
-
-  const pauseIcon = (
-    <PauseCircle
-      sx={{ height: 48, width: 48, zIndex: 1, position: "relative" }}
-      onClick={() => {
-        handlePause();
-      }}
-    />
-  );
-
   return (
     <div>
       <Head>Report {feedSlug} | Orcasound </Head>
-      <Box
-        sx={{
-          position: "relative",
-          // marginTop: 5,
-          marginBottom: "2px",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          gap: "16px",
-          background: `center / cover no-repeat url(${feed?.imageUrl})`,
-          p: 2,
-          minHeight: smDown ? " 160px" : "260px",
-        }}
-      >
-        {/* Gradient overlay */}
+      {showHeading && (
         <Box
           sx={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(to top, rgba(0,0,0,0.33), rgba(0,0,0,0))",
-            zIndex: 0,
-          }}
-        />
-        {!drawer ? (
-          <Link
-            href={smDown ? "#" : href}
-            onClick={(e) => {
-              if (smDown) {
-                e.preventDefault();
-                router.back();
-              }
-              if (feed) {
-                setNowPlayingFeed(feed);
-                setNowPlayingCandidate(null);
-              }
-            }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              textDecoration: "none",
-              lineHeight: 1,
-              color: theme.palette.common.white,
-              zIndex: 1,
-              position: "relative",
-            }}
-          >
-            <ArrowBackIos />
-          </Link>
-        ) : (
-          <Box></Box>
-        )}
-        <Box
-          sx={{
-            width: "100%",
+            position: "relative",
+            // marginTop: 5,
+            marginBottom: "2px",
             display: "flex",
+            flexDirection: "column",
             justifyContent: "space-between",
-            alignItems: "center",
+            gap: "16px",
+            background: `center / cover no-repeat url(${feed?.imageUrl})`,
+            p: 2,
+            minHeight: smDown ? " 160px" : "260px",
           }}
         >
-          <Typography
-            variant="h4"
-            component="h1"
+          {/* Gradient overlay */}
+          <Box
             sx={{
-              zIndex: 1,
-              lineHeight: 1.1,
-              position: "relative",
-              textShadow: "0 2px 4px rgba(0, 0, 0, 0.5)",
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(to top, rgba(0,0,0,0.33), rgba(0,0,0,0))",
+              zIndex: 0,
+            }}
+          />
+          {!drawer ? (
+            <Link
+              href={smDown ? "#" : href}
+              onClick={(e) => {
+                if (smDown) {
+                  e.preventDefault();
+                  router.back();
+                }
+                setNowPlayingFeed(null);
+                setNowPlayingCandidate(null);
+                setPlaybarExpanded(false);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                textDecoration: "none",
+                lineHeight: 1,
+                color: theme.palette.common.white,
+                zIndex: 1,
+                position: "relative",
+              }}
+            >
+              <ArrowBackIos />
+            </Link>
+          ) : (
+            <Box></Box>
+          )}
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            {feed?.name}
-          </Typography>
-          {!active || masterPlayerStatus !== "playing" ? playIcon : pauseIcon}
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{
+                zIndex: 1,
+                lineHeight: 1.1,
+                position: "relative",
+                textShadow: "0 2px 4px rgba(0, 0, 0, 0.5)",
+              }}
+            >
+              {feed?.name}
+            </Typography>
+          </Box>
         </Box>
-      </Box>
-      {tabRow(tabs)}
-      <Box sx={{ p: 2 }}>{children}</Box>
+      )}
+      {showTabs && tabRow(tabs)}
+      <Box>{children}</Box>
     </div>
   );
 };

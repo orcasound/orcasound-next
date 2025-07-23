@@ -82,8 +82,6 @@ export function PlayerBase({
   const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
   const { nowPlayingCandidate, nowPlayingFeed } = useNowPlaying();
   const { reportCount, filters, feeds } = useData();
-  // const { playbarExpanded, setPlaybarExpanded, setCandidatePreview } =
-  //   useLayout();
 
   const feedSlug = useMemo(() => {
     if (nowPlayingCandidate) {
@@ -185,14 +183,6 @@ export function PlayerBase({
               </Box>
               <Link
                 href={href}
-                // href={!smDown ? href : "#"}
-                // onClick={(e) => {
-                //   if (smDown) {
-                //     e.preventDefault();
-                //     setCandidatePreview(nowPlayingCandidate ? false : true);
-                //     setPlaybarExpanded(!playbarExpanded);
-                //   }
-                // }}
                 sx={{
                   textDecoration: "none",
                   flex: 1,

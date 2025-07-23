@@ -16,7 +16,6 @@ import {
   Alert,
   Button,
   CircularProgress,
-  Fade,
   FormControl,
   FormHelperText,
   IconButton,
@@ -401,11 +400,11 @@ export default function AudioAnalyzer({
             maxHeight: topRightButtonHeight, // matches header
           }}
         >
-          <Fade in={boutSaved}>
+          {/* <Fade in={boutSaved}>
             <Alert severity="success" sx={{ mr: 2 }}>
               Bout saved
             </Alert>
-          </Fade>
+          </Fade> */}
           <IconButton
             title="Zoom out"
             onClick={spectrogramControls.current?.zoomOut}

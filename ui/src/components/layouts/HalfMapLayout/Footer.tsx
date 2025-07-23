@@ -1,7 +1,6 @@
 import { Box, Stack, Theme, useMediaQuery } from "@mui/material";
 import React, { MutableRefObject } from "react";
 
-import PlayBar from "@/components/PlayBar/PlayBar";
 import { useLayout } from "@/context/LayoutContext";
 
 export default function Footer({
@@ -42,7 +41,7 @@ export default function Footer({
           mb: smDown ? "2px" : "2rem",
         }}
       >
-        <PlayBar masterPlayerTimeRef={masterPlayerTimeRef} />
+        {/* <PlayBar masterPlayerTimeRef={masterPlayerTimeRef} /> */}
       </Box>
     </Stack>
   );

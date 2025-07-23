@@ -1,5 +1,6 @@
 import { useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
+import { useMemo } from "react";
 
 import { FeedStream } from "@/graphql/generated";
 
@@ -64,12 +65,14 @@ export function useFeedStreamsMultiple(
   feedId: string | undefined,
   playlistTimestamps: string[],
 ): UseQueryResult<{ feedStreams: { results: FeedStream[] } }>[] {
-  return useQueries({
-    queries: playlistTimestamps.map((timestamp) => ({
+  const queries = useMemo(() => {
+    return playlistTimestamps.map((timestamp) => ({
       queryKey: ["feedstreams", feedId, timestamp],
       queryFn: () => fetchFeedStreams(feedId!, timestamp),
       enabled: !!feedId && !!timestamp,
       staleTime: 5 * 60 * 1000,
-    })),
-  });
+    }));
+  }, [feedId, playlistTimestamps]);
+  const results = useQueries({ queries });
+  return results;
 }

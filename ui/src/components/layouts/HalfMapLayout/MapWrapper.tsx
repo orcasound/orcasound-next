@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import React, { useMemo } from "react";
 
 import { timeRangeSelect } from "@/components/CandidateList/CandidateListFilters";
-import PlayerTimeDisplay from "@/components/CandidateList/PlayerTimeDisplay";
 import { useData } from "@/context/DataContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import { useComputedPlaybackFields } from "@/hooks/beta/useComputedPlaybackFields";
@@ -20,7 +19,7 @@ const MapWithNoSSR = dynamic(
 export function MapWrapper({
   masterPlayerTimeRef,
 }: {
-  masterPlayerTimeRef: React.MutableRefObject<number>;
+  masterPlayerTimeRef?: React.MutableRefObject<number>;
 }) {
   const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
   const {
@@ -85,12 +84,12 @@ export function MapWrapper({
                   ?.label}
           </Box>
         </Stack>
-        {nowPlayingCandidate && (
+        {/* {nowPlayingCandidate && (
           <PlayerTimeDisplay
             masterPlayerTimeRef={masterPlayerTimeRef}
             startOffset={startOffset} // needs to be passed in, don't recalculate the startOffset hook on every change
           />
-        )}
+        )} */}
       </Box>
 
       {smDown && nowPlayingCandidate && (

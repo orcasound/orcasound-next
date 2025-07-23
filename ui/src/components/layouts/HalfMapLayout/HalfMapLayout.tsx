@@ -1,66 +1,37 @@
-import {
-  Box,
-  Container,
-  Tab,
-  Tabs,
-  Theme,
-  Typography,
-  useMediaQuery,
-} from "@mui/material";
+import { Box, Tab, Tabs, Theme, useMediaQuery } from "@mui/material";
 import { useRouter } from "next/router";
-import { ReactElement, ReactNode, useMemo, useRef } from "react";
+import React, { ReactElement, useRef } from "react";
 
-import { timeRangeSelect } from "@/components/CandidateList/CandidateListFilters";
-import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
-import { HydrophonesStack } from "@/components/CandidateList/HydrophonesStack";
 import { MobileDisplay } from "@/components/CandidateList/MobileDisplay";
 import HeaderNew from "@/components/HeaderNew";
-import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
-import HydrophoneCandidatesPage from "@/pages/beta/[feedSlug]/candidates";
-import { getPageContext } from "@/utils/pageContext";
 
 import { MasterDataLayout } from "../MasterDataLayout";
 import Footer from "./Footer";
 import { MapWrapper } from "./MapWrapper";
 import { MobileBottomNav } from "./MobileBottomNav";
-import PlayerDetail from "./PlayerDetail";
 import { SideList } from "./SideList";
 
-function HalfMapLayout({ children }: { children: ReactNode }) {
+type HalfMapLayoutProps = {
+  leftSlot?: React.ReactNode;
+  centerSlot?: React.ReactNode;
+  rightSlot?: React.ReactNode;
+  children?: React.ReactNode;
+};
+
+export function HalfMapLayout({
+  leftSlot,
+  centerSlot,
+  rightSlot,
+  children,
+}: HalfMapLayoutProps) {
   const router = useRouter();
-  const { isFeedDetail } = getPageContext(router);
   const { playbarExpanded, headerHeight } = useLayout();
-  const { filters } = useData();
-  const pageRoute = useMemo(() => router.route, [router.route]);
+  console.log("playbarExpanded", playbarExpanded);
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
 
   const masterPlayerTimeRef = useRef(0);
-
-  const showChildrenRight = useMemo(() => {
-    const showChildren = router.query.candidateId !== undefined;
-    return showChildren;
-  }, [router.query.candidateId]);
-
-  const showChildrenLeft = useMemo(() => {
-    const showChildren =
-      pageRoute === "/beta/[feedSlug]/candidates" ||
-      pageRoute === "/beta/[feedSlug]";
-    return showChildren;
-  }, [pageRoute]);
-
-  // const tabSlugs = ["hydrophones", "candidates", "visualizations"];
-
-  // function getTabIndexFromPath(path: string): number {
-  //   const slug = path.replace("/beta/", "");
-  //   if (tabSlugs.includes(slug)) {
-  //     return tabSlugs.indexOf(slug);
-  //   } else {
-  //     return 0;
-  //   }
-  // }
-  // const tabIndex = getTabIndexFromPath(router.route);
 
   function a11yProps(index: number) {
     return {
@@ -68,10 +39,6 @@ function HalfMapLayout({ children }: { children: ReactNode }) {
       "aria-controls": `simple-tabpanel-${index}`,
     };
   }
-
-  // const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-  //   router.push(`/beta/${tabSlugs[newValue]}`, undefined, { shallow: true });
-  // };
 
   const tabSx = {
     padding: "7px 16px !important",
@@ -153,73 +120,38 @@ function HalfMapLayout({ children }: { children: ReactNode }) {
           }}
         >
           {/* // desktop view */}
-          {!mdDown && (
-            <SideList>
-              {/* <AnimatePresence mode="wait"> */}
-              {isFeedDetail ? (
-                <HydrophoneCandidatesPage />
-              ) : showChildrenLeft ? (
-                // <motion.div
-                //   key={router.asPath}
-                //   initial={{ x: 100, opacity: 0 }}
-                //   animate={{ x: 0, opacity: 1 }}
-                //   exit={{ x: 100, opacity: 0 }}
-                //   transition={{ duration: 0.4, ease: "easeOut" }}
-                //   style={{ height: "100%" }}
-                // >
-                children
-              ) : (
-                // </motion.div>
-
-                <Container
-                  maxWidth="xl"
-                  sx={{
-                    px: { xs: 1, sm: 2, md: 3 },
-                    pb: "200px",
-                    mt: "24px",
-                  }}
-                >
-                  <Typography component="h2" variant="h5" sx={{ mb: "1.5rem" }}>
-                    {
-                      timeRangeSelect.find(
-                        (el) => el.value === filters.timeRange,
-                      )?.label
-                    }
-                  </Typography>
-                  <CandidatesStack />
-                </Container>
-              )}
-              {/* </AnimatePresence> */}
-            </SideList>
-          )}
-          {!mdDown && <MapWrapper masterPlayerTimeRef={masterPlayerTimeRef} />}
-          {!mdDown && (
-            <SideList
-            // key={
-            //   router.query.feedSlug
-            //     ? router.query.feedSlug.toString()
-            //     : router.asPath
-            // }
+          {!mdDown && <SideList>{leftSlot}</SideList>}
+          <Box
+            className="center-column"
+            sx={{ display: "flex", flexGrow: 1, position: "relative" }}
+          >
+            <MapWrapper />
+            <Box
+              className="now-playing-drawer"
+              sx={{
+                px: 0,
+                flex: 1,
+                overflowY: "auto",
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                borderRight: "1px solid rgba(255,255,255,.5)",
+                height:
+                  smDown && playbarExpanded
+                    ? `calc(100vh)` // height calc gets complex on mobile due to browser bar
+                    : playbarExpanded
+                      ? `calc(100vh - ${headerHeight})`
+                      : 0,
+                backgroundColor: "background.default",
+                zIndex: (theme) => theme.zIndex.drawer + 1,
+                transition: "height .66s ease",
+              }}
             >
-              {showChildrenRight ? (
-                children
-              ) : (
-                <Container
-                  maxWidth="xl"
-                  sx={{
-                    px: { xs: 1, sm: 2, md: 3 },
-                    pb: "200px",
-                    mt: "24px",
-                  }}
-                >
-                  <Typography component="h2" variant="h5" sx={{ mb: "1rem" }}>
-                    Listen Live
-                  </Typography>
-                  <HydrophonesStack />
-                </Container>
-              )}
-            </SideList>
-          )}
+              {playbarExpanded && centerSlot}
+            </Box>{" "}
+          </Box>
+          {!mdDown && <SideList>{rightSlot}</SideList>}
           {/* // mobile view */}
           {mdDown && (
             <Box
@@ -241,31 +173,8 @@ function HalfMapLayout({ children }: { children: ReactNode }) {
         </Box>
 
         <Footer masterPlayerTimeRef={masterPlayerTimeRef} />
+
         {mdDown && <MobileBottomNav />}
-        <Box
-          className="now-playing-drawer"
-          sx={{
-            px: mdDown ? 0 : "24px",
-            flex: 1,
-            overflowY: "auto",
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            width: smDown ? "100%" : "75%",
-            borderRight: "1px solid rgba(255,255,255,.5)",
-            height:
-              smDown && playbarExpanded
-                ? `calc(100vh)` // height calc gets complex on mobile due to browser bar
-                : playbarExpanded
-                  ? `calc(100vh - ${headerHeight})`
-                  : 0,
-            backgroundColor: "background.default",
-            zIndex: (theme) => theme.zIndex.drawer + 1,
-            transition: "height .66s ease",
-          }}
-        >
-          {playbarExpanded && <PlayerDetail />}
-        </Box>
       </Box>
     </>
   );

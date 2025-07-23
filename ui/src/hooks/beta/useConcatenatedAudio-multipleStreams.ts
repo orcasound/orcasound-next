@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { useFeedStreams } from "@/hooks/beta/useFeedStreams";
+import { useFeedStreamsMultiple } from "@/hooks/beta/useFeedStreams";
 import { useFfmpeg } from "@/hooks/beta/useFfmpeg";
 
 import { useFeedSegments } from "./useFeedSegments";
@@ -34,8 +34,7 @@ export default function useConcatenatedAudio({
   startTime,
   endTime,
 }: Props) {
-  const { isReady, convertMultipleToMp3, clearFiles, cancelCurrentJob } =
-    useFfmpeg();
+  const { isReady, convertMultipleToMp3, clearFiles } = useFfmpeg();
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,60 +46,65 @@ export default function useConcatenatedAudio({
     endTime,
   });
 
-  console.log("feedSegments length", segmentsData?.feedSegments.results.length);
-
-  const firstTimestamp = useMemo(() => {
-    const tsList =
-      segmentsData?.feedSegments?.results
-        ?.map((seg) => seg.playlistTimestamp)
-        .filter((ts): ts is string => !!ts) ?? [];
-    return tsList.length > 0 ? tsList[0] : null;
+  const playlistTimestamps = useMemo(() => {
+    if (!segmentsData?.feedSegments?.results) return [];
+    const timestamps = segmentsData.feedSegments.results
+      .map((seg) => seg.playlistTimestamp)
+      .filter((ts): ts is string => !!ts);
+    return [...new Set(timestamps)];
   }, [segmentsData]);
 
-  const {
-    data: streamData,
-    isFetched,
-    isLoading,
-  } = useFeedStreams({
-    feedId,
-    playlistTimestamp: firstTimestamp ?? "",
-    enabled: !!firstTimestamp,
-  });
+  const streams = useFeedStreamsMultiple(feedId, playlistTimestamps);
 
-  const stream = streamData?.feedStreams?.results?.[0] ?? null;
+  const allLoaded = streams.every((r) => r.isFetched && !r.isLoading);
 
-  const allLoaded = isFetched && !isLoading;
+  const allStreams = useMemo(() => {
+    const flattened = streams.flatMap((q) => q.data?.feedStreams.results ?? []);
+
+    const filtered = flattened.filter(
+      (s): s is typeof s & { playlistTimestamp: string } =>
+        !!s.playlistTimestamp,
+    );
+
+    const sorted = filtered.sort(
+      (a, b) =>
+        new Date(a.playlistTimestamp).getTime() -
+        new Date(b.playlistTimestamp).getTime(),
+    );
+
+    return sorted;
+  }, [streams]);
 
   console.log("isReady", isReady);
-  console.log("stream", stream);
-  console.log("allLoaded", allLoaded);
+  console.log("allStreams.length", allStreams.length);
+  useEffect(() => {
+    console.log("allStreams changed", allStreams);
+  }, [allStreams]);
+  useEffect(() => {
+    console.log("playlistTimestamps identity changed");
+  }, [playlistTimestamps]);
+
+  console.log("playlistTimestamps", playlistTimestamps);
   console.log("feedId", feedId);
+  console.log("results");
   console.log("startTime", startTime);
   console.log("endTime", endTime);
+  console.log("allLoaded", allLoaded);
 
   useEffect(() => {
-    if (!segmentsData?.feedSegments?.results?.length) {
-      console.log("No segments found — clearing audioBlob");
-      setAudioBlob(null);
-      setTotalDurationMs(null);
-      setError("No segments available for this time range.");
-      setIsProcessing(false);
-      return;
-    }
-
     if (
       !isReady ||
-      !stream ||
+      allStreams.length === 0 ||
       !allLoaded ||
       !feedId ||
       !startTime ||
       !endTime
     ) {
-      console.log("useConcatenatedAudio skipped — missing deps");
+      console.log("useConcatenatedAudio skipped -- missing params");
+
       return;
     }
-
-    console.log("useConcatenatedAudio running with single stream");
+    console.log("useConcatenatedAudio running fetchAndConcat");
 
     const abortController = new AbortController();
     let cancelled = false;
@@ -115,12 +119,18 @@ export default function useConcatenatedAudio({
 
         const segments: Segment[] = [];
 
-        if (stream?.playlistM3u8Path && stream.bucket && stream.bucketRegion) {
+        for (const stream of allStreams) {
+          if (
+            !stream?.playlistM3u8Path ||
+            !stream.bucket ||
+            !stream.bucketRegion
+          )
+            continue;
+
           const m3u8Url = `https://${stream.bucket}.s3.${stream.bucketRegion}.amazonaws.com${stream.playlistM3u8Path}`;
           const res = await fetch(m3u8Url, { signal: abortController.signal });
           const text = await res.text();
           const lines = text.split("\n");
-
           let cumulativeTime = new Date(stream.startTime ?? "").getTime();
 
           for (let i = 0; i < lines.length; i++) {
@@ -160,6 +170,7 @@ export default function useConcatenatedAudio({
 
         const fetchedFiles = await Promise.all(
           segments.map(async (seg) => {
+            if (cancelled) return null;
             try {
               const res = await fetch(seg.url, {
                 signal: abortController.signal,
@@ -197,7 +208,7 @@ export default function useConcatenatedAudio({
       } catch (err) {
         if (!cancelled) {
           if (err instanceof DOMException && err.name === "AbortError") {
-            // no-op
+            // Fetch aborted, no-op
           } else {
             console.error("Unexpected error:", err);
             setError("Failed to fetch or process audio segments.");
@@ -216,34 +227,19 @@ export default function useConcatenatedAudio({
     };
   }, [
     isReady,
-    stream,
+    allStreams,
     startTime,
     endTime,
     convertMultipleToMp3,
     clearFiles,
     allLoaded,
     feedId,
-    segmentsData?.feedSegments?.results?.length,
   ]);
-
-  const streamEndTime =
-    stream && stream.endTime ? new Date(stream.endTime) : new Date();
-
-  useEffect(() => {
-    cancelCurrentJob();
-  }, [startTime]);
 
   return {
     audioBlob,
     isProcessing,
     error,
     totalDurationMs,
-    droppedSeconds:
-      new Date(endTime) > streamEndTime
-        ? Math.round(
-            (new Date(endTime).getTime() - new Date(streamEndTime).getTime()) /
-              1000,
-          )
-        : 0,
   };
 }

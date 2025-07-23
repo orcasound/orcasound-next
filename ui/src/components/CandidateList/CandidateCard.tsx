@@ -47,7 +47,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
     masterPlayerRef,
     masterPlayerStatus,
   } = useNowPlaying();
-  const { setPlaybarExpanded, setCandidatePreview } = useLayout();
+  const { setPlaybarExpanded } = useLayout();
   const router = useRouter();
 
   const candidate = props.candidate;
@@ -99,7 +99,6 @@ export default function CandidateCard(props: { candidate: Candidate }) {
   const href = feedDetailCandidateHref;
 
   const handlePlay = (candidate: Candidate) => {
-    setCandidatePreview(true);
     autoPlayOnReady.current = true;
     setNowPlayingCandidate(candidate);
     setNowPlayingFeed(null);
@@ -213,7 +212,6 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                 autoPlayOnReady.current = false;
                 setNowPlayingCandidate(candidate);
                 setNowPlayingFeed(null);
-                setPlaybarExpanded(false);
                 sessionStorage.setItem(
                   "scrollBox",
                   String(scrollBox?.scrollTop),

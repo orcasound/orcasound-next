@@ -230,8 +230,10 @@ export default function Map() {
   const feed = useMemo(() => {
     if (nowPlayingCandidate) {
       return feeds.find((f) => f.id === nowPlayingCandidate.feedId);
-    } else {
+    } else if (nowPlayingFeed) {
       return nowPlayingFeed;
+    } else {
+      return null;
     }
   }, [nowPlayingCandidate, nowPlayingFeed, feeds]);
 
@@ -256,6 +258,7 @@ export default function Map() {
       // map?.setZoom(12);
       // map?.panTo(feed.latLng);
     } else {
+      setLatLng([48.1, -122.75]);
       setZoom(smDown ? 8 : 9);
       // map?.setZoom(8);
     }
@@ -337,7 +340,7 @@ export default function Map() {
                       setNowPlayingFeed(f);
                       setNowPlayingCandidate(null);
                     } else {
-                      router.push(`/beta/${f.slug}/candidates`);
+                      router.push(`/beta/${f.slug}`);
                       autoPlayOnReady.current = false;
                       setNowPlayingFeed(f);
                       setNowPlayingCandidate(null);
