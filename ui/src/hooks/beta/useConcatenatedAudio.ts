@@ -34,12 +34,18 @@ export default function useConcatenatedAudio({
   startTime,
   endTime,
 }: Props) {
-  const { isReady, convertMultipleToMp3, clearFiles, cancelCurrentJob } =
-    useFfmpeg();
+  const {
+    isReady,
+    convertMultipleToMp3,
+    clearFiles,
+    cancelCurrentJob,
+    convertMultipleToMp3WithSpectrogram,
+  } = useFfmpeg();
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [totalDurationMs, setTotalDurationMs] = useState<string | null>(null);
+  const [spectrogramUrl, setSpectrogramUrl] = useState<string | null>(null);
 
   const { data: segmentsData } = useFeedSegments({
     feedId,
@@ -187,13 +193,24 @@ export default function useConcatenatedAudio({
           return;
         }
 
-        const output = await convertMultipleToMp3(validFiles);
+        const { audio, spectrogram } =
+          await convertMultipleToMp3WithSpectrogram(validFiles);
+
         if (!cancelled) {
-          setAudioBlob(output);
+          setAudioBlob(audio);
+          setSpectrogramUrl(URL.createObjectURL(spectrogram));
           setTotalDurationMs(
             formatDuration(calculateSegmentsDurationMs(segments)),
           );
         }
+        // IN CASE SPECTROGRAM DOESN'T WORK
+        // const output = await convertMultipleToMp3(validFiles);
+        // if (!cancelled) {
+        //   setAudioBlob(output);
+        //   setTotalDurationMs(
+        //     formatDuration(calculateSegmentsDurationMs(segments)),
+        //   );
+        // }
       } catch (err) {
         if (!cancelled) {
           if (err instanceof DOMException && err.name === "AbortError") {
@@ -219,7 +236,8 @@ export default function useConcatenatedAudio({
     stream,
     startTime,
     endTime,
-    convertMultipleToMp3,
+    // convertMultipleToMp3,
+    convertMultipleToMp3WithSpectrogram,
     clearFiles,
     allLoaded,
     feedId,
@@ -235,6 +253,7 @@ export default function useConcatenatedAudio({
 
   return {
     audioBlob,
+    spectrogramUrl,
     isProcessing,
     error,
     totalDurationMs,

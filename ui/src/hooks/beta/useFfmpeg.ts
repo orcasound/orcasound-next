@@ -75,6 +75,57 @@ export function useFfmpeg() {
     [clearFiles],
   );
 
+  // In useFfmpeg.ts
+
+  const convertMultipleToMp3WithSpectrogram = useCallback(
+    async (files: FileEntry[]): Promise<{ audio: Blob; spectrogram: Blob }> => {
+      const { fetchFile } = await import("@ffmpeg/util");
+      const ffmpeg = ffmpegRef.current;
+      if (!ffmpeg) throw new Error("FFmpeg not loaded");
+
+      await clearFiles();
+
+      for (const file of files) {
+        await ffmpeg.writeFile(file.name, await fetchFile(file.data));
+      }
+
+      const listContent = files.map((file) => `file '${file.name}'`).join("\n");
+      await ffmpeg.writeFile("list.txt", listContent);
+
+      // Step 1: Concatenate to temp.ts and encode to output.mp3
+      await ffmpeg.exec([
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        "list.txt",
+        "-c",
+        "copy",
+        "temp.ts",
+      ]);
+      await ffmpeg.exec(["-i", "temp.ts", "-b:a", "192k", "output.mp3"]);
+
+      // Step 2: Generate spectrogram from the mp3
+      await ffmpeg.exec([
+        "-i",
+        "output.mp3",
+        "-lavfi",
+        "showspectrumpic=s=800x256",
+        "spectrogram.png",
+      ]);
+
+      const audioData = await ffmpeg.readFile("output.mp3");
+      const spectrogramData = await ffmpeg.readFile("spectrogram.png");
+
+      return {
+        audio: new Blob([audioData], { type: "audio/mpeg" }),
+        spectrogram: new Blob([spectrogramData], { type: "image/png" }),
+      };
+    },
+    [clearFiles],
+  );
+
   const terminate = useCallback(async () => {
     if (ffmpegRef.current) {
       await ffmpegRef.current.terminate();
@@ -100,5 +151,11 @@ export function useFfmpeg() {
     }
   }, [load]);
 
-  return { isReady, convertMultipleToMp3, clearFiles, cancelCurrentJob };
+  return {
+    isReady,
+    convertMultipleToMp3,
+    clearFiles,
+    cancelCurrentJob,
+    convertMultipleToMp3WithSpectrogram,
+  };
 }

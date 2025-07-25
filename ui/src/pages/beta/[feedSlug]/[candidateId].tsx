@@ -170,6 +170,7 @@ const LeftDetail = ({ feed }: { feed: Feed | undefined }) => {
 const CenterDetail = ({
   clipId,
   audioUrl,
+  spectrogramUrl,
   isProcessing,
   error,
   totalDurationMs,
@@ -177,6 +178,7 @@ const CenterDetail = ({
 }: {
   clipId: string;
   audioUrl: string | undefined;
+  spectrogramUrl: string | null;
   isProcessing: boolean;
   error: string | null;
   totalDurationMs: string | null;
@@ -198,9 +200,18 @@ const CenterDetail = ({
           height: "55px",
         }}
       >
-        <a href={audioUrl} download={`clip-${clipId}.mp3`}>
-          Download MP3
-        </a>
+        {audioUrl ? (
+          <a href={audioUrl} download={`clip-${clipId}.mp3`}>
+            Download MP3
+          </a>
+        ) : (
+          "Processing mp3..."
+        )}
+        {spectrogramUrl && (
+          <a href={spectrogramUrl} download={`spectrogram-${clipId}.png`}>
+            Download spectrogram
+          </a>
+        )}
       </Box>
       <Box
         className="wavesurfer-container"
@@ -259,6 +270,13 @@ const CenterDetail = ({
           height: "100px",
         }}
       >
+        {spectrogramUrl && (
+          <img
+            src={spectrogramUrl}
+            alt="Spectrogram"
+            className="w-full h-auto"
+          />
+        )}
         <PlayBar />
       </Box>
     </Stack>
@@ -351,12 +369,18 @@ const CandidateLayout = ({ children }: { children: React.ReactNode }) => {
     setPlaybarExpanded(false);
   };
 
-  const { audioBlob, isProcessing, error, totalDurationMs, droppedSeconds } =
-    useConcatenatedAudio({
-      feedId,
-      startTime: startTimeString,
-      endTime: endTimeString,
-    });
+  const {
+    audioBlob,
+    spectrogramUrl,
+    isProcessing,
+    error,
+    totalDurationMs,
+    droppedSeconds,
+  } = useConcatenatedAudio({
+    feedId,
+    startTime: startTimeString,
+    endTime: endTimeString,
+  });
 
   const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
 
@@ -392,6 +416,7 @@ const CandidateLayout = ({ children }: { children: React.ReactNode }) => {
         <CenterDetail
           clipId={startTimeString}
           audioUrl={audioUrl}
+          spectrogramUrl={spectrogramUrl}
           isProcessing={isProcessing}
           error={error}
           totalDurationMs={totalDurationMs}
