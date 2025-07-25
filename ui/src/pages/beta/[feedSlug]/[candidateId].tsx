@@ -290,6 +290,7 @@ const CandidateLayout = ({ children }: { children: React.ReactNode }) => {
   const { setNowPlayingCandidate, setNowPlayingFeed } = useNowPlaying();
 
   const { candidateId, feedSlug } = router.query;
+
   const feed = feeds.find((f) => f.slug === feedSlug) ?? undefined;
   const feedId = useMemo(() => {
     return feeds.find((f) => f.slug === feedSlug)?.id ?? "";
@@ -314,23 +315,36 @@ const CandidateLayout = ({ children }: { children: React.ReactNode }) => {
     startTime: "",
   });
 
+  const [candidateIdState, setCandidateIdState] = useState<
+    string | string[] | undefined
+  >(undefined);
+
   const previousCandidateIdRef = useRef<string | string[] | undefined>();
+
+  // necessary to ensure the next useEffect runs
+  useEffect(() => {
+    setCandidateIdState(candidateId);
+  }, [candidateId, setCandidateIdState]);
 
   // Playbar open/close logic on route change
   useEffect(() => {
-    if (!candidateId) return;
+    // Don't do anything if there's no candidateId
+    if (!candidateIdState) return;
 
-    if (previousCandidateIdRef.current === candidateId) return;
-    previousCandidateIdRef.current = candidateId;
+    // Skip if same as previous
+    if (previousCandidateIdRef.current === candidateIdState) return;
 
+    // Save new value
+    previousCandidateIdRef.current = candidateIdState;
+
+    // Collapse then expand playbar
     setPlaybarExpanded(false);
-
     const timeout = setTimeout(() => {
       setPlaybarExpanded(true);
     }, 700);
 
     return () => clearTimeout(timeout);
-  }, [candidateId, setPlaybarExpanded]);
+  }, [candidateIdState, setPlaybarExpanded]);
 
   // Now Playing logic
   useEffect(() => {
