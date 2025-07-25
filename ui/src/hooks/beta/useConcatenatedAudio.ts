@@ -231,7 +231,7 @@ export default function useConcatenatedAudio({
 
   useEffect(() => {
     cancelCurrentJob();
-  }, [startTime]);
+  }, [startTime, cancelCurrentJob]);
 
   return {
     audioBlob,

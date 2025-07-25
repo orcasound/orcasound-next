@@ -4,12 +4,17 @@ import { type VideoJSPlayer } from "@/components/Player/VideoJS";
 import { useData } from "@/context/DataContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import type { Feed } from "@/graphql/generated";
+import { useAudioAnalyser } from "@/hooks/beta/useAudioAnalyzer";
 import useFeedPresence from "@/hooks/useFeedPresence";
 import { useTimestampFetcher } from "@/hooks/useTimestampFetcher";
 import fin512 from "@/public/photos/fin-512x512.png";
 import { analytics } from "@/utils/analytics";
+import { colormapOptions, generateColorScale } from "@/utils/colorMaps";
 
+import AudioVisualizer from "./AudioVisualizer";
 import { PlayerBase } from "./PlayerBase";
+import SpectrogramCanvas from "./SpectrogramCanvas";
+import WaveformCanvas from "./WaveformCanvas";
 
 // // dynamically import VideoJS to speed up initial page load
 // const VideoJS = dynamic(() => import("@/components/Player/VideoJS"));
@@ -183,22 +188,80 @@ export default function LivePlayer({
     console.log("masterPlayerStatus: " + masterPlayerStatus);
   }, [playerStatus, masterPlayerStatus]);
 
+  const el = playerRef.current?.el(); // from video.js
+  const videoEl = el?.querySelector("video") as HTMLMediaElement | null;
+  const { analyser, getFrequencyData, getWaveformData, getCurrentTime } =
+    useAudioAnalyser(videoEl);
+
+  const [selectedMap, setSelectedMap] = useState("viridis");
+  const [selectedScale, setSelectedScale] = useState<"linear" | "log">("log");
+
+  const colorMap = useMemo(
+    () => generateColorScale(selectedMap),
+    [selectedMap],
+  );
+
   return (
-    <PlayerBase
-      key={currentFeed.id}
-      type="feed"
-      playerOptions={playerOptions}
-      handleReady={handleReady}
-      playerStatus={playerStatus}
-      feed={currentFeed}
-      playerRef={playerRef}
-      handlePlayPauseClickFeed={handlePlayPauseClick}
-      image={currentFeed.imageUrl?.toString()}
-      timestamp={timestamp}
-      listenerCount={listenerCount}
-      playerTitle={playerText}
-      playerSubtitle={""}
-    />
+    <div className="playerbase">
+      <PlayerBase
+        key={currentFeed.id}
+        type="feed"
+        playerOptions={playerOptions}
+        handleReady={handleReady}
+        playerStatus={playerStatus}
+        feed={currentFeed}
+        playerRef={playerRef}
+        handlePlayPauseClickFeed={handlePlayPauseClick}
+        image={currentFeed.imageUrl?.toString()}
+        timestamp={timestamp}
+        listenerCount={listenerCount}
+        playerTitle={playerText}
+        playerSubtitle={""}
+      />
+
+      {videoEl && analyser && <WaveformCanvas analyser={analyser} />}
+      {videoEl && analyser && <SpectrogramCanvas analyser={analyser} />}
+      {videoEl && (
+        <>
+          <label>
+            Color scheme:
+            <select
+              value={selectedMap}
+              onChange={(e) => setSelectedMap(e.target.value)}
+            >
+              {colormapOptions.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Scale:
+            <select
+              value={selectedScale}
+              onChange={(e) =>
+                setSelectedScale(e.target.value as "linear" | "log")
+              }
+            >
+              <option key={1} value={"linear"}>
+                Linear
+              </option>
+              <option key={2} value={"log"}>
+                Logarithmic
+              </option>
+            </select>
+          </label>
+          <AudioVisualizer
+            getFrequencyData={getFrequencyData}
+            getWaveformData={getWaveformData}
+            colorMap={colorMap}
+            scale={selectedScale}
+            getCurrentTime={getCurrentTime}
+          />
+        </>
+      )}
+    </div>
   );
 }
 

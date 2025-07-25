@@ -16,9 +16,14 @@ import { useData } from "@/context/DataContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 // import { useData } from "@/context/DataContext";
 import { Feed } from "@/graphql/generated";
+import { useAudioAnalyser } from "@/hooks/beta/useAudioAnalyzer";
 import { getHlsURI } from "@/hooks/useTimestampFetcher";
+import { colormapOptions, generateColorScale } from "@/utils/colorMaps";
 
+import AudioVisualizer from "./AudioVisualizer";
 import { PlayerBase } from "./PlayerBase";
+import SpectrogramCanvas from "./SpectrogramCanvas";
+import WaveformCanvas from "./WaveformCanvas";
 
 // // dynamically import VideoJS to speed up initial page load
 // const VideoJS = dynamic(() => import("../Player/VideoJS"));
@@ -199,24 +204,81 @@ export function CandidatePlayer({
     console.log("masterPlayerStatus: " + masterPlayerStatus);
   }, [playerStatus, masterPlayerStatus]);
 
+  const el = playerRef.current?.el(); // from video.js
+  const videoEl = el?.querySelector("video") as HTMLMediaElement | null;
+  const { analyser, getFrequencyData, getWaveformData, getCurrentTime } =
+    useAudioAnalyser(videoEl);
+  const [selectedMap, setSelectedMap] = useState("magma");
+  const [selectedScale, setSelectedScale] = useState<"linear" | "log">("log");
+
+  const colorMap = useMemo(
+    () => generateColorScale(selectedMap),
+    [selectedMap],
+  );
+
   return (
-    <PlayerBase
-      type="candidate"
-      playerOptions={playerOptions}
-      startOffset={startOffset}
-      endOffset={endOffset}
-      duration={duration}
-      handleReady={handleReady}
-      playerStatus={playerStatus}
-      feed={feed}
-      image={image}
-      playerTitle={clipDateTime}
-      playerSubtitle={clipNode}
-      marks={marks}
-      playerRef={playerRef}
-      playerTime={playerTime}
-      onAudioPlay={onAudioPlay}
-      handlePlayPauseClickCandidate={handlePlayPauseClick}
-    />
+    <div className="playerbase">
+      <PlayerBase
+        type="candidate"
+        playerOptions={playerOptions}
+        startOffset={startOffset}
+        endOffset={endOffset}
+        duration={duration}
+        handleReady={handleReady}
+        playerStatus={playerStatus}
+        feed={feed}
+        image={image}
+        playerTitle={clipDateTime}
+        playerSubtitle={clipNode}
+        marks={marks}
+        playerRef={playerRef}
+        playerTime={playerTime}
+        onAudioPlay={onAudioPlay}
+        handlePlayPauseClickCandidate={handlePlayPauseClick}
+      />
+      {videoEl && analyser && <WaveformCanvas analyser={analyser} />}
+      {videoEl && analyser && <SpectrogramCanvas analyser={analyser} />}
+      {videoEl && (
+        <>
+          {" "}
+          <label>
+            Color scheme:
+            <select
+              value={selectedMap}
+              onChange={(e) => setSelectedMap(e.target.value)}
+            >
+              {colormapOptions.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Scale:
+            <select
+              value={selectedScale}
+              onChange={(e) =>
+                setSelectedScale(e.target.value as "linear" | "log")
+              }
+            >
+              <option key={1} value={"linear"}>
+                Linear
+              </option>
+              <option key={2} value={"log"}>
+                Logarithmic
+              </option>
+            </select>
+          </label>
+          <AudioVisualizer
+            getFrequencyData={getFrequencyData}
+            getWaveformData={getWaveformData}
+            getCurrentTime={getCurrentTime}
+            colorMap={colorMap}
+            scale={selectedScale}
+          />
+        </>
+      )}
+    </div>
   );
 }

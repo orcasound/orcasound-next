@@ -18,6 +18,7 @@ import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout"
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import Link from "@/components/Link";
 import PlayBar from "@/components/PlayBar/PlayBar";
+import WaveformPlayer from "@/components/PlayBar/WaveformPlayer";
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
@@ -202,22 +203,40 @@ const CenterDetail = ({
         </a>
       </Box>
       <Box
-        className="spectrogram-container"
-        sx={{
-          border: "1px solid red",
-          flex: 1,
-        }}
-      ></Box>
-      <Box
-        className="waveform-container"
+        className="wavesurfer-container"
         sx={{
           border: "1px solid orange",
-          height: "200px",
+          flex: 1,
         }}
       >
         <Box>
           {isProcessing ? (
-            <p>Processing audio...</p>
+            <p>Processing waveform player...</p>
+          ) : error ? (
+            <p>Error: {error}</p>
+          ) : audioUrl ? (
+            <div>
+              <WaveformPlayer audioUrl={audioUrl} />
+              <div>{totalDurationMs} ms</div>
+              {droppedSeconds > 0 && (
+                <div>Dropped {droppedSeconds} seconds from stream reset</div>
+              )}
+            </div>
+          ) : (
+            <p>No audio available.</p>
+          )}
+        </Box>
+      </Box>
+      <Box
+        className="html-audio-container"
+        sx={{
+          border: "1px solid orange",
+          minHeight: "100px",
+        }}
+      >
+        <Box>
+          {isProcessing ? (
+            <p>Processing HTML player...</p>
           ) : error ? (
             <p>Error: {error}</p>
           ) : audioUrl ? (
