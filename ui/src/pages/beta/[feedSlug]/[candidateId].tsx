@@ -17,7 +17,6 @@ import HydrophoneDetailTabs from "@/components/CandidateList/HydrophoneDetailTab
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import Link from "@/components/Link";
-import PlayBar from "@/components/PlayBar/PlayBar";
 import WaveformPlayer from "@/components/PlayBar/WaveformPlayer";
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
@@ -228,10 +227,10 @@ const CenterDetail = ({
           ) : audioUrl ? (
             <div>
               <WaveformPlayer audioUrl={audioUrl} />
-              <div>{totalDurationMs} ms</div>
+              {/* <div>{totalDurationMs} ms</div>
               {droppedSeconds > 0 && (
                 <div>Dropped {droppedSeconds} seconds from stream reset</div>
-              )}
+              )} */}
             </div>
           ) : (
             <p>No audio available.</p>
@@ -243,6 +242,7 @@ const CenterDetail = ({
         sx={{
           border: "1px solid orange",
           minHeight: "100px",
+          display: "none",
         }}
       >
         <Box>
@@ -268,16 +268,10 @@ const CenterDetail = ({
         sx={{
           border: "1px solid blue",
           height: "100px",
+          display: "none",
         }}
       >
-        {spectrogramUrl && (
-          <img
-            src={spectrogramUrl}
-            alt="Spectrogram"
-            className="w-full h-auto"
-          />
-        )}
-        <PlayBar />
+        {/* <PlayBar /> */}
       </Box>
     </Stack>
   );
