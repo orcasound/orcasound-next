@@ -10,206 +10,189 @@ type WaveformPlayerProps = {
 export default function WaveformPlayer({ audioUrl }: WaveformPlayerProps) {
   const waveformRef = useRef<HTMLDivElement | null>(null);
   const waveSurferRef = useRef<WaveSurfer | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  // containerRef seems unused, consider removing if not needed
+  // const containerRef = useRef<HTMLDivElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
   const [zoomLevel, setZoomLevel] = useState<number>(0); // pixels per second
 
-  const [baseZoom, setBaseZoom] = useState<number>(0); // fully zoomed out
-  const [maxZoom, setMaxZoom] = useState<number>(0); // fully zoomed in
-  const [containerWidth, setContainerWidth] = useState<number | null>(null);
+  // These should probably be derived from duration and container width,
+  // not separately stateful unless you have specific reasons.
+  // const [baseZoom, setBaseZoom] = useState<number>(0); // fully zoomed out
+  // const [maxZoom, setMaxZoom] = useState<number>(0); // fully zoomed in
+  const [containerWidth, setContainerWidth] = useState<number | null>(null); // To calculate dynamic zoom limits
 
   const lastSecondsInWindowRef = useRef<number | null>(null);
 
   const spectrogramRef = useRef<HTMLDivElement | null>(null);
   const timelineRef = useRef<HTMLDivElement | null>(null);
 
-  const calculateZoomLimits = useCallback(() => {
-    const duration = waveSurferRef.current?.getDuration() ?? 0;
-    if (duration > 0) {
-      const minZoom = duration; // fully zoomed out = all seconds visible
-      const maxZoom = 1; // fully zoomed in = 1 second visible
-      setBaseZoom(minZoom);
-      setMaxZoom(maxZoom);
-      return { minZoom, maxZoom };
-    }
-    return { minZoom: 0, maxZoom: 0 };
-  }, []);
-
+  // Effect for initializing WaveSurfer and plugins
   useEffect(() => {
     if (
-      !audioUrl ||
       !waveformRef.current ||
       !spectrogramRef.current ||
       !timelineRef.current
-    )
+    ) {
+      console.log("Missing refs for Wavesurfer initialization. Skipping.");
       return;
-
-    waveSurferRef.current?.destroy();
-
-    const waveSurfer = WaveSurfer.create({
-      container: waveformRef.current,
-      waveColor: "#999",
-      progressColor: "#fff",
-      cursorColor: "#333",
-      height: 80,
-      barWidth: 2,
-      barGap: 2,
-      barRadius: 2,
-      url: audioUrl,
-      plugins: [
-        Spectrogram.create({
-          container: spectrogramRef.current,
-          labels: true,
-          height: 400,
-          scale: "linear",
-          fftSamples: 1024,
-        }),
-        Timeline.create({
-          container: timelineRef.current,
-        }),
-      ],
-    });
-
-    waveSurferRef.current = waveSurfer;
-
-    waveSurfer.on("ready", () => {
-      setIsReady(true);
-      setIsPlaying(false);
-      const { minZoom, maxZoom } = calculateZoomLimits();
-      setZoomLevel(minZoom); // start fully zoomed out
-      waveSurfer.zoom(minZoom);
-      if (containerRef.current) {
-        const containerW = containerRef.current.offsetWidth;
-        setContainerWidth(containerW);
-        const seconds = containerW / minZoom;
-        lastSecondsInWindowRef.current = seconds;
-      }
-
-      // timeline scroll sync
-      const waveformScrollDiv = document
-        .querySelector("#waveform div")
-        ?.shadowRoot?.querySelector(".scroll") as HTMLDivElement;
-
-      if (waveformScrollDiv) {
-        containerRef.current = waveformScrollDiv;
-        waveformScrollDiv.addEventListener("scroll", () => {
-          const scrollX = waveformScrollDiv.scrollLeft;
-          const tickContainer = document.querySelector(
-            "#timeline div[part='timeline']",
-          ) as HTMLElement | null;
-
-          if (tickContainer) {
-            tickContainer.style.overflow = "visible";
-            tickContainer.style.transform = `translateX(${-scrollX}px)`;
-          }
-        });
-      }
-    });
-
-    waveSurfer.on("finish", () => setIsPlaying(false));
-
-    return () => {
-      waveSurfer.destroy();
-      waveSurferRef.current = null;
-      setIsReady(false);
-    };
-  }, [audioUrl, calculateZoomLimits]);
-
-  useEffect(() => {
-    const observer = new ResizeObserver(() => {
-      const { minZoom, maxZoom } = calculateZoomLimits();
-      setBaseZoom(minZoom);
-      setMaxZoom(maxZoom);
-
-      if (containerRef.current && lastSecondsInWindowRef.current) {
-        const containerW = containerRef.current.offsetWidth;
-        const newZoom = containerW / lastSecondsInWindowRef.current;
-        const clampedZoom = Math.max(minZoom, Math.min(newZoom, maxZoom));
-        setZoomLevel(clampedZoom);
-        waveSurferRef.current?.zoom(clampedZoom);
-        setContainerWidth(containerW);
-      }
-    });
-
-    if (waveformRef.current && isReady) {
-      observer.observe(waveformRef.current);
     }
 
-    return () => observer.disconnect();
-  }, [calculateZoomLimits, isReady]);
+    if (!waveSurferRef.current) {
+      const ws = WaveSurfer.create({
+        container: waveformRef.current,
+        waveColor: "#999",
+        progressColor: "#fff",
+        cursorColor: "#333",
+        height: 80,
+        barWidth: 2,
+        barGap: 2,
+        barRadius: 2,
+        url: audioUrl,
+        plugins: [
+          Spectrogram.create({
+            container: spectrogramRef.current,
+            labels: true,
+            height: 400,
+            scale: "linear",
+            fftSamples: 1024,
+          }),
+          Timeline.create({
+            container: timelineRef.current,
+          }),
+        ],
+      });
+      waveSurferRef.current = ws;
 
-  // update containerWidth
-  useEffect(() => {
-    if (containerRef.current) {
-      setContainerWidth(containerRef.current.offsetWidth);
+      ws.on("error", (err) => {
+        console.error("Wavesurfer error:", err);
+      });
+
+      // Crucial: Set isReady only when Wavesurfer confirms it's ready.
+      ws.on("ready", (duration) => {
+        console.log("Wavesurfer 'ready' event fired!");
+        setIsReady(true);
+        // Optionally, if `deferInit` was used for Spectrogram, initialize it here
+        // ws.initPlugin('spectrogram');
+      });
+
+      console.log("Loading audio:", audioUrl);
+      ws.load(audioUrl).catch((error) => {
+        console.error("Error loading audio in Wavesurfer:", error);
+      });
+
+      // Cleanup function
+      return () => {
+        console.log("Destroying WaveSurfer instance...");
+        ws.destroy();
+        waveSurferRef.current = null;
+        setIsReady(false);
+      };
+    } else {
+      // If instance exists, and audioUrl changes, load new audio
+      console.log("WaveSurfer instance exists, loading new audio:", audioUrl);
+      setIsReady(false); // Reset ready state when loading new audio
+      waveSurferRef.current.load(audioUrl).catch((error) => {
+        console.error("Error loading new audio:", error);
+      });
     }
-  }, [zoomLevel]);
+  }, [audioUrl]); // Re-run effect if audioUrl changes
 
+  // Callback to calculate zoom limits (memoized)
+  const calculateZoomLimits = useCallback(() => {
+    if (!waveSurferRef.current) return { minZoom: 0, maxZoom: 0 };
+
+    const duration = waveSurferRef.current.getDuration();
+    if (duration > 0 && waveformRef.current) {
+      const containerPx = waveformRef.current.offsetWidth;
+      // Define your zoom levels: e.g., base is 'whole audio fits container', max is '1 second per X pixels'
+      const minZoom = containerPx / duration; // Pixels per second for fully zoomed out
+      const maxZoom = 200; // Example: 200 pixels per second as max zoom in
+      // You can adjust these based on your UX needs.
+      return { minZoom, maxZoom };
+    }
+    return { minZoom: 0, maxZoom: 0 };
+  }, [isReady, containerWidth]); // Recalculate if containerWidth or ready state changes
+
+  // Effect to set initial zoom level and calculate limits
   useEffect(() => {
+    if (isReady && waveSurferRef.current && containerWidth !== null) {
+      // Ensure duration is available before calculating limits
+      const duration = waveSurferRef.current.getDuration();
+      if (duration > 0) {
+        const { minZoom, maxZoom } = calculateZoomLimits();
+        // Set initial zoom to fully zoomed out or a sensible default
+        setZoomLevel(minZoom);
+        console.log(`Initial zoom set to minZoom: ${minZoom}`);
+      }
+    }
+  }, [isReady, calculateZoomLimits, containerWidth]); // Depend on isReady and calculated limits
+
+  // Effect for applying zoom level changes
+  useEffect(() => {
+    // Only apply zoom if Wavesurfer is ready and zoomLevel is valid
     if (waveSurferRef.current && isReady && zoomLevel > 0) {
+      console.log(`Applying zoom: ${zoomLevel}`);
+      // Use requestAnimationFrame for smoother updates if zoomLevel changes frequently
       requestAnimationFrame(() => {
         waveSurferRef.current?.zoom(zoomLevel);
       });
     }
-  }, [zoomLevel, isReady]);
+  }, [zoomLevel, isReady]); // Depend on zoomLevel and isReady
 
-  const togglePlay = () => {
-    waveSurferRef.current?.playPause();
-    setIsPlaying((prev) => !prev);
-  };
+  // Effect to get container width for responsive scaling (optional)
+  useEffect(() => {
+    const handleResize = () => {
+      if (waveformRef.current) {
+        setContainerWidth(waveformRef.current.offsetWidth);
+      }
+    };
+    if (waveformRef.current) {
+      setContainerWidth(waveformRef.current.offsetWidth);
+      window.addEventListener("resize", handleResize);
+    }
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
-  const setZoomPercent = (percent: number) => {
-    const secondsInWindow = baseZoom - percent * (baseZoom - maxZoom); // e.g. 160 → 1
-    if (containerRef.current) {
-      const containerWidth = containerRef.current.offsetWidth;
-      const newZoom = containerWidth / secondsInWindow; // pixels per second
-      setZoomLevel(newZoom);
-      lastSecondsInWindowRef.current = secondsInWindow;
+  const handlePlayPause = () => {
+    if (waveSurferRef.current) {
+      waveSurferRef.current.playPause();
+      setIsPlaying(waveSurferRef.current.isPlaying());
     }
   };
 
-  const zoomPercent =
-    maxZoom < baseZoom && zoomLevel > 0 && containerRef.current
-      ? (baseZoom - containerRef.current.offsetWidth / zoomLevel) /
-        (baseZoom - maxZoom)
-      : 0;
+  const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newZoom = parseFloat(e.target.value);
+    setZoomLevel(newZoom);
+  };
 
   return (
-    <div className="waveform-player" style={{ width: "100%" }}>
-      <div ref={timelineRef} id="timeline" />
-      <div ref={spectrogramRef} id="spectrogram" />
-      <div ref={waveformRef} id="waveform" />
+    <div>
+      <div ref={timelineRef} id="timeline-container"></div>
+      <div ref={waveformRef} id="waveform-container"></div>
+      <div ref={spectrogramRef} id="spectrogram-container"></div>
 
-      <button onClick={togglePlay}>{isPlaying ? "Pause" : "Play"}</button>
+      <button onClick={handlePlayPause} disabled={!isReady}>
+        {isPlaying ? "Pause" : "Play"}
+      </button>
 
-      <label style={{ marginTop: "12px", display: "block" }}>
-        Zoom: {zoomLevel.toFixed(2)} px/sec
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={zoomPercent}
-          onChange={(e) => {
-            const percent = parseFloat(e.target.value);
-            setZoomPercent(percent);
-          }}
-          style={{ width: "100%", marginTop: "4px" }}
-          disabled={!isReady}
-        />
-      </label>
-
-      <div>Current zoom: {zoomLevel.toFixed(2)} px/sec</div>
-
+      <input
+        type="range"
+        min={calculateZoomLimits().minZoom || 0} // Ensure min value is available
+        max={calculateZoomLimits().maxZoom || 100} // Ensure max value is available
+        value={zoomLevel}
+        onChange={handleZoomChange}
+        disabled={!isReady}
+      />
+      <p>Zoom Level: {zoomLevel.toFixed(2)} px/sec</p>
       {containerWidth && zoomLevel > 0 && (
         <div>
           Seconds in window: {(containerWidth / zoomLevel).toFixed(2)} sec
         </div>
       )}
-      <div>Fully zoomed out (base): {baseZoom.toFixed(0)} sec</div>
-      <div>Fully zoomed in (max): {maxZoom.toFixed(0)} sec</div>
     </div>
   );
 }

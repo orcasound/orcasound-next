@@ -195,8 +195,12 @@ const CenterDetail = ({
       <Box
         className="drawer-controls"
         sx={{
-          border: "1px solid orange",
-          height: "55px",
+          minHeight: "36px",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          paddingX: "8px",
+          borderBottom: "1px solid rgba(255,255,255,.7)",
         }}
       >
         {audioUrl ? (
@@ -215,7 +219,6 @@ const CenterDetail = ({
       <Box
         className="wavesurfer-container"
         sx={{
-          border: "1px solid orange",
           flex: 1,
         }}
       >
@@ -240,7 +243,6 @@ const CenterDetail = ({
       <Box
         className="html-audio-container"
         sx={{
-          border: "1px solid orange",
           minHeight: "100px",
           display: "none",
         }}
