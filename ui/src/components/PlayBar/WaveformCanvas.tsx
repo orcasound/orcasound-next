@@ -50,11 +50,6 @@ export default function WaveformCanvas({ analyser }: Props) {
   }, [analyser]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={600}
-      height={100}
-      style={{ width: "100%" }}
-    />
+    <canvas ref={canvasRef} width={600} height={50} style={{ width: "100%" }} />
   );
 }

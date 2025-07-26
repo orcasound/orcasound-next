@@ -23,7 +23,7 @@ export interface CandidateFilters {
   category: string;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
-  sortOrder: "asc" | "desc";
+  sortOrder: "asc" | "desc" | "reports";
   searchQuery: string;
   chartLegend: "category" | "hydrophone";
   detectionsGreaterThan: number;
@@ -71,7 +71,7 @@ export const DataProvider = ({
     category: "All categories",
     startDate: null,
     endDate: dayjs(),
-    sortOrder: "desc",
+    sortOrder: "reports",
     searchQuery: "",
     chartLegend: "category",
     detectionsGreaterThan: 1,

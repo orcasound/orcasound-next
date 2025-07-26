@@ -149,10 +149,20 @@ const sortCandidates = (candidates: Candidate[], sortOrder: string) => {
     );
     return sort;
   };
+
+  const sortByReports = (array: Candidate[]) => {
+    const sort = array.sort((a, b) => b.array.length - a.array.length);
+    return sort;
+  };
+
   const sorted =
     sortOrder === "desc"
       ? sortDescending([...candidates])
-      : sortAscending([...candidates]);
+      : sortOrder === "asc"
+        ? sortAscending([...candidates])
+        : sortOrder === "reports"
+          ? sortByReports([...candidates])
+          : [];
   return sorted;
 };
 

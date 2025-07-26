@@ -73,6 +73,8 @@ const RightDetail = () => {
     masterPlayerStatus,
   } = useNowPlaying();
 
+  const { setPlaybarExpanded } = useLayout();
+
   const { feeds, autoPlayOnReady } = useData();
   const feed = feeds.find((feed) => feed.slug === feedSlug);
   const host = hosts.find((host) => feedSlug === host.hydrophone);
@@ -88,9 +90,10 @@ const RightDetail = () => {
   const active = feed?.id === nowPlayingFeed?.id;
 
   const handlePlay = (feed: Feed) => {
-    autoPlayOnReady.current = true;
     setNowPlayingFeed(feed);
     setNowPlayingCandidate(null);
+    if (masterPlayerRef.current !== null) masterPlayerRef.current.play();
+    setPlaybarExpanded(true);
   };
 
   const playIcon = (
@@ -104,11 +107,12 @@ const RightDetail = () => {
   );
   const handlePause = () => {
     masterPlayerRef?.current?.pause();
+    setPlaybarExpanded(false);
   };
 
   const pauseIcon = (
     <PauseCircle
-      sx={{ height: 48, width: 48, zIndex: 1, position: "relative" }}
+      sx={{ height: 64, width: 64, zIndex: 1, position: "relative" }}
       onClick={() => {
         handlePause();
       }}
@@ -136,7 +140,6 @@ const RightDetail = () => {
           </Typography>
         </Stack>
       </Box>
-      <PlayBar />
       <HydrophoneDetailTabs showHeading={false}>
         <Box sx={{ p: 3 }}>
           {host && (
@@ -172,10 +175,18 @@ const RightDetail = () => {
   );
 };
 
+const CenterDetail = () => {
+  return <PlayBar />;
+};
+
 HydrophonePage.getLayout = function getLayout() {
   return (
     <MasterDataLayout>
-      <HalfMapLayout leftSlot={<LeftDetail />} rightSlot={<RightDetail />} />
+      <HalfMapLayout
+        leftSlot={<LeftDetail />}
+        centerSlot={<CenterDetail />}
+        rightSlot={<RightDetail />}
+      />
     </MasterDataLayout>
   );
 };

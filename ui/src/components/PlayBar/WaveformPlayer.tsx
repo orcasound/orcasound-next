@@ -1,3 +1,4 @@
+import { PauseCircle, PlayCircle } from "@mui/icons-material";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
 import Spectrogram from "wavesurfer.js/dist/plugins/spectrogram.js";
@@ -54,7 +55,7 @@ export default function WaveformPlayer({ audioUrl }: WaveformPlayerProps) {
           Spectrogram.create({
             container: spectrogramRef.current,
             labels: true,
-            height: 400,
+            height: 500,
             scale: "linear",
             fftSamples: 1024,
           }),
@@ -169,30 +170,52 @@ export default function WaveformPlayer({ audioUrl }: WaveformPlayerProps) {
     setZoomLevel(newZoom);
   };
 
+  const playIcon = (
+    <PlayCircle
+      sx={{ height: 64, width: 64, zIndex: 1, position: "relative" }}
+      onClick={handlePlayPause}
+    />
+  );
+
+  const pauseIcon = (
+    <PauseCircle
+      sx={{ height: 64, width: 64, zIndex: 1, position: "relative" }}
+      onClick={handlePlayPause}
+    />
+  );
+
   return (
     <div>
       <div ref={timelineRef} id="timeline-container"></div>
       <div ref={waveformRef} id="waveform-container"></div>
       <div ref={spectrogramRef} id="spectrogram-container"></div>
-
-      <button onClick={handlePlayPause} disabled={!isReady}>
-        {isPlaying ? "Pause" : "Play"}
-      </button>
-
-      <input
-        type="range"
-        min={calculateZoomLimits().minZoom || 0} // Ensure min value is available
-        max={calculateZoomLimits().maxZoom || 100} // Ensure max value is available
-        value={zoomLevel}
-        onChange={handleZoomChange}
-        disabled={!isReady}
-      />
-      <p>Zoom Level: {zoomLevel.toFixed(2)} px/sec</p>
-      {containerWidth && zoomLevel > 0 && (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          width: "100%",
+          padding: "16px",
+        }}
+      >
+        {" "}
+        {isPlaying ? pauseIcon : playIcon}
         <div>
-          Seconds in window: {(containerWidth / zoomLevel).toFixed(2)} sec
+          <input
+            type="range"
+            min={calculateZoomLimits().minZoom || 0} // Ensure min value is available
+            max={calculateZoomLimits().maxZoom || 100} // Ensure max value is available
+            value={zoomLevel}
+            onChange={handleZoomChange}
+            disabled={!isReady}
+          />
+          <div>Zoom Level: {zoomLevel.toFixed(2)} px/sec</div>
+          {containerWidth && zoomLevel > 0 && (
+            <div>
+              Seconds in window: {(containerWidth / zoomLevel).toFixed(2)} sec
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -19,8 +19,8 @@ function AudioVisualizer({
   const lastAudioTimeRef = useRef<number>(getCurrentTime());
 
   const width = 1000;
-  const heightSpectrogram = 1000;
-  const heightWaveform = 400;
+  const heightSpectrogram = 500;
+  const heightWaveform = 80;
 
   const isSilent = (data: Uint8Array) => data.every((val) => val === 0);
 
@@ -169,16 +169,16 @@ function AudioVisualizer({
   return (
     <div>
       <canvas
-        ref={spectrogramRef}
-        width={width}
-        height={heightSpectrogram}
-        style={{ width: "100%", maxHeight: "600px" }}
-      />
-      <canvas
         ref={waveformRef}
         width={width}
         height={heightWaveform}
         style={{ width: "100%" }}
+      />
+      <canvas
+        ref={spectrogramRef}
+        width={width}
+        height={heightSpectrogram}
+        style={{ width: "100%", maxHeight: "400px" }}
       />
     </div>
   );

@@ -1,3 +1,4 @@
+import { Box } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { type VideoJSPlayer } from "@/components/Player/VideoJS";
@@ -193,7 +194,7 @@ export default function LivePlayer({
   const { analyser, getFrequencyData, getWaveformData, getCurrentTime } =
     useAudioAnalyser(videoEl);
 
-  const [selectedMap, setSelectedMap] = useState("viridis");
+  const [selectedMap, setSelectedMap] = useState("magma");
   const [selectedScale, setSelectedScale] = useState<"linear" | "log">("log");
 
   const colorMap = useMemo(
@@ -203,6 +204,60 @@ export default function LivePlayer({
 
   return (
     <div className="playerbase">
+      <Box
+        className="drawer-controls"
+        sx={{
+          minHeight: "36px",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          paddingX: "8px",
+          borderBottom: "1px solid rgba(255,255,255,.7)",
+        }}
+      >
+        {videoEl && (
+          <>
+            <label>
+              Color scheme:
+              <select
+                value={selectedMap}
+                onChange={(e) => setSelectedMap(e.target.value)}
+              >
+                {colormapOptions.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Scale:
+              <select
+                value={selectedScale}
+                onChange={(e) =>
+                  setSelectedScale(e.target.value as "linear" | "log")
+                }
+              >
+                <option key={1} value={"linear"}>
+                  Linear
+                </option>
+                <option key={2} value={"log"}>
+                  Logarithmic
+                </option>
+              </select>
+            </label>
+          </>
+        )}
+      </Box>
+      <AudioVisualizer
+        getFrequencyData={getFrequencyData}
+        getWaveformData={getWaveformData}
+        colorMap={colorMap}
+        scale={selectedScale}
+        getCurrentTime={getCurrentTime}
+      />
+      {videoEl && analyser && <WaveformCanvas analyser={analyser} />}
+      {videoEl && analyser && <SpectrogramCanvas analyser={analyser} />}
       <PlayerBase
         key={currentFeed.id}
         type="feed"
@@ -218,49 +273,6 @@ export default function LivePlayer({
         playerTitle={playerText}
         playerSubtitle={""}
       />
-
-      {videoEl && analyser && <WaveformCanvas analyser={analyser} />}
-      {videoEl && analyser && <SpectrogramCanvas analyser={analyser} />}
-      {videoEl && (
-        <>
-          <label>
-            Color scheme:
-            <select
-              value={selectedMap}
-              onChange={(e) => setSelectedMap(e.target.value)}
-            >
-              {colormapOptions.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Scale:
-            <select
-              value={selectedScale}
-              onChange={(e) =>
-                setSelectedScale(e.target.value as "linear" | "log")
-              }
-            >
-              <option key={1} value={"linear"}>
-                Linear
-              </option>
-              <option key={2} value={"log"}>
-                Logarithmic
-              </option>
-            </select>
-          </label>
-          <AudioVisualizer
-            getFrequencyData={getFrequencyData}
-            getWaveformData={getWaveformData}
-            colorMap={colorMap}
-            scale={selectedScale}
-            getCurrentTime={getCurrentTime}
-          />
-        </>
-      )}
     </div>
   );
 }

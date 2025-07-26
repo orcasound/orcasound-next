@@ -59,7 +59,6 @@ const RightDetail = ({
   detections: DetectionsProps;
   durationString: string | undefined | null;
   onClose: () => void;
-  playbarExpanded: boolean;
 }) => {
   const { filters } = useData();
   const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
@@ -440,7 +439,6 @@ const CandidateLayout = ({ children }: { children: React.ReactNode }) => {
           detections={detections}
           durationString={durationString}
           onClose={handleClose}
-          playbarExpanded={true}
         />
       }
     >

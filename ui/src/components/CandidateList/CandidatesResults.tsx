@@ -59,11 +59,12 @@ export function CandidatesResults({
       list={[
         { label: "Newest first", value: "desc" },
         { label: "Oldest first", value: "asc" },
+        { label: "Most reports", value: "reports" },
       ]}
       onChange={(e) => {
         setFilters((prev) => ({
           ...prev,
-          sortOrder: e.target.value as "asc" | "desc",
+          sortOrder: e.target.value as "asc" | "desc" | "reports",
         }));
       }}
       sx={{
