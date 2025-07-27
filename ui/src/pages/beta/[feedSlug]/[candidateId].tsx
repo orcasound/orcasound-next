@@ -223,7 +223,7 @@ const CenterDetail = ({
       >
         <Box>
           {isProcessing ? (
-            <p>Processing waveform player...</p>
+            <p></p>
           ) : error ? (
             <p>Error: {error}</p>
           ) : audioUrl ? (

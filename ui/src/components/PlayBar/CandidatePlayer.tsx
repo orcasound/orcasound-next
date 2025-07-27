@@ -206,8 +206,10 @@ export function CandidatePlayer({
 
   const el = playerRef.current?.el(); // from video.js
   const videoEl = el?.querySelector("video") as HTMLMediaElement | null;
+
   const { analyser, getFrequencyData, getWaveformData, getCurrentTime } =
     useAudioAnalyser(videoEl);
+
   const [selectedMap, setSelectedMap] = useState("magma");
   const [selectedScale, setSelectedScale] = useState<"linear" | "log">("log");
 
