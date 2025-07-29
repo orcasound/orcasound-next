@@ -18,7 +18,7 @@ import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Feed } from "@/graphql/generated";
 import { useAudioAnalyser } from "@/hooks/beta/useAudioAnalyzer";
 import { getHlsURI } from "@/hooks/useTimestampFetcher";
-import { colormapOptions, generateColorScale } from "@/utils/colorMaps";
+import { colormapOptions } from "@/utils/colorMaps";
 
 import AudioVisualizer from "./AudioVisualizer";
 import { PlayerBase } from "./PlayerBase";
@@ -207,16 +207,10 @@ export function CandidatePlayer({
   const el = playerRef.current?.el(); // from video.js
   const videoEl = el?.querySelector("video") as HTMLMediaElement | null;
 
-  const { analyser, getFrequencyData, getWaveformData, getCurrentTime } =
-    useAudioAnalyser(videoEl);
+  const { analyser } = useAudioAnalyser(videoEl);
 
   const [selectedMap, setSelectedMap] = useState("magma");
   const [selectedScale, setSelectedScale] = useState<"linear" | "log">("log");
-
-  const colorMap = useMemo(
-    () => generateColorScale(selectedMap),
-    [selectedMap],
-  );
 
   return (
     <div className="playerbase">
@@ -272,13 +266,7 @@ export function CandidatePlayer({
               </option>
             </select>
           </label>
-          <AudioVisualizer
-            getFrequencyData={getFrequencyData}
-            getWaveformData={getWaveformData}
-            getCurrentTime={getCurrentTime}
-            colorMap={colorMap}
-            scale={selectedScale}
-          />
+          <AudioVisualizer />
         </>
       )}
     </div>

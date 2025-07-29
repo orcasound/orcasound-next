@@ -1,21 +1,22 @@
-import { Box } from "@mui/material";
+import { ErrorOutline, PauseCircle, PlayCircle } from "@mui/icons-material";
+import {
+  Box,
+  CircularProgress,
+  Stack,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { type VideoJSPlayer } from "@/components/Player/VideoJS";
+import VideoJS, { type VideoJSPlayer } from "@/components/Player/VideoJS";
 import { useData } from "@/context/DataContext";
+import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import type { Feed } from "@/graphql/generated";
-import { useAudioAnalyser } from "@/hooks/beta/useAudioAnalyzer";
 import useFeedPresence from "@/hooks/useFeedPresence";
 import { useTimestampFetcher } from "@/hooks/useTimestampFetcher";
 import fin512 from "@/public/photos/fin-512x512.png";
 import { analytics } from "@/utils/analytics";
-import { colormapOptions, generateColorScale } from "@/utils/colorMaps";
-
-import AudioVisualizer from "./AudioVisualizer";
-import { PlayerBase } from "./PlayerBase";
-import SpectrogramCanvas from "./SpectrogramCanvas";
-import WaveformCanvas from "./WaveformCanvas";
 
 // // dynamically import VideoJS to speed up initial page load
 // const VideoJS = dynamic(() => import("@/components/Player/VideoJS"));
@@ -39,11 +40,19 @@ export default function LivePlayer({
   //   | "bucket"
   // >;
 }) {
-  const { masterPlayerRef, masterPlayerStatus, setMasterPlayerStatus } =
-    useNowPlaying();
+  const {
+    masterPlayerRef,
+    masterPlayerStatus,
+    audioContextRef,
+    analyserNodeRef,
+    setMasterPlayerStatus,
+    setNowPlayingCandidate,
+    setNowPlayingFeed,
+  } = useNowPlaying();
   const { autoPlayOnReady } = useData();
   const [playerStatus, setPlayerStatus] = useState<PlayerStatus>("idle");
   const playerRef = useRef<VideoJSPlayer | null>(null);
+  const { setPlaybarExpanded } = useLayout();
 
   const { timestamp, hlsURI } = useTimestampFetcher(
     currentFeed?.bucket,
@@ -52,10 +61,6 @@ export default function LivePlayer({
 
   const feedPresence = useFeedPresence(currentFeed?.slug);
   const listenerCount = feedPresence?.metas.length ?? 0;
-
-  const playerText = currentFeed
-    ? currentFeed.name
-    : "Select a location to start listening live";
 
   const playerOptions = useMemo(
     () => ({
@@ -106,6 +111,31 @@ export default function LivePlayer({
     (player: VideoJSPlayer) => {
       playerRef.current = player;
       masterPlayerRef.current = player;
+      const el = masterPlayerRef.current?.el(); // from video.js
+      const videoEl = el?.querySelector("video") as HTMLMediaElement | null;
+
+      if (!videoEl) return;
+
+      if (audioContextRef.current) {
+        try {
+          audioContextRef.current.close();
+        } catch (e) {
+          console.warn("Failed to close previous AudioContext", e);
+        }
+      }
+      const audioCtx = new AudioContext();
+      const source = audioCtx.createMediaElementSource(videoEl);
+      const analyser = audioCtx.createAnalyser();
+
+      analyser.fftSize = 4096;
+      analyser.smoothingTimeConstant = 0.8;
+
+      source.connect(analyser);
+      analyser.connect(audioCtx.destination);
+
+      audioContextRef.current = audioCtx;
+      analyserNodeRef.current = analyser;
+
       if (autoPlayOnReady.current) {
         player.play();
       }
@@ -137,11 +167,20 @@ export default function LivePlayer({
       masterPlayerRef,
       setMasterPlayerStatus,
       autoPlayOnReady,
+      analyserNodeRef,
+      audioContextRef,
     ],
   );
 
   const handlePlayPauseClick = async () => {
     const player = playerRef.current;
+    console.log("playerRef", playerRef.current);
+    console.log("masterPlayerRef", masterPlayerRef.current);
+    console.log("analyserNodeRef", analyserNodeRef.current);
+
+    setNowPlayingFeed(currentFeed);
+    setNowPlayingCandidate(null);
+    if (playerStatus !== "playing") setPlaybarExpanded(true);
 
     if (playerStatus === "error") {
       setPlayerStatus("idle");
@@ -189,90 +228,120 @@ export default function LivePlayer({
     console.log("masterPlayerStatus: " + masterPlayerStatus);
   }, [playerStatus, masterPlayerStatus]);
 
-  const el = playerRef.current?.el(); // from video.js
-  const videoEl = el?.querySelector("video") as HTMLMediaElement | null;
-  const { analyser, getFrequencyData, getWaveformData, getCurrentTime } =
-    useAudioAnalyser(videoEl);
-
-  const [selectedMap, setSelectedMap] = useState("magma");
-  const [selectedScale, setSelectedScale] = useState<"linear" | "log">("log");
-
-  const colorMap = useMemo(
-    () => generateColorScale(selectedMap),
-    [selectedMap],
+  const playPause = (
+    <Box
+      sx={{
+        width: 64,
+        height: 64,
+      }}
+      onClick={() => currentFeed && handlePlayPauseClick()}
+    >
+      {playerStatus === "error" ? (
+        <Tooltip title="Failed to load" placement="right">
+          <ErrorOutline className="icon" sx={{ width: 64, height: 64 }} />
+        </Tooltip>
+      ) : playerStatus === "loading" ? (
+        <CircularProgress
+          sx={{ color: "base.contrastText", width: 64, height: 64 }}
+        />
+      ) : playerStatus === "playing" ? (
+        <PauseCircle
+          className="icon"
+          sx={{
+            width: 64,
+            height: 64,
+          }}
+        />
+      ) : (
+        <PlayCircle
+          className="icon"
+          sx={{
+            width: 64,
+            height: 64,
+          }}
+        />
+      )}
+    </Box>
   );
 
   return (
-    <div className="playerbase">
-      <Box
-        className="drawer-controls"
-        sx={{
-          minHeight: "36px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          paddingX: "8px",
-          borderBottom: "1px solid rgba(255,255,255,.7)",
-        }}
+    <div
+      className="live-player-container"
+      style={{
+        display: "flex",
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        gap: "1rem",
+      }}
+    >
+      <div
+        className="live-player"
+        style={{ display: "flex", gap: "16px", marginLeft: "4px" }}
       >
-        {videoEl && (
-          <>
-            <label>
-              Color scheme:
-              <select
-                value={selectedMap}
-                onChange={(e) => setSelectedMap(e.target.value)}
-              >
-                {colormapOptions.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Scale:
-              <select
-                value={selectedScale}
-                onChange={(e) =>
-                  setSelectedScale(e.target.value as "linear" | "log")
-                }
-              >
-                <option key={1} value={"linear"}>
-                  Linear
-                </option>
-                <option key={2} value={"log"}>
-                  Logarithmic
-                </option>
-              </select>
-            </label>
-          </>
-        )}
+        {playPause}
+        {/* {!active || masterPlayerStatus !== "playing" ? playIcon : pauseIcon} */}
+        <Stack
+          className="live-player-text"
+          sx={{
+            justifyContent: "center",
+          }}
+        >
+          <Typography sx={{ fontSize: "20px" }}>Listen Live</Typography>
+          <Typography sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
+            {currentFeed &&
+              `${listenerCount} listener${listenerCount > 1 ? "s" : ""}`}
+          </Typography>
+        </Stack>
+      </div>
+
+      {/* <div className="detection-button" style={{ maxWidth: "50%" }}>
+        {(playerStatus === "playing" || playerStatus === "loading") &&
+          currentFeed && (
+            <DetectionDialog
+              isPlaying={playerStatus === "playing"}
+              feed={currentFeed}
+              timestamp={timestamp}
+              getPlayerTime={() => playerRef.current?.currentTime()}
+              listenerCount={listenerCount}
+            >
+              <DetectionButton />
+            </DetectionDialog>
+          )}
+      </div> */}
+      {/* {playerStatus !== "playing" && playerStatus !== "loading" && (
+          <DetectionButton disabled={true} />
+        )} */}
+
+      {/* <Button variant="outlined">Share</Button>
+        <Button variant="outlined">notifications</Button> */}
+      <Box display="none" id="video-js">
+        <VideoJS
+          options={playerOptions}
+          onReady={handleReady}
+          key={timestamp}
+        />
       </Box>
-      <AudioVisualizer
-        getFrequencyData={getFrequencyData}
-        getWaveformData={getWaveformData}
-        colorMap={colorMap}
-        scale={selectedScale}
-        getCurrentTime={getCurrentTime}
-      />
-      {videoEl && analyser && <WaveformCanvas analyser={analyser} />}
-      {videoEl && analyser && <SpectrogramCanvas analyser={analyser} />}
-      <PlayerBase
-        key={currentFeed.id}
-        type="feed"
-        playerOptions={playerOptions}
-        handleReady={handleReady}
-        playerStatus={playerStatus}
-        feed={currentFeed}
-        playerRef={playerRef}
-        handlePlayPauseClickFeed={handlePlayPauseClick}
-        image={currentFeed.imageUrl?.toString()}
-        timestamp={timestamp}
-        listenerCount={listenerCount}
-        playerTitle={playerText}
-        playerSubtitle={""}
-      />
+
+      {/* <div style={{ display: "none" }}>
+        <PlayerBase
+          key={currentFeed.id}
+          type="feed"
+          playerOptions={playerOptions}
+          handleReady={handleReady}
+          playerStatus={playerStatus}
+          feed={currentFeed}
+          playerRef={playerRef}
+          handlePlayPauseClickFeed={handlePlayPauseClick}
+          image={currentFeed.imageUrl?.toString()}
+          timestamp={timestamp}
+          listenerCount={listenerCount}
+          playerTitle={playerText}
+          playerSubtitle={""}
+        />
+      </div> */}
     </div>
   );
 }

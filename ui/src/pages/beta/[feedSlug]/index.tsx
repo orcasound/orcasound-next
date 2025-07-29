@@ -1,5 +1,4 @@
-import { PauseCircle, PlayCircle } from "@mui/icons-material";
-import { Box, Paper, Stack, Typography } from "@mui/material";
+import { Box, Paper, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 
@@ -8,11 +7,11 @@ import HydrophoneDetailTabs from "@/components/CandidateList/HydrophoneDetailTab
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import Link from "@/components/Link";
-import PlayBar from "@/components/PlayBar/PlayBar";
+import AudioVisualizer from "@/components/PlayBar/AudioVisualizer";
+import LivePlayer from "@/components/PlayBar/LivePlayer";
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
-import { Feed } from "@/graphql/generated";
 
 const hosts = [
   {
@@ -65,15 +64,8 @@ const RightDetail = () => {
   const { feedSlug } = router.query;
   // const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
-  const {
-    setNowPlayingCandidate,
-    setNowPlayingFeed,
-    nowPlayingFeed,
-    masterPlayerRef,
-    masterPlayerStatus,
-  } = useNowPlaying();
-
-  const { setPlaybarExpanded } = useLayout();
+  const { setNowPlayingCandidate, setNowPlayingFeed, nowPlayingFeed } =
+    useNowPlaying();
 
   const { feeds, autoPlayOnReady } = useData();
   const feed = feeds.find((feed) => feed.slug === feedSlug);
@@ -86,38 +78,6 @@ const RightDetail = () => {
       autoPlayOnReady.current = false;
     }
   }, [feed, setNowPlayingCandidate, setNowPlayingFeed, autoPlayOnReady]);
-
-  const active = feed?.id === nowPlayingFeed?.id;
-
-  const handlePlay = (feed: Feed) => {
-    setNowPlayingFeed(feed);
-    setNowPlayingCandidate(null);
-    if (masterPlayerRef.current !== null) masterPlayerRef.current.play();
-    setPlaybarExpanded(true);
-  };
-
-  const playIcon = (
-    <PlayCircle
-      sx={{ height: 64, width: 64, zIndex: 1, position: "relative" }}
-      onClick={() => {
-        console.log("clicked");
-        if (feed) handlePlay(feed);
-      }}
-    />
-  );
-  const handlePause = () => {
-    masterPlayerRef?.current?.pause();
-    setPlaybarExpanded(false);
-  };
-
-  const pauseIcon = (
-    <PauseCircle
-      sx={{ height: 64, width: 64, zIndex: 1, position: "relative" }}
-      onClick={() => {
-        handlePause();
-      }}
-    />
-  );
 
   return (
     <>
@@ -132,13 +92,7 @@ const RightDetail = () => {
           gap: 2,
         }}
       >
-        {!active || masterPlayerStatus !== "playing" ? playIcon : pauseIcon}
-        <Stack>
-          <Typography sx={{ fontSize: "20px" }}>Listen Live</Typography>
-          <Typography sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
-            0 listeners
-          </Typography>
-        </Stack>
+        {nowPlayingFeed && <LivePlayer currentFeed={nowPlayingFeed} />}
       </Box>
       <HydrophoneDetailTabs showHeading={false}>
         <Box sx={{ p: 3 }}>
@@ -176,7 +130,9 @@ const RightDetail = () => {
 };
 
 const CenterDetail = () => {
-  return <PlayBar />;
+  const { nowPlayingFeed } = useNowPlaying();
+
+  return <AudioVisualizer key={nowPlayingFeed?.slug} />;
 };
 
 HydrophonePage.getLayout = function getLayout() {

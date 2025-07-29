@@ -130,6 +130,8 @@ export function HalfMapLayout({
               className="now-playing-drawer"
               sx={{
                 px: 0,
+                display: "flex",
+                flexDirection: "column",
                 flex: 1,
                 overflowY: "auto",
                 position: "absolute",

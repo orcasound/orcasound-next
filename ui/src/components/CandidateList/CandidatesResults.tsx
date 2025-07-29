@@ -1,28 +1,22 @@
 import { Box, Typography } from "@mui/material";
 
 import { useData } from "@/context/DataContext";
-import { Feed } from "@/graphql/generated";
-import { standardizeFeedName } from "@/utils/masterDataHelpers";
+import { Candidate } from "@/types/DataTypes";
 
 import ChartSelect from "./ChartSelect";
 
 export function CandidatesResults({
   viewType,
   layout,
-  feed,
+  // feed,
+  candidates,
 }: {
   viewType: "list" | "chart";
   layout?: string;
-  feed?: Feed;
+  // feed?: Feed;
+  candidates: Candidate[];
 }) {
-  const { setFilters, sortedCandidates, filters, isSuccessOrcahello } =
-    useData();
-
-  const candidates = feed
-    ? sortedCandidates.filter(
-        (c) => c.hydrophone === standardizeFeedName(feed?.name),
-      )
-    : sortedCandidates;
+  const { setFilters, filters, isSuccessOrcahello } = useData();
 
   const chartSelect = (
     <ChartSelect
@@ -59,7 +53,7 @@ export function CandidatesResults({
       list={[
         { label: "Newest first", value: "desc" },
         { label: "Oldest first", value: "asc" },
-        { label: "Most reports", value: "reports" },
+        { label: "Most upvoted", value: "reports" },
       ]}
       onChange={(e) => {
         setFilters((prev) => ({

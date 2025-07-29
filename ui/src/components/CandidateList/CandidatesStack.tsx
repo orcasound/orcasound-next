@@ -10,6 +10,9 @@ import React from "react";
 
 import { useData } from "@/context/DataContext";
 import { Feed } from "@/graphql/generated";
+import { countCategories } from "@/hooks/beta/useSortedCandidates";
+import { CombinedData } from "@/types/DataTypes";
+import { standardizeFeedName } from "@/utils/masterDataHelpers";
 
 import Link from "../Link";
 import { timeRangeSelect } from "./CandidateListFilters";
@@ -25,7 +28,54 @@ export const CandidatesStack = ({
   showChart?: boolean;
 }) => {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
-  const { filters } = useData();
+  const { filters, sortedCandidates, filteredData } = useData();
+
+  const candidates = feed
+    ? sortedCandidates.filter(
+        (c) => c.hydrophone === standardizeFeedName(feed?.name),
+      )
+    : sortedCandidates;
+
+  const detections = feed
+    ? filteredData.filter(
+        (c) => c.hydrophone === standardizeFeedName(feed?.name),
+      )
+    : filteredData;
+
+  function countString(detectionArray: CombinedData[]) {
+    const categories = ["whale", "whale (AI)", "vessel", "other", "sighting"];
+
+    const items = categories
+      .map((category) => {
+        const count = countCategories(detectionArray, category);
+
+        // if (count === 0) return null;
+
+        let label = category;
+        if (category === "sighting" && count !== 1) {
+          label += "s";
+        }
+
+        return (
+          <Link key={category} href="#" color="rgba(255,255,255,.7)">
+            {count} {label}
+          </Link>
+        );
+      })
+      .filter((c) => c); // filters out the null items
+
+    console.log("items", items);
+
+    // Interleave with separators
+    const interleaved = items.flatMap((item, index) =>
+      index < items.length - 1
+        ? [item, <span key={`dot-${index}`}> · </span>]
+        : [item],
+    );
+
+    return <div style={{ display: "flex", gap: "8px" }}>{interleaved}</div>;
+  }
+
   return (
     <Container
       maxWidth="xl"
@@ -37,9 +87,12 @@ export const CandidatesStack = ({
       }}
     >
       {!showChart && (
-        <Typography component="h2" variant="h5" mb={2}>
-          Recordings
-        </Typography>
+        <>
+          <Typography component="h2" variant="h5" mb={1}>
+            Recordings
+          </Typography>
+          <Box mb={4}>{countString(detections)}</Box>
+        </>
       )}
       {showChart && (
         <Stack className="chart-heading" gap={0.5}>
@@ -49,23 +102,7 @@ export const CandidatesStack = ({
                 ?.label
             }
           </Typography>
-          <Stack direction={"row"} gap={1}>
-            <Link href="#" sx={{ color: "rgba(255,255,255,.7)" }}>
-              8 whale
-            </Link>
-            {" · "}
-            <Link href="#" sx={{ color: "rgba(255,255,255,.7)" }}>
-              5 vessel
-            </Link>
-            {" · "}
-            <Link href="#" sx={{ color: "rgba(255,255,255,.7)" }}>
-              2 other
-            </Link>
-            {" · "}
-            <Link href="#" sx={{ color: "rgba(255,255,255,.7)" }}>
-              3 sightings
-            </Link>
-          </Stack>
+          {countString(detections)}
         </Stack>
       )}
       <Stack
@@ -87,7 +124,7 @@ export const CandidatesStack = ({
           </Box>
         )}
         <Box sx={{ overflow: mdDown ? "auto" : "initial" }}>
-          <CandidatesResults viewType="list" feed={feed} />
+          <CandidatesResults viewType="list" candidates={candidates} />
           <Box sx={{ paddingTop: "1.5rem" }}></Box>
           <CandidatesList feed={feed} />
         </Box>

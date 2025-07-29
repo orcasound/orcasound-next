@@ -21,6 +21,8 @@ interface NowPlayingContextType {
   masterPlayerRef: React.MutableRefObject<VideoJSPlayer | null>;
   masterPlayerStatus: string;
   setMasterPlayerStatus: React.Dispatch<React.SetStateAction<string>>;
+  analyserNodeRef: React.MutableRefObject<AnalyserNode | null>;
+  audioContextRef: React.MutableRefObject<AudioContext | null>;
   queue?: Candidate[];
   setQueue?: React.Dispatch<React.SetStateAction<Candidate[]>>;
   onPlayerEnd?: () => void;
@@ -41,6 +43,9 @@ export const NowPlayingProvider = ({
 
   const [masterPlayerStatus, setMasterPlayerStatus] = useState("empty");
   const masterPlayerRef = useRef<VideoJSPlayer | null>(null);
+
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserNodeRef = useRef<AnalyserNode | null>(null);
 
   const [queue, setQueue] = useState<Candidate[]>([]);
   const onPlayerEndRef = useRef<(() => void) | undefined>(undefined);
@@ -75,6 +80,8 @@ export const NowPlayingProvider = ({
         masterPlayerRef,
         masterPlayerStatus,
         setMasterPlayerStatus,
+        audioContextRef,
+        analyserNodeRef,
         queue,
         setQueue,
         onPlayerEnd,

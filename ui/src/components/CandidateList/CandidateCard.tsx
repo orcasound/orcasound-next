@@ -15,13 +15,13 @@ import { useEffect } from "react";
 
 import Link from "@/components/Link";
 import { useData } from "@/context/DataContext";
-import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Candidate, CombinedData } from "@/types/DataTypes";
 import formatDuration from "@/utils/masterDataHelpers";
 import { formatTimestamp } from "@/utils/time";
 
 import { useComputedPlaybackFields } from "../../hooks/beta/useComputedPlaybackFields";
+import CommunityBar from "./CommunityBar";
 
 const tagRegex = [
   "s[0-9]+",
@@ -47,7 +47,6 @@ export default function CandidateCard(props: { candidate: Candidate }) {
     masterPlayerRef,
     masterPlayerStatus,
   } = useNowPlaying();
-  const { setPlaybarExpanded } = useLayout();
   const router = useRouter();
 
   const candidate = props.candidate;
@@ -187,162 +186,179 @@ export default function CandidateCard(props: { candidate: Candidate }) {
         // border: active ? "1px solid rgba(255,255,255,.25)" : "none",
       }}
     >
-      <CardActionArea>
-        <CardContent
-          sx={{
-            display: "flex",
-            flexFlow: "column",
-            gap: "12px",
-            fontSize: smDown ? "14px" : "1rem",
-            padding: smDown ? "12px" : "1rem",
-          }}
-        >
-          <Box
+      <Stack sx={{ width: "100%" }}>
+        <CardActionArea>
+          <CardContent
             sx={{
               display: "flex",
-              justifyContent: "space-between",
-              width: "100%",
-              gap: "1rem",
+              flexFlow: "column",
+              gap: "16px",
+              fontSize: smDown ? "14px" : "1rem",
+              padding: 0,
             }}
           >
-            <Link
-              // custom Link component based on NextLink, not MUI Link, is required here to persist layout and avoid page reset
-              href={href}
-              onClick={() => {
-                autoPlayOnReady.current = false;
-                setNowPlayingCandidate(candidate);
-                setNowPlayingFeed(null);
-                sessionStorage.setItem(
-                  "scrollBox",
-                  String(scrollBox?.scrollTop),
-                );
-                sessionStorage.setItem("sideList", String(sideList?.scrollTop));
-              }}
-              style={{
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
                 width: "100%",
-                color: "inherit",
-                textDecoration: "inherit",
+                gap: "1rem",
               }}
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: "1rem",
-                  alignItems: "center",
+              <Link
+                // custom Link component based on NextLink, not MUI Link, is required here to persist layout and avoid page reset
+                href={href}
+                onClick={() => {
+                  autoPlayOnReady.current = false;
+                  setNowPlayingCandidate(candidate);
+                  setNowPlayingFeed(null);
+                  sessionStorage.setItem(
+                    "scrollBox",
+                    String(scrollBox?.scrollTop),
+                  );
+                  sessionStorage.setItem(
+                    "sideList",
+                    String(sideList?.scrollTop),
+                  );
+                }}
+                style={{
+                  width: "100%",
+                  color: "inherit",
+                  textDecoration: "inherit",
+                  padding: smDown ? "12px" : "1rem",
+                  paddingBottom: 0,
                 }}
               >
                 <Box
                   sx={{
-                    backgroundImage: `url(${image})`,
-                    backgroundPosition: "center",
-                    backgroundSize: "cover",
-                    backgroundRepeat: "no-repeat",
-                    minWidth: smDown ? "40px" : "60px",
-                    minHeight: smDown ? "40px" : "60px",
-                    borderRadius: "4px",
+                    display: "flex",
+                    gap: "1rem",
+                    alignItems: "center",
                   }}
-                ></Box>
-
-                <Stack>
-                  <Typography
-                    variant="body1"
-                    component="div"
-                    sx={{
-                      fontWeight: "bold",
-                      fontSize: "inherit",
-                      // color: active ? (theme) => "antiquewhite" : "default",
-                    }}
-                  >
-                    {candidateTitle}
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontSize: "inherit" }}>
-                    {candidate.hydrophone}
-                    {" · "}
-                    {timeAgoString} ago
-                    {" · "}
-                    {durationString}
-                  </Typography>
-                </Stack>
-              </Box>
-            </Link>
-            <Box>
-              {duration > 0
-                ? !active
-                  ? playIcon
-                  : masterPlayerStatus !== "playing"
-                    ? playIcon
-                    : pauseIcon
-                : playIconDisabled}
-            </Box>
-          </Box>
-          <Link
-            // custom Link component based on NextLink, not MUI Link, is required here to persist layout and avoid page reset
-            href={href}
-            onClick={() => (autoPlayOnReady.current = false)}
-            style={{
-              width: "100%",
-              color: "inherit",
-              textDecoration: "inherit",
-            }}
-          >
-            <Typography variant="body1" sx={{ fontSize: "inherit" }}>
-              {candidate.clipCount}
-              <span style={{ whiteSpace: "pre" }}>{"  "}</span>
-              {candidate.descriptions ? (
-                <span style={{ color: "rgba(255,255,255,.75)" }}>
-                  {candidate.descriptions}
-                </span>
-              ) : (
-                <br />
-              )}
-            </Typography>
-
-            {tagArray && (
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: "10px",
-                  padding: "1rem 0 0",
-                  flexWrap: "wrap",
-                }}
-              >
-                {Object.entries(tagObject).map(([tag]) => (
-                  <Chip
-                    label={`${tag}`}
-                    key={tag}
-                    variant="filled"
-                    sx={{
-                      fontSize: "14px",
-                    }}
-                  />
-                ))}
-              </Box>
-            )}
-            {imageLinks.length > 0 && (
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: "10px",
-                  padding: "1rem 0",
-                  flexWrap: "wrap",
-                }}
-              >
-                {imageLinks.map((link) => (
+                >
                   <Box
-                    key={link}
                     sx={{
-                      height: "100px",
-                      width: "100px",
-                      backgroundImage: `url(${link})`,
+                      backgroundImage: `url(${image})`,
+                      backgroundPosition: "center",
                       backgroundSize: "cover",
+                      backgroundRepeat: "no-repeat",
+                      minWidth: smDown ? "40px" : "60px",
+                      minHeight: smDown ? "40px" : "60px",
+                      borderRadius: "4px",
                     }}
                   ></Box>
-                ))}
+
+                  <Stack>
+                    <Typography
+                      variant="body1"
+                      component="div"
+                      sx={{
+                        fontWeight: "bold",
+                        fontSize: "inherit",
+                        // color: active ? (theme) => "antiquewhite" : "default",
+                      }}
+                    >
+                      {candidateTitle}
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontSize: "inherit" }}>
+                      {candidate.hydrophone}
+                      {" · "}
+                      {timeAgoString} ago
+                      {" · "}
+                      {durationString}
+                    </Typography>
+                  </Stack>
+                </Box>
+              </Link>
+              <Box
+                style={{
+                  paddingTop: smDown ? "8px" : "12px",
+                  paddingRight: smDown ? "8px" : "12px",
+                }}
+              >
+                {duration > 0
+                  ? !active
+                    ? playIcon
+                    : masterPlayerStatus !== "playing"
+                      ? playIcon
+                      : pauseIcon
+                  : playIconDisabled}
               </Box>
-            )}
-          </Link>
-        </CardContent>
-      </CardActionArea>
+            </Box>
+            <Link
+              // custom Link component based on NextLink, not MUI Link, is required here to persist layout and avoid page reset
+              href={href}
+              onClick={() => (autoPlayOnReady.current = false)}
+              style={{
+                width: "100%",
+                color: "inherit",
+                textDecoration: "inherit",
+                padding: smDown ? "12px" : "1rem",
+                paddingTop: 0,
+              }}
+            >
+              <Typography variant="body1" sx={{ fontSize: "inherit" }}>
+                {candidate.clipCount}
+                <span style={{ whiteSpace: "pre" }}>{"  "}</span>
+                {candidate.descriptions ? (
+                  <span style={{ color: "rgba(255,255,255,.75)" }}>
+                    {candidate.descriptions}
+                  </span>
+                ) : (
+                  <br />
+                )}
+              </Typography>
+
+              {tagArray && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: "10px",
+                    padding: "1rem 0 0",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {Object.entries(tagObject).map(([tag]) => (
+                    <Chip
+                      label={`${tag}`}
+                      key={tag}
+                      variant="filled"
+                      sx={{
+                        fontSize: "14px",
+                      }}
+                    />
+                  ))}
+                </Box>
+              )}
+              {imageLinks.length > 0 && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: "10px",
+                    padding: "1rem 0",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {imageLinks.map((link) => (
+                    <Box
+                      key={link}
+                      sx={{
+                        height: "100px",
+                        width: "100px",
+                        backgroundImage: `url(${link})`,
+                        backgroundSize: "cover",
+                      }}
+                    ></Box>
+                  ))}
+                </Box>
+              )}
+            </Link>
+          </CardContent>
+        </CardActionArea>
+        <div style={{ padding: smDown ? "12px" : "1rem" }}>
+          <CommunityBar votes={candidate.array.length} />
+        </div>
+      </Stack>
     </Card>
   );
 }

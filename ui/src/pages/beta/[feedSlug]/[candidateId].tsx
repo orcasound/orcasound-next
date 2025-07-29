@@ -8,16 +8,18 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import Head from "next/head";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
+import CommunityBar from "@/components/CandidateList/CommunityBar";
 import { DetectionsList } from "@/components/CandidateList/DetectionsList";
 import HydrophoneDetailTabs from "@/components/CandidateList/HydrophoneDetailTabs";
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import Link from "@/components/Link";
-import WaveformPlayer from "@/components/PlayBar/WaveformPlayer";
+import WavesurferPlayer from "@/components/PlayBar/WavesurferPlayer";
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
@@ -135,6 +137,7 @@ const RightDetail = ({
             )}
           </Box>
           <Stack gap={2} direction="column" sx={{ my: 3 }}>
+            <CommunityBar votes={0} />
             {/* {smDown && (
               <Button
                 variant="outlined"
@@ -209,11 +212,6 @@ const CenterDetail = ({
         ) : (
           "Processing mp3..."
         )}
-        {spectrogramUrl && (
-          <a href={spectrogramUrl} download={`spectrogram-${clipId}.png`}>
-            Download spectrogram
-          </a>
-        )}
       </Box>
       <Box
         className="wavesurfer-container"
@@ -221,14 +219,18 @@ const CenterDetail = ({
           flex: 1,
         }}
       >
-        <Box>
+        <Box sx={{ margin: "8px" }}>
           {isProcessing ? (
-            <p></p>
+            spectrogramUrl ? (
+              <Image src={spectrogramUrl} alt="spectrogram" />
+            ) : (
+              "Processing spectrogram..."
+            )
           ) : error ? (
             <p>Error: {error}</p>
           ) : audioUrl ? (
             <div>
-              <WaveformPlayer audioUrl={audioUrl} />
+              <WavesurferPlayer audioUrl={audioUrl} />
               {/* <div>{totalDurationMs} ms</div>
               {droppedSeconds > 0 && (
                 <div>Dropped {droppedSeconds} seconds from stream reset</div>

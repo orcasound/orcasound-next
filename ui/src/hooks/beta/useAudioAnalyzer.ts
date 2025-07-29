@@ -8,7 +8,7 @@ export function useAudioAnalyser(audioElement: HTMLMediaElement | null) {
   const mediaElementRef = useRef<HTMLMediaElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  const FFT_SIZE = 2048;
+  const FFT_SIZE = 2048 * 2;
 
   useEffect(() => {
     if (!audioElement) {
@@ -47,7 +47,7 @@ export function useAudioAnalyser(audioElement: HTMLMediaElement | null) {
         analyserRef.current = null;
       }
     };
-  }, [audioElement]);
+  }, [audioElement, FFT_SIZE]);
 
   const getCurrentTime = (): number => {
     return audioContextRef.current?.currentTime ?? 0;

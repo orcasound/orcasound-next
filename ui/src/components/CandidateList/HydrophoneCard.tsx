@@ -9,6 +9,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
+import { useRouter } from "next/router";
 
 import Link from "@/components/Link";
 import { useData } from "@/context/DataContext";
@@ -36,7 +37,7 @@ export default function HydrophoneCard({ feed }: Props) {
   const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
 
   // use these to set href on cards
-  // const router = useRouter();
+  const router = useRouter();
   // const basePath = router.pathname.replace(/\[.*?\]/g, "").replace(/\/$/, ""); // remove the query in [], then remove any trailing slash
   const feedHref = `/beta/${feed.slug}`;
 
@@ -44,8 +45,8 @@ export default function HydrophoneCard({ feed }: Props) {
     autoPlayOnReady.current = true;
     setNowPlayingFeed(feed);
     setNowPlayingCandidate(null);
-    // masterPlayerRef?.current?.play();
-    // router.push(`/beta/${feed.slug}`);
+    masterPlayerRef?.current?.play();
+    router.push(`/beta/${feed.slug}`);
   };
 
   const handlePause = () => {

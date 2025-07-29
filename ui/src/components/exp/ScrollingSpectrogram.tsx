@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 
 export function ScrollingSpectrogram({
   analyser,
-  scale = "linear",
+  scale = "log",
   colorMap = defaultColorMap,
   scrollWhenSilent = true,
 }: {

@@ -119,7 +119,9 @@ export default function DetectionDialog({
 
   return (
     <>
-      <Box onClick={handleClickOpen}>{children}</Box>
+      <Box onClick={handleClickOpen} width={"100%"} height={"100%"}>
+        {children}
+      </Box>
       <Dialog
         open={open}
         onClose={handleClose}

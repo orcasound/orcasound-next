@@ -15,26 +15,20 @@ export default function DetectionButton({
       color="primary"
       id="detection-button"
       sx={{
-        // position: "absolute",
-        // bottom: "86px",
-        // left: 0,
-        // right: 0,
-        // margin: "auto",
-        mr: smDown ? 0 : "1rem",
-        maxWidth: "max-content",
+        width: "100%",
+        height: "100%",
+        maxWidth: "none",
         minWidth: "unset",
         whiteSpace: "nowrap",
         px: "16px",
         boxShadow: "none",
         // style to look like outlined button
-        backgroundColor: disabled ? "rgba(255,255,255,.25)" : "primary.main",
-        color: "base.main",
+        backgroundColor: disabled ? "transparent" : "primary.main",
+        border: disabled ? "1px solid rgba(255,255,255,.25)" : "none",
+        color: disabled ? "rgba(255,255,255,.5)" : "base.main",
         borderRadius: "8px",
-        // borderColor: "primary.main",
-        // borderStyle: "solid",
-        // borderWidth: "2px",
         "&:hover": {
-          backgroundColor: disabled ? "rgba(255,255,255,.25)" : "primary.main",
+          backgroundColor: disabled ? "transparent" : "primary.main",
           cursor: disabled ? "default" : "pointer",
         },
       }}
@@ -44,9 +38,15 @@ export default function DetectionButton({
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          width: "100%",
         }}
       >
-        <GraphicEq sx={{ mr: smDown ? 0 : 1, color: "base.main" }} />
+        <GraphicEq
+          sx={{
+            mr: smDown ? 0 : 1,
+            color: disabled ? "rgba(255,255,255,.5)" : "base.main",
+          }}
+        />
         {!smDown && "Report sound"}
       </Box>
     </Fab>

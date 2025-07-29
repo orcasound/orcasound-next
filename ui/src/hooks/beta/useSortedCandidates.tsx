@@ -2,7 +2,10 @@ import { useMemo } from "react";
 
 import { Candidate, CombinedData } from "@/types/DataTypes";
 
-const countCategories = (arr: { newCategory: string }[], cat: string) => {
+export const countCategories = (
+  arr: { newCategory: string }[],
+  cat: string,
+) => {
   return arr.filter((d) => d.newCategory.toLowerCase() === cat.toLowerCase())
     .length;
 };
