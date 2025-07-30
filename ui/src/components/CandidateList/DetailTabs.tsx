@@ -18,15 +18,22 @@ import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Feed } from "@/graphql/generated";
 import darkTheme from "@/styles/darkTheme";
 
-const HydrophoneDetailTabs = ({
+type Tab = {
+  title: string;
+  slug: string;
+};
+
+const DetailTabs = ({
   children,
   feed,
+  tabs,
   drawer = false,
   showHeading = true,
   showTabs = true,
 }: {
   children: ReactNode;
   feed?: Feed;
+  tabs?: Tab[];
   drawer?: boolean;
   showHeading?: boolean;
   showTabs?: boolean;
@@ -59,16 +66,6 @@ const HydrophoneDetailTabs = ({
   const isIndexPage = route[route.length - 1] === "[feedSlug]";
   const isCandidatePage = route[route.length - 1] === "[candidateId]";
 
-  type Tab = {
-    title: string;
-    slug: string;
-  };
-
-  const tabs = [
-    { title: "About", slug: "" },
-    { title: "Images", slug: "#" },
-  ];
-
   const tabRow = (tabs: Tab[]) => (
     <Stack
       direction="row"
@@ -76,21 +73,15 @@ const HydrophoneDetailTabs = ({
       sx={{
         borderBottom: "1px solid rgba(255,255,255,.33)",
         px: 3,
+        ml: router.query.candidateId ? "-24px" : 0,
       }}
     >
-      {tabs.map((tab) => {
-        const tabSlug = tab.slug;
-        const active = drawer
-          ? tabSlug === "candidates"
-          : isIndexPage
-            ? tabSlug === ""
-            : isCandidatePage
-              ? tabSlug === "candidates"
-              : tabPage === tabSlug;
+      {tabs.map((tab, index) => {
+        const active = index === 0;
         return (
           <Link
             key={tab.title}
-            href={feed ? `/beta/${feed.slug}/${tabSlug}` : "#"}
+            href={tab.slug}
             style={{
               color: active
                 ? darkTheme.palette.text.primary
@@ -189,10 +180,10 @@ const HydrophoneDetailTabs = ({
           </Box>
         </Box>
       )}
-      {showTabs && tabRow(tabs)}
+      {showTabs && tabs && tabRow(tabs)}
       <Box>{children}</Box>
     </div>
   );
 };
 
-export default HydrophoneDetailTabs;
+export default DetailTabs;

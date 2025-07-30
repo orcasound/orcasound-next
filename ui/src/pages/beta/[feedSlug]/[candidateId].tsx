@@ -14,8 +14,9 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
 import CommunityBar from "@/components/CandidateList/CommunityBar";
+import HydrophoneDetailTabs from "@/components/CandidateList/DetailTabs";
+import DetailTabs from "@/components/CandidateList/DetailTabs";
 import { DetectionsList } from "@/components/CandidateList/DetectionsList";
-import HydrophoneDetailTabs from "@/components/CandidateList/HydrophoneDetailTabs";
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import Link from "@/components/Link";
@@ -70,6 +71,11 @@ const RightDetail = ({
     new Date(candidate?.startTimestamp ?? "").getTime() / 1000;
   const timeAgoString = formatDuration(timestampSeconds, currentTimeSeconds);
   if (!detections?.startTime) return null;
+
+  const tabs = [
+    { title: "Live reports", slug: "" },
+    { title: "Comments", slug: "#" },
+  ];
 
   return (
     <div>
@@ -152,7 +158,9 @@ const RightDetail = ({
             )} */}
           </Stack>
           <Box className="main">
-            {candidate && <DetectionsList candidate={candidate} />}
+            <DetailTabs showHeading={false} tabs={tabs}>
+              {candidate && <DetectionsList candidate={candidate} />}
+            </DetailTabs>
           </Box>
         </Box>
       </Container>

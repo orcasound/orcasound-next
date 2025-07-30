@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 
 import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
-import HydrophoneDetailTabs from "@/components/CandidateList/HydrophoneDetailTabs";
+import DetailTabs from "@/components/CandidateList/DetailTabs";
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import Link from "@/components/Link";
@@ -52,10 +52,11 @@ const LeftDetail = () => {
   const feedSlug = query.feedSlug as string;
   const { feeds } = useData();
   const feed = feeds.find((f) => f.slug === feedSlug);
+
   return (
-    <HydrophoneDetailTabs showTabs={false}>
+    <DetailTabs showTabs={false}>
       <CandidatesStack feed={feed} showChart={true}></CandidatesStack>
-    </HydrophoneDetailTabs>
+    </DetailTabs>
   );
 };
 
@@ -79,6 +80,11 @@ const RightDetail = () => {
     }
   }, [feed, setNowPlayingCandidate, setNowPlayingFeed, autoPlayOnReady]);
 
+  const tabs = [
+    { title: "About", slug: "" },
+    { title: "Images", slug: "#" },
+  ];
+
   return (
     <>
       <Box
@@ -94,7 +100,7 @@ const RightDetail = () => {
       >
         {nowPlayingFeed && <LivePlayer currentFeed={nowPlayingFeed} />}
       </Box>
-      <HydrophoneDetailTabs showHeading={false}>
+      <DetailTabs showHeading={false} tabs={tabs}>
         <Box sx={{ p: 3 }}>
           {host && (
             <Paper
@@ -124,7 +130,7 @@ const RightDetail = () => {
             JSON.stringify(feed, null, 2)
           )}
         </Box>
-      </HydrophoneDetailTabs>
+      </DetailTabs>
     </>
   );
 };

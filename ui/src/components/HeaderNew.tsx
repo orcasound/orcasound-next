@@ -3,6 +3,7 @@ import {
   Alert,
   AppBar,
   Box,
+  Button,
   Collapse,
   Drawer,
   IconButton,
@@ -184,14 +185,24 @@ function Desktop({ tabs }: { tabs?: ReactNode }) {
 
         <Box
           className="header-buttons"
-          sx={{ display: "flex", gap: "16px", py: "1rem" }}
+          sx={{ display: "flex", gap: "12px", py: "1rem" }}
         >
-          <Box>
-            <CandidateListFilters
-              showFilters={showFilters}
-              setShowFilters={setShowFilters}
-            />
-          </Box>
+          <Button
+            href="#"
+            size="small"
+            variant="outlined"
+            sx={{ whiteSpace: "nowrap", maxHeight: "31px" }}
+          >
+            Sign up
+          </Button>
+          <Button
+            href="#"
+            size="small"
+            variant="contained"
+            sx={{ whiteSpace: "nowrap", maxHeight: "31px" }}
+          >
+            Log in
+          </Button>
         </Box>
       </Box>
     </Box>

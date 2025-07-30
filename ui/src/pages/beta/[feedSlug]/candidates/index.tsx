@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 
 import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
-import HydrophoneDetailTabs from "@/components/CandidateList/HydrophoneDetailTabs";
+import HydrophoneDetailTabs from "@/components/CandidateList/DetailTabs";
 import { getHalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import { useData } from "@/context/DataContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";

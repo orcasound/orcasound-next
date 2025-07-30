@@ -14,7 +14,7 @@ import {
   transformSightings,
 } from "../../utils/masterDataTransforms";
 import { useAIDetections } from "./useAIDetections";
-import { useLiveDetections } from "./useLiveDetections";
+import { useLiveDetections1000 } from "./useLiveDetections1000";
 import { useLiveFeeds } from "./useLiveFeeds";
 import { useSightings } from "./useSightings";
 
@@ -31,7 +31,9 @@ export function useMasterData(useLiveData: boolean): MasterData {
   //// ORCASOUND
   // get feeds and detections based on live/seed toggle in development UI
   const seedDetections = useDetectionsQuery().data?.detections?.results ?? [];
-  const liveDetections = useLiveDetections().data?.detections?.results ?? [];
+  // const liveDetections = useLiveDetections().data?.detections?.results ?? [];
+  const liveDetections = useLiveDetections1000().data ?? [];
+
   const humanDetections = useLiveData
     ? liveDetections
     : (seedDetections as Detection[]);

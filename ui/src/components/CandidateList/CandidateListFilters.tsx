@@ -15,7 +15,6 @@ import {
 
 import ChartSelect from "./ChartSelect";
 import { CustomDatePicker } from "./CustomDatePicker";
-import SearchBar from "./SearchBar";
 
 export const defaultRange = sevenDays;
 
@@ -185,9 +184,9 @@ const CandidateListFilters = ({
 
   return (
     <Stack
-      style={{
+      sx={{
         display: "flex",
-        gap: "1rem",
+        gap: 3,
         flexWrap: "wrap",
         width: "100%",
         alignItems: "flex-end",
@@ -219,7 +218,7 @@ const CandidateListFilters = ({
             Filters
           </Button>
         )}
-        {!mdDown && (
+        {/* {!mdDown && (
           <>
             <Button
               href="#"
@@ -238,28 +237,28 @@ const CandidateListFilters = ({
               Log in
             </Button>
           </>
-        )}
+        )} */}
       </Stack>
 
       {showFilters && (
         <Stack
           direction={mdDown ? "column" : "row"}
-          spacing={2}
-          sx={{ maxWidth: "100%" }}
+          spacing={3}
+          sx={{ width: "100%" }}
         >
-          <SearchBar />
+          {/* <SearchBar /> */}
           {/* <ChartSelect
             name={"hydrophone"}
             value={filters.hydrophone}
             list={feedList}
             onChange={handleChange}
           /> */}
-          <ChartSelect
+          {/* <ChartSelect
             name={"category"}
             value={filters.category}
             list={categorySelect}
             onChange={handleChange}
-          />
+          /> */}
           <ChartSelect
             name={"timeIncrement"}
             value={filters.timeIncrement}
@@ -276,7 +275,7 @@ const CandidateListFilters = ({
       )}
 
       {filters.timeRange === customRange && (
-        <Stack direction="row" spacing={2} sx={{ maxWidth: "100%" }}>
+        <Stack direction="row" spacing={2} sx={{ width: "100%" }}>
           <CustomDatePicker
             label="Start date"
             valueProp={filters.startDate}

@@ -6,7 +6,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 
 import { useData } from "@/context/DataContext";
 import { Feed } from "@/graphql/generated";
@@ -15,7 +15,7 @@ import { CombinedData } from "@/types/DataTypes";
 import { standardizeFeedName } from "@/utils/masterDataHelpers";
 
 import Link from "../Link";
-import { timeRangeSelect } from "./CandidateListFilters";
+import CandidateListFilters, { timeRangeSelect } from "./CandidateListFilters";
 import CandidatesList from "./CandidatesList";
 import { CandidatesResults } from "./CandidatesResults";
 import ReportsBarChart from "./ReportsBarChart";
@@ -76,6 +76,8 @@ export const CandidatesStack = ({
     return <div style={{ display: "flex", gap: "8px" }}>{interleaved}</div>;
   }
 
+  const [showFilters, setShowFilters] = useState(false);
+
   return (
     <Container
       maxWidth="xl"
@@ -87,12 +89,23 @@ export const CandidatesStack = ({
       }}
     >
       {!showChart && (
-        <>
+        <Box mb={2}>
           <Typography component="h2" variant="h5" mb={1}>
             Recordings
           </Typography>
-          <Box mb={4}>{countString(detections)}</Box>
-        </>
+          <Typography
+            component="p"
+            variant="body1"
+            mb={2}
+            sx={{ color: "rgba(255,255,255,.7)" }}
+          >
+            Explore recent events and vote for the most interesting.
+          </Typography>
+          <CandidateListFilters
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+          />
+        </Box>
       )}
       {showChart && (
         <Stack className="chart-heading" gap={0.5}>

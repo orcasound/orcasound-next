@@ -18,7 +18,10 @@ export const DetectionsList = ({ candidate }: { candidate: Candidate }) => {
       {candidate?.array.map((el, index) => (
         <ListItemButton
           key={index}
-          sx={{ px: 0, borderTop: "1px solid rgba(255,255,255,.25)" }}
+          sx={{
+            px: 0,
+            borderTop: index !== 0 ? "1px solid rgba(255,255,255,.25)" : "none",
+          }}
         >
           {/* <ListItemAvatar>
             <AccountCircle style={{ fontSize: 40, opacity: 0.9 }} />

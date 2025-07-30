@@ -25,8 +25,16 @@ export const HydrophonesStack = () => {
         mt: "24px",
       }}
     >
-      <Typography component="h2" variant="h5" sx={{ mb: "1rem" }}>
+      <Typography component="h2" variant="h5" sx={{ mb: 1 }}>
         Listen Live
+      </Typography>
+      <Typography
+        component="p"
+        variant="body1"
+        mb={2}
+        sx={{ color: "rgba(255,255,255,.7)" }}
+      >
+        Alert the community when you hear something.
       </Typography>
       <Stack>
         <Box sx={{ overflow: mdDown ? "auto" : "initial" }}>
