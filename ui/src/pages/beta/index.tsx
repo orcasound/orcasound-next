@@ -4,7 +4,7 @@ import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout"
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 
 function HomePage() {
-  return null;
+  return <></>;
 }
 
 HomePage.getLayout = function getLayout(page: React.ReactElement) {
