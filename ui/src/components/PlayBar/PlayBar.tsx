@@ -15,8 +15,6 @@ export default function PlayBar({
 }: {
   masterPlayerTimeRef?: MutableRefObject<number>;
 }) {
-  // const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
-
   const { nowPlayingCandidate, nowPlayingFeed } = useNowPlaying();
 
   const detections = nowPlayingCandidate?.array;

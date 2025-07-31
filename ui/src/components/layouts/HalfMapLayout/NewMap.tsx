@@ -217,7 +217,7 @@ export default function Map() {
       return filteredData;
     }
   }, [filteredData, nowPlayingCandidate, nowPlayingFeed]);
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   const audioReports = useMemo(() => {
     return reports?.filter((d) => d.newCategory !== "SIGHTING");
@@ -239,7 +239,7 @@ export default function Map() {
 
   const [map, setMap] = useState<LeafletMap>();
   const [latLng, setLatLng] = useState<LatLngExpression>([48.1, -122.75]);
-  const [zoom, setZoom] = useState<number>(smDown ? 8 : 9);
+  const [zoom, setZoom] = useState<number>(mdDown ? 8 : 9);
 
   const hydrophoneDefaultIcon = L.icon({
     iconUrl: hydrophoneDefaultIconImage.src,
@@ -254,15 +254,15 @@ export default function Map() {
   useEffect(() => {
     if (feed) {
       setLatLng(feed.latLng);
-      setZoom(smDown ? 11 : 12);
+      setZoom(mdDown ? 11 : 12);
       // map?.setZoom(12);
       // map?.panTo(feed.latLng);
     } else {
       setLatLng([48.1, -122.75]);
-      setZoom(smDown ? 8 : 9);
+      setZoom(mdDown ? 8 : 9);
       // map?.setZoom(8);
     }
-  }, [map, feed, setLatLng, setZoom, smDown]);
+  }, [map, feed, setLatLng, setZoom, mdDown]);
 
   return (
     <>
@@ -282,7 +282,7 @@ export default function Map() {
         //TODO: Disable attribution on mobile only
         attributionControl={false}
       >
-        {!smDown && <ZoomControl position="topright" />}
+        {!mdDown && <ZoomControl position="topright" />}
         <TileLayer
           attribution="Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri"
           url="https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
@@ -333,9 +333,9 @@ export default function Map() {
                     //   // setPopupFeed(f);
                     //   // setPopupDetection(null);
                     // } else {
-                    if (smDown && f.id === nowPlayingFeed?.id) {
+                    if (mdDown && f.id === nowPlayingFeed?.id) {
                       setPlaybarExpanded(true);
-                    } else if (smDown) {
+                    } else if (mdDown) {
                       autoPlayOnReady.current = false;
                       setNowPlayingFeed(f);
                       setNowPlayingCandidate(null);
@@ -373,7 +373,7 @@ export default function Map() {
               opacity={inRange ? 1 : 0.33}
               // eventHandlers={{
               //   click: () => {
-              //     if (smDown) {
+              //     if (mdDown) {
               //       setPopupDetection(sighting);
               //       setPopupFeed(null);
               //     }

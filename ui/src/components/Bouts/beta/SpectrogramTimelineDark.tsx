@@ -150,9 +150,9 @@ export default function SpectrogramTimelineDark({
     200,
     { trailing: false },
   );
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
-  const SPECTROGRAM_HEIGHT = smDown ? 250 : 450;
+  const SPECTROGRAM_HEIGHT = mdDown ? 250 : 450;
 
   const minZoom = 2;
   const maxZoom = 1600;

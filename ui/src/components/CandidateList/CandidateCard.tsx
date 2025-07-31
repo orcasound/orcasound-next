@@ -54,7 +54,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
 
   const candidate = props.candidate;
   const active = candidate.id === nowPlayingCandidate?.id;
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const { feeds, autoPlayOnReady } = useData();
   const feed = feeds.find(
     (feed) => feed.id === props.candidate.array[0].feedId,
@@ -104,7 +104,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
     autoPlayOnReady.current = true;
     setNowPlayingCandidate(candidate);
     setNowPlayingFeed(null);
-    if (!smDown) router.push(href);
+    if (!mdDown) router.push(href);
 
     const player = masterPlayerRef?.current;
     if (player && player !== null && typeof player.play === "function") {
@@ -128,7 +128,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
         height: iconSize,
         width: iconSize,
         cursor: "pointer",
-        // marginRight: smDown ? "-8px" : "-4px",
+        // marginRight: mdDown ? "-8px" : "-4px",
       }}
     />
   );
@@ -139,7 +139,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
         opacity: 0.25,
         height: iconSize,
         width: iconSize,
-        // marginRight: smDown ? "-8px" : "-4px",
+        // marginRight: mdDown ? "-8px" : "-4px",
       }}
     />
   );
@@ -202,7 +202,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
               display: "flex",
               flexFlow: "column",
               gap: "16px",
-              fontSize: smDown ? "14px" : "1rem",
+              fontSize: mdDown ? "14px" : "1rem",
               padding: 0,
             }}
           >
@@ -235,7 +235,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                   width: "100%",
                   color: "inherit",
                   textDecoration: "inherit",
-                  padding: smDown ? "12px" : "1rem",
+                  padding: mdDown ? "12px" : "1rem",
                   paddingBottom: 0,
                 }}
               >
@@ -252,8 +252,8 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                       backgroundPosition: "center",
                       backgroundSize: "cover",
                       backgroundRepeat: "no-repeat",
-                      minWidth: smDown ? "40px" : "60px",
-                      minHeight: smDown ? "40px" : "60px",
+                      minWidth: mdDown ? "40px" : "60px",
+                      minHeight: mdDown ? "40px" : "60px",
                       borderRadius: "4px",
                     }}
                   ></Box>
@@ -282,8 +282,8 @@ export default function CandidateCard(props: { candidate: Candidate }) {
               </Link>
               <Box
                 style={{
-                  paddingTop: smDown ? "8px" : "12px",
-                  paddingRight: smDown ? "8px" : "12px",
+                  paddingTop: mdDown ? "8px" : "12px",
+                  paddingRight: mdDown ? "8px" : "12px",
                 }}
               >
                 {duration > 0
@@ -303,7 +303,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                 width: "100%",
                 color: "inherit",
                 textDecoration: "inherit",
-                padding: smDown ? "12px" : "1rem",
+                padding: mdDown ? "12px" : "1rem",
                 paddingTop: 0,
               }}
             >
@@ -365,7 +365,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
             </Link>
           </CardContent>
         </CardActionArea>
-        <div style={{ padding: smDown ? "12px" : "1rem" }}>
+        <div style={{ padding: mdDown ? "12px" : "1rem" }}>
           <CommunityBar votes={candidate.array.length} />
         </div>
       </Stack>

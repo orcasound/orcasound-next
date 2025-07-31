@@ -65,7 +65,7 @@ const RightDetail = ({
   onClose: () => void;
 }) => {
   const { filters } = useData();
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   const currentTimeSeconds = new Date().getTime() / 1000;
   const timestampSeconds =
@@ -87,7 +87,7 @@ const RightDetail = ({
         }}
       >
         <Box>
-          {smDown && (
+          {mdDown && (
             <Link
               href={"/beta/candidates"}
               style={{
@@ -134,7 +134,7 @@ const RightDetail = ({
                 Reports within {filters?.timeIncrement} min
               </Typography>
             </Box>
-            {!smDown && (
+            {!mdDown && (
               <Link href={`/beta/${feed?.slug}`} onClick={onClose}>
                 <Close />
               </Link>
@@ -142,7 +142,7 @@ const RightDetail = ({
           </Box>
           <Stack gap={2} direction="column" sx={{ my: 3, px: 3 }}>
             <CommunityBar votes={0} />
-            {/* {smDown && (
+            {/* {mdDown && (
               <Button
                 variant="outlined"
                 sx={{ width: "100%" }}

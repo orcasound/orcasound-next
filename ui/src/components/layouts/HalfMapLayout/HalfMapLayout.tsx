@@ -31,7 +31,6 @@ export function HalfMapLayout({
   const router = useRouter();
   const { playbarExpanded, headerHeight } = useLayout();
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
 
   const masterPlayerTimeRef = useRef(0);
 
@@ -102,7 +101,7 @@ export function HalfMapLayout({
           //   height: "100dvh",
           // },
           // height: "100vh",
-          // paddingBottom: smDown ? "155px" : "86px",
+          // paddingBottom: mdDown ? "155px" : "86px",
           // paddingTop: "60px", // added this due to making header position: fixed
           display: "flex",
           flexDirection: "column",
@@ -151,7 +150,7 @@ export function HalfMapLayout({
                 right: 0,
                 borderRight: "1px solid rgba(255,255,255,.5)",
                 height:
-                  smDown && playbarExpanded
+                  mdDown && playbarExpanded
                     ? `calc(100vh)` // height calc gets complex on mobile due to browser bar
                     : playbarExpanded
                       ? `calc(100vh - ${headerHeight})`
@@ -181,7 +180,7 @@ export function HalfMapLayout({
                   right: 0,
                   borderRight: "1px solid rgba(255,255,255,.5)",
                   height:
-                    smDown && playbarExpanded && router.query.candidateId
+                    mdDown && playbarExpanded && router.query.candidateId
                       ? `calc(100vh)` // height calc gets complex on mobile due to browser bar
                       : playbarExpanded && router.query.candidateId
                         ? `calc(100vh - ${headerHeight})`

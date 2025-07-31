@@ -34,7 +34,7 @@ export default function HydrophoneCard({ feed }: Props) {
 
   const active = feed.id === nowPlayingFeed?.id;
   // const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   // use these to set href on cards
   const router = useRouter();
@@ -112,8 +112,8 @@ export default function HydrophoneCard({ feed }: Props) {
           sx={{
             display: "flex",
             flexFlow: "column",
-            fontSize: smDown ? "14px" : "1rem",
-            padding: smDown ? "12px" : "1rem",
+            fontSize: mdDown ? "14px" : "1rem",
+            padding: mdDown ? "12px" : "1rem",
           }}
         >
           <Box

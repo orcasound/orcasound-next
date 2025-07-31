@@ -21,7 +21,7 @@ export function MapWrapper({
 }: {
   masterPlayerTimeRef?: React.MutableRefObject<number>;
 }) {
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const {
     nowPlayingCandidate,
     nowPlayingFeed,
@@ -59,7 +59,7 @@ export function MapWrapper({
           position: "absolute",
           top: 16,
           left: 16,
-          // width: smDown ? "250px" : "300px",
+          // width: mdDown ? "250px" : "300px",
           zIndex: (theme) => theme.zIndex.fab,
           display: "flex",
           flexDirection: "column",
@@ -92,7 +92,7 @@ export function MapWrapper({
         )} */}
       </Box>
 
-      {smDown && nowPlayingCandidate && (
+      {mdDown && nowPlayingCandidate && (
         <IconButton
           aria-label="close"
           className="candidate-map-close"

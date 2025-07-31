@@ -25,7 +25,7 @@ function MapPopup({
   sighting: Sighting | null;
   onClick?: () => void;
 }) {
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   // const { nowPlayingFeed, nowPlayingCandidate } = useNowPlaying();
 
@@ -58,12 +58,12 @@ function MapPopup({
       onClick={(e) => e.stopPropagation()}
       sx={{
         position: "absolute",
-        bottom: smDown ? "86px" : "2rem",
-        right: smDown ? "1rem" : "2rem",
+        bottom: mdDown ? "86px" : "2rem",
+        right: mdDown ? "1rem" : "2rem",
         zIndex: 10000,
         backgroundColor: "primary.main",
         boxShadow: "0px 2px 10px rgba(0,0,0,0.2)",
-        width: smDown ? "calc(100% - 2rem)" : "calc(100% - 4rem)",
+        width: mdDown ? "calc(100% - 2rem)" : "calc(100% - 4rem)",
         color: "base.main",
       }}
     >
@@ -82,13 +82,13 @@ function MapPopup({
                   backgroundPosition: "center",
                   backgroundSize: "cover",
                   backgroundRepeat: "no-repeat",
-                  width: smDown ? "40px" : "48px",
-                  height: smDown ? "40px" : "48px",
+                  width: mdDown ? "40px" : "48px",
+                  height: mdDown ? "40px" : "48px",
                   borderRadius: "4px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  padding: smDown ? "10px" : "1rem",
+                  padding: mdDown ? "10px" : "1rem",
                 }}
               />
             </Link>
@@ -118,7 +118,7 @@ function MapPopup({
         }
         subheader={
           <Typography
-            variant={smDown ? "body2" : "body1"}
+            variant={mdDown ? "body2" : "body1"}
             sx={{ margin: 0, color: "base.main" }}
           >
             {lastWhaleReportString !== "audio unavailable" ? (

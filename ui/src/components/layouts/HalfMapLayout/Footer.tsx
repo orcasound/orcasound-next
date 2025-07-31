@@ -9,7 +9,7 @@ export default function Footer({
   masterPlayerTimeRef: MutableRefObject<number>;
 }) {
   // const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const { mobileMenuHeight } = useLayout();
 
   return (
@@ -18,7 +18,7 @@ export default function Footer({
       className={"bottom-controls-stack"}
       sx={{
         position: "absolute",
-        bottom: smDown ? mobileMenuHeight : 0,
+        bottom: mdDown ? mobileMenuHeight : 0,
         // top: "8rem",
         zIndex: (theme) => theme.zIndex.drawer + 1,
         width: "100%",
@@ -37,8 +37,8 @@ export default function Footer({
       <Box
         className="playbar-container"
         sx={{
-          width: smDown ? "calc(100% - .5rem)" : "46%",
-          mb: smDown ? "2px" : "2rem",
+          width: mdDown ? "calc(100% - .5rem)" : "46%",
+          mb: mdDown ? "2px" : "2rem",
         }}
       >
         {/* <PlayBar masterPlayerTimeRef={masterPlayerTimeRef} /> */}

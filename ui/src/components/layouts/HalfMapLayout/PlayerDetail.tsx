@@ -5,7 +5,6 @@ import { useBout, useBouts } from "@/hooks/beta/useBouts";
 
 export default function PlayerDetail() {
   const { nowPlayingCandidate } = useNowPlaying();
-  // const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
 
   // seeding with known bout from production
   const { feeds } = useData();

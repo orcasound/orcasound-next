@@ -31,8 +31,8 @@ const mobileMenuHeight = "69px";
 export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
   const [alertOpen, setAlertOpen] = useState<boolean>(true);
 
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
-  const noAlertHeight = smDown ? mobileHeaderHeight : desktopHeaderHeight;
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
+  const noAlertHeight = mdDown ? mobileHeaderHeight : desktopHeaderHeight;
 
   const headerHeight = alertOpen
     ? `calc(${alertHeight} + ${noAlertHeight})`

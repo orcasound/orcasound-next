@@ -79,7 +79,7 @@ export function PlayerBase({
   playerTime = 0,
   timestamp,
 }: PlayerBaseProps) {
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const { nowPlayingCandidate, nowPlayingFeed } = useNowPlaying();
   const { reportCount, filters, feeds } = useData();
 
@@ -143,7 +143,7 @@ export function PlayerBase({
           <Stack spacing={1} sx={{ width: "100%" }}>
             <Box
               sx={(theme) => ({
-                minHeight: smDown ? 0 : theme.spacing(10),
+                minHeight: mdDown ? 0 : theme.spacing(10),
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "flex-start",
@@ -153,9 +153,9 @@ export function PlayerBase({
                 // Keep player above the sliding drawer
                 zIndex: theme.zIndex.drawer + 1,
                 width: "100%",
-                // flexFlow: smDown ? "row-reverse" : "row",
-                gap: smDown ? 2 : 3,
-                marginRight: smDown ? 0 : "2rem",
+                // flexFlow: mdDown ? "row-reverse" : "row",
+                gap: mdDown ? 2 : 3,
+                marginRight: mdDown ? 0 : "2rem",
               })}
             >
               <Box display="none" id="video-js">
@@ -194,7 +194,7 @@ export function PlayerBase({
                 <Stack
                   direction="row"
                   width="100%"
-                  spacing={smDown ? 2 : 3}
+                  spacing={mdDown ? 2 : 3}
                   sx={{ overflow: "hidden" }}
                 >
                   <Box
@@ -203,9 +203,9 @@ export function PlayerBase({
                       backgroundPosition: "center",
                       backgroundSize: "cover",
                       backgroundRepeat: "no-repeat",
-                      minWidth: smDown ? "40px" : "60px",
-                      width: smDown ? "40px" : "60px",
-                      height: smDown ? "40px" : "60px",
+                      minWidth: mdDown ? "40px" : "60px",
+                      width: mdDown ? "40px" : "60px",
+                      height: mdDown ? "40px" : "60px",
                       borderRadius: "4px",
                     }}
                   ></Box>
@@ -221,17 +221,17 @@ export function PlayerBase({
                       component="h2"
                       sx={{
                         whiteSpace: "nowrap",
-                        fontSize: smDown ? "14px" : "1rem",
+                        fontSize: mdDown ? "14px" : "1rem",
                       }}
                     >
                       <span style={{ fontWeight: "bold" }}>{playerTitle}</span>
-                      {smDown ? <br /> : " · "}
+                      {mdDown ? <br /> : " · "}
                       {playerSubtitle && playerSubtitle}
                       {type === "feed" &&
                         `${listenerCount} listener${listenerCount !== 1 ? "s" : ""}`}
                       {type === "candidate" && " · " + duration}
                     </Typography>
-                    {!smDown && nowPlayingFeed && (
+                    {!mdDown && nowPlayingFeed && (
                       <Typography sx={{ color: "text.secondary" }}>
                         {
                           timeRangeSelect.find(
@@ -242,12 +242,12 @@ export function PlayerBase({
                         {reportCount[feed.id].shortCountString}
                       </Typography>
                     )}
-                    {!smDown && nowPlayingCandidate && slider}
+                    {!mdDown && nowPlayingCandidate && slider}
                   </Box>
                 </Stack>
               </Link>
             </Box>
-            {smDown && nowPlayingCandidate && slider}
+            {mdDown && nowPlayingCandidate && slider}
           </Stack>
           {(playerStatus === "playing" || playerStatus === "loading") &&
             feed &&

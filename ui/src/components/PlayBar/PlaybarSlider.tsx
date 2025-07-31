@@ -26,8 +26,7 @@ export function PlaybarSlider({
   startOffset: number;
   endOffset: number;
 }) {
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
-  // const lgUp = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const theme = useTheme();
 
   const sliderMax = endOffset - startOffset;
@@ -87,7 +86,7 @@ export function PlaybarSlider({
       <Box
         id="formatted-seconds"
         sx={{
-          display: smDown ? "none" : "flex",
+          display: mdDown ? "none" : "flex",
           justifyContent: "space-between",
         }}
       >

@@ -6,7 +6,7 @@ export default function DetectionButton({
 }: {
   disabled?: boolean;
 }) {
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   return (
     <Fab
@@ -43,11 +43,11 @@ export default function DetectionButton({
       >
         <GraphicEq
           sx={{
-            mr: smDown ? 0 : 1,
+            mr: mdDown ? 0 : 1,
             color: disabled ? "rgba(255,255,255,.5)" : "base.main",
           }}
         />
-        {!smDown && "Report sound"}
+        {!mdDown && "Report sound"}
       </Box>
     </Fab>
   );

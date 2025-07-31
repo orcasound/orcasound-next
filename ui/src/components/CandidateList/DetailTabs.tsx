@@ -68,7 +68,7 @@ const DetailTabs = ({
 }) => {
   const router = useRouter();
   const { feedSlug } = router.query;
-  const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   // const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const theme = useTheme();
@@ -145,7 +145,7 @@ const DetailTabs = ({
             background: `center / cover no-repeat url(${feed?.imageUrl})`,
             px: 3,
             py: 2,
-            minHeight: smDown ? " 160px" : "260px",
+            minHeight: mdDown ? " 160px" : "260px",
           }}
         >
           {/* Gradient overlay */}
@@ -160,9 +160,9 @@ const DetailTabs = ({
           />
           {!drawer ? (
             <Link
-              href={smDown ? "#" : href}
+              href={mdDown ? "#" : href}
               onClick={(e) => {
-                if (smDown) {
+                if (mdDown) {
                   e.preventDefault();
                   router.back();
                 }
