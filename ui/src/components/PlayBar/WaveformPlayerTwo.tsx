@@ -19,7 +19,6 @@ export default function WaveformPlayer({ audioUrl }: WaveformPlayerProps) {
       .load(audioUrl)
       .then(() => {
         // Audio loaded successfully
-        console.log("setting isReady true");
         setIsReady(true);
       })
       .catch((error) => {
@@ -89,9 +88,7 @@ export default function WaveformPlayer({ audioUrl }: WaveformPlayerProps) {
 
     waveSurferRef.current
       .load(audioUrl)
-      .then(() => {
-        console.log("Audio loaded, waiting for ready event");
-      })
+      .then(() => {})
       .catch((error) => {
         console.error("Error loading audio:", error);
       });
@@ -172,9 +169,6 @@ export default function WaveformPlayer({ audioUrl }: WaveformPlayerProps) {
 
   useEffect(() => {
     if (waveSurferRef.current && isReady && zoomLevel > 0) {
-      console.log("!!waveSurferRef.current", !!waveSurferRef.current);
-      console.log("isReady", isReady);
-      console.log("zoomLevel", zoomLevel);
       waveSurferRef.current?.zoom(zoomLevel);
     }
   }, [zoomLevel, isReady]);

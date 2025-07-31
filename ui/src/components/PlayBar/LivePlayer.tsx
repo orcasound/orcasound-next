@@ -174,9 +174,6 @@ export default function LivePlayer({
 
   const handlePlayPauseClick = async () => {
     const player = playerRef.current;
-    console.log("playerRef", playerRef.current);
-    console.log("masterPlayerRef", masterPlayerRef.current);
-    console.log("analyserNodeRef", analyserNodeRef.current);
 
     setNowPlayingFeed(currentFeed);
     setNowPlayingCandidate(null);

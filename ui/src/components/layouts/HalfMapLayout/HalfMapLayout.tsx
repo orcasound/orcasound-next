@@ -2,6 +2,7 @@ import { Box, Tab, Tabs, Theme, useMediaQuery } from "@mui/material";
 import { useRouter } from "next/router";
 import React, { ReactElement, useRef } from "react";
 
+import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
 import { MobileDisplay } from "@/components/CandidateList/MobileDisplay";
 import HeaderNew from "@/components/HeaderNew";
 import { useLayout } from "@/context/LayoutContext";
@@ -13,21 +14,22 @@ import { MobileBottomNav } from "./MobileBottomNav";
 import { SideList } from "./SideList";
 
 type HalfMapLayoutProps = {
-  leftSlot?: React.ReactNode;
+  // leftSlot?: React.ReactNode;
   centerSlot?: React.ReactNode;
   rightSlot?: React.ReactNode;
+  rightDrawer?: React.ReactNode;
   children?: React.ReactNode;
 };
 
 export function HalfMapLayout({
-  leftSlot,
+  // leftSlot,
   centerSlot,
   rightSlot,
+  rightDrawer,
   children,
 }: HalfMapLayoutProps) {
   const router = useRouter();
   const { playbarExpanded, headerHeight } = useLayout();
-  console.log("playbarExpanded", playbarExpanded);
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const smDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
 
@@ -120,10 +122,19 @@ export function HalfMapLayout({
           }}
         >
           {/* // desktop view */}
-          {!mdDown && <SideList>{leftSlot}</SideList>}
+          {!mdDown && (
+            <SideList position="left">
+              <CandidatesStack />
+            </SideList>
+          )}
           <Box
             className="center-column"
-            sx={{ display: "flex", flexGrow: 1, position: "relative" }}
+            sx={{
+              display: "flex",
+              flexGrow: 1,
+              position: "relative",
+              borderLeft: "1px solid rgba(255,255,255,.5)",
+            }}
           >
             <MapWrapper />
             <Box
@@ -151,9 +162,39 @@ export function HalfMapLayout({
               }}
             >
               {playbarExpanded && centerSlot}
-            </Box>{" "}
+            </Box>
           </Box>
-          {!mdDown && <SideList>{rightSlot}</SideList>}
+          {!mdDown && (
+            <SideList position="right">
+              {rightSlot}
+              <Box
+                className="right-slot-drawer"
+                sx={{
+                  px: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: 1,
+                  overflowY: "auto",
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  borderRight: "1px solid rgba(255,255,255,.5)",
+                  height:
+                    smDown && playbarExpanded && router.query.candidateId
+                      ? `calc(100vh)` // height calc gets complex on mobile due to browser bar
+                      : playbarExpanded && router.query.candidateId
+                        ? `calc(100vh - ${headerHeight})`
+                        : 0,
+                  backgroundColor: "background.default",
+                  zIndex: (theme) => theme.zIndex.drawer + 1,
+                  transition: "height .66s ease",
+                }}
+              >
+                {rightDrawer}
+              </Box>
+            </SideList>
+          )}
           {/* // mobile view */}
           {mdDown && (
             <Box

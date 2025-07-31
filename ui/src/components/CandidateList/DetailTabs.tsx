@@ -1,6 +1,7 @@
 import { ArrowBackIos } from "@mui/icons-material";
 import {
   Box,
+  Paper,
   Stack,
   Theme,
   Typography,
@@ -15,8 +16,37 @@ import { ReactNode } from "react";
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
-import { Feed } from "@/graphql/generated";
 import darkTheme from "@/styles/darkTheme";
+
+import LivePlayer from "../PlayBar/LivePlayer";
+
+const hosts = [
+  {
+    hydrophone: "orcasound-lab",
+    name: "Beam Reach",
+    link: "http://www.beamreach.blue/",
+  },
+  {
+    hydrophone: "north-sjc",
+    name: "Orca Behavior Institute",
+    link: "https://www.orcabehaviorinstitute.org/",
+  },
+  {
+    hydrophone: "sunset-bay",
+    name: "Beach Camp at Sunset Bay",
+    link: "https://www.sunsetbaywharf.com/",
+  },
+  {
+    hydrophone: "port-townsend",
+    name: "Port Townsend Marine Science Center",
+    link: "http://www.ptmsc.org/",
+  },
+  {
+    hydrophone: "bush-point",
+    name: "Orca Network",
+    link: "https://orcanetwork.org/",
+  },
+];
 
 type Tab = {
   title: string;
@@ -25,14 +55,12 @@ type Tab = {
 
 const DetailTabs = ({
   children,
-  feed,
   tabs,
   drawer = false,
   showHeading = true,
   showTabs = true,
 }: {
   children: ReactNode;
-  feed?: Feed;
   tabs?: Tab[];
   drawer?: boolean;
   showHeading?: boolean;
@@ -48,9 +76,8 @@ const DetailTabs = ({
   const { setPlaybarExpanded } = useLayout();
   const { feeds } = useData();
 
-  if (!feed && feedSlug) {
-    feed = feeds.find((feed) => feed.slug === feedSlug);
-  }
+  const feed = feeds.find((feed) => feed.slug === feedSlug);
+  const host = hosts.find((host) => feedSlug === host.hydrophone);
 
   // const isCandidateDetail =
   //   !!router.query.feedSlug && !!router.query.candidateId;
@@ -66,6 +93,8 @@ const DetailTabs = ({
   const isIndexPage = route[route.length - 1] === "[feedSlug]";
   const isCandidatePage = route[route.length - 1] === "[candidateId]";
 
+  const { nowPlayingFeed } = useNowPlaying();
+
   const tabRow = (tabs: Tab[]) => (
     <Stack
       direction="row"
@@ -73,7 +102,6 @@ const DetailTabs = ({
       sx={{
         borderBottom: "1px solid rgba(255,255,255,.33)",
         px: 3,
-        ml: router.query.candidateId ? "-24px" : 0,
       }}
     >
       {tabs.map((tab, index) => {
@@ -115,7 +143,8 @@ const DetailTabs = ({
             justifyContent: "space-between",
             gap: "16px",
             background: `center / cover no-repeat url(${feed?.imageUrl})`,
-            p: 2,
+            px: 3,
+            py: 2,
             minHeight: smDown ? " 160px" : "260px",
           }}
         >
@@ -179,6 +208,34 @@ const DetailTabs = ({
             </Typography>
           </Box>
         </Box>
+      )}
+      <Box
+        sx={{
+          m: 2,
+        }}
+      >
+        {nowPlayingFeed && <LivePlayer currentFeed={nowPlayingFeed} />}
+      </Box>
+      {host && (
+        <Paper
+          elevation={0}
+          sx={{
+            backgroundColor: "accent1.main",
+            p: 2,
+            mx: 2,
+            my: 1,
+            borderRadius: 1,
+          }}
+        >
+          <Typography variant="body2">
+            Hosted by <strong>{host.name}</strong>
+            <br />
+            <Link href={host.link} target="_blank" rel="noopener">
+              Learn more or donate
+            </Link>{" "}
+            to support their work.
+          </Typography>
+        </Paper>
       )}
       {showTabs && tabs && tabRow(tabs)}
       <Box>{children}</Box>

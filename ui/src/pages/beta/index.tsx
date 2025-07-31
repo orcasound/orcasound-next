@@ -1,4 +1,3 @@
-import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
 import { HydrophonesStack } from "@/components/CandidateList/HydrophonesStack";
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
@@ -11,7 +10,7 @@ HomePage.getLayout = function getLayout(page: React.ReactElement) {
   return (
     <MasterDataLayout>
       <HalfMapLayout
-        leftSlot={<CandidatesStack />}
+        // leftSlot={<CandidatesStack />}
         rightSlot={<HydrophonesStack />}
       >
         {page}

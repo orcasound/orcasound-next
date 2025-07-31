@@ -8,18 +8,17 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import Head from "next/head";
-import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
 import CommunityBar from "@/components/CandidateList/CommunityBar";
-import HydrophoneDetailTabs from "@/components/CandidateList/DetailTabs";
 import DetailTabs from "@/components/CandidateList/DetailTabs";
 import { DetectionsList } from "@/components/CandidateList/DetectionsList";
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import Link from "@/components/Link";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import WavesurferPlayer from "@/components/PlayBar/WavesurferPlayer";
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
@@ -36,6 +35,8 @@ import {
 } from "@/types/DataTypes";
 import formatDuration from "@/utils/masterDataHelpers";
 import { formatTimestamp } from "@/utils/time";
+
+import { FeedRightDetail } from ".";
 
 function CandidatePage() {
   return null;
@@ -81,14 +82,11 @@ const RightDetail = ({
     <div>
       <Head>Report {candidate?.id} | Orcasound </Head>
       <Container
-        maxWidth="xl"
         sx={{
-          p: 2,
-          pb: 14,
+          padding: "24px 0px !important",
         }}
       >
         <Box>
-          {" "}
           {smDown && (
             <Link
               href={"/beta/candidates"}
@@ -108,7 +106,7 @@ const RightDetail = ({
           )}
           <Box
             sx={{
-              marginTop: 1,
+              px: 3,
               display: "flex",
               justifyContent: "space-between",
             }}
@@ -142,7 +140,7 @@ const RightDetail = ({
               </Link>
             )}
           </Box>
-          <Stack gap={2} direction="column" sx={{ my: 3 }}>
+          <Stack gap={2} direction="column" sx={{ my: 3, px: 3 }}>
             <CommunityBar votes={0} />
             {/* {smDown && (
               <Button
@@ -159,7 +157,11 @@ const RightDetail = ({
           </Stack>
           <Box className="main">
             <DetailTabs showHeading={false} tabs={tabs}>
-              {candidate && <DetectionsList candidate={candidate} />}
+              {candidate && (
+                <div style={{ margin: "0 24px" }}>
+                  <DetectionsList candidate={candidate} />
+                </div>
+              )}
             </DetailTabs>
           </Box>
         </Box>
@@ -170,9 +172,9 @@ const RightDetail = ({
 
 const LeftDetail = ({ feed }: { feed: Feed | undefined }) => {
   return (
-    <HydrophoneDetailTabs showTabs={false}>
-      <CandidatesStack feed={feed} showChart={true}></CandidatesStack>
-    </HydrophoneDetailTabs>
+    // <HydrophoneDetailTabs showTabs={false}>
+    <CandidatesStack />
+    // </HydrophoneDetailTabs>
   );
 };
 
@@ -202,42 +204,48 @@ const CenterDetail = ({
         flexDirection: "column",
       }}
     >
-      <Box
-        className="drawer-controls"
-        sx={{
-          minHeight: "36px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          paddingX: "8px",
-          borderBottom: "1px solid rgba(255,255,255,.7)",
-        }}
-      >
-        {audioUrl ? (
+      {audioUrl && (
+        <Box
+          className="drawer-controls"
+          sx={{
+            minHeight: "36px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            paddingX: "8px",
+            borderBottom: "1px solid rgba(255,255,255,.7)",
+          }}
+        >
           <a href={audioUrl} download={`clip-${clipId}.mp3`}>
             Download MP3
           </a>
-        ) : (
-          "Processing mp3..."
-        )}
-      </Box>
+        </Box>
+      )}
       <Box
         className="wavesurfer-container"
         sx={{
           flex: 1,
         }}
       >
-        <Box sx={{ margin: "8px" }}>
+        <Box
+          sx={{
+            margin: "8px",
+            height: "100%",
+            maxWidth: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: isProcessing ? "center" : "flex-start",
+          }}
+        >
           {isProcessing ? (
-            spectrogramUrl ? (
-              <Image src={spectrogramUrl} alt="spectrogram" />
-            ) : (
-              "Processing spectrogram..."
-            )
+            <Stack gap={3}>
+              <LoadingSpinner />
+              {"Building audio file..."}
+            </Stack>
           ) : error ? (
             <p>Error: {error}</p>
           ) : audioUrl ? (
-            <div>
+            <div style={{ width: "100%" }}>
               <WavesurferPlayer audioUrl={audioUrl} />
               {/* <div>{totalDurationMs} ms</div>
               {droppedSeconds > 0 && (
@@ -426,11 +434,9 @@ const CandidateLayout = ({ children }: { children: React.ReactNode }) => {
     };
   }, [audioBlob, startTimeString, endTimeString]);
 
-  console.log("Rendering CandidateLayout");
-
   return (
     <HalfMapLayout
-      leftSlot={<LeftDetail feed={feed} />}
+      // leftSlot={<LeftDetail feed={feed} />}
       centerSlot={
         <CenterDetail
           clipId={startTimeString}
@@ -442,7 +448,8 @@ const CandidateLayout = ({ children }: { children: React.ReactNode }) => {
           droppedSeconds={droppedSeconds}
         />
       }
-      rightSlot={
+      rightSlot={<FeedRightDetail />}
+      rightDrawer={
         <RightDetail
           candidate={candidate}
           feed={feed}

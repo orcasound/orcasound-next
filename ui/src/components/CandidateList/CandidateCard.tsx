@@ -15,6 +15,7 @@ import { useEffect } from "react";
 
 import Link from "@/components/Link";
 import { useData } from "@/context/DataContext";
+import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Candidate, CombinedData } from "@/types/DataTypes";
 import formatDuration from "@/utils/masterDataHelpers";
@@ -48,6 +49,8 @@ export default function CandidateCard(props: { candidate: Candidate }) {
     masterPlayerStatus,
   } = useNowPlaying();
   const router = useRouter();
+
+  const { setPlaybarExpanded } = useLayout();
 
   const candidate = props.candidate;
   const active = candidate.id === nowPlayingCandidate?.id;
@@ -182,8 +185,14 @@ export default function CandidateCard(props: { candidate: Candidate }) {
         width: "100%",
         maxWidth: "100%",
         overflow: "hidden",
-        backgroundColor: active ? "rgba(255,255,255,.1)" : "default",
+        // backgroundColor: active ? "rgba(255,255,255,.1)" : "default",
         // border: active ? "1px solid rgba(255,255,255,.25)" : "none",
+        backgroundColor: active
+          ? (theme) => "rgba(255,255,255,.125)"
+          : "default",
+        border: active
+          ? "1px solid rgba(255,255,255,.25)"
+          : "1px solid transparent",
       }}
     >
       <Stack sx={{ width: "100%" }}>
@@ -210,6 +219,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                 href={href}
                 onClick={() => {
                   autoPlayOnReady.current = false;
+                  setPlaybarExpanded(false);
                   setNowPlayingCandidate(candidate);
                   setNowPlayingFeed(null);
                   sessionStorage.setItem(

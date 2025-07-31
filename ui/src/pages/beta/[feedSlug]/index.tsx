@@ -1,4 +1,4 @@
-import { Box, Paper, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 
@@ -6,40 +6,10 @@ import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
 import DetailTabs from "@/components/CandidateList/DetailTabs";
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
-import Link from "@/components/Link";
 import AudioVisualizer from "@/components/PlayBar/AudioVisualizer";
-import LivePlayer from "@/components/PlayBar/LivePlayer";
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
-
-const hosts = [
-  {
-    hydrophone: "orcasound-lab",
-    name: "Beam Reach",
-    link: "http://www.beamreach.blue/",
-  },
-  {
-    hydrophone: "north-sjc",
-    name: "Orca Behavior Institute",
-    link: "https://www.orcabehaviorinstitute.org/",
-  },
-  {
-    hydrophone: "sunset-bay",
-    name: "Beach Camp at Sunset Bay",
-    link: "https://www.sunsetbaywharf.com/",
-  },
-  {
-    hydrophone: "port-townsend",
-    name: "Port Townsend Marine Science Center",
-    link: "http://www.ptmsc.org/",
-  },
-  {
-    hydrophone: "bush-point",
-    name: "Orca Network",
-    link: "https://orcanetwork.org/",
-  },
-];
 
 function HydrophonePage() {
   const { setPlaybarExpanded } = useLayout();
@@ -60,7 +30,7 @@ const LeftDetail = () => {
   );
 };
 
-const RightDetail = () => {
+export const FeedRightDetail = () => {
   const router = useRouter();
   const { feedSlug } = router.query;
   // const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
@@ -70,7 +40,6 @@ const RightDetail = () => {
 
   const { feeds, autoPlayOnReady } = useData();
   const feed = feeds.find((feed) => feed.slug === feedSlug);
-  const host = hosts.find((host) => feedSlug === host.hydrophone);
   // load the feed into nowPlaying on page load
   useEffect(() => {
     if (feed) {
@@ -87,40 +56,8 @@ const RightDetail = () => {
 
   return (
     <>
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          p: 3,
-          pb: 2,
-          ml: -1,
-          gap: 2,
-        }}
-      >
-        {nowPlayingFeed && <LivePlayer currentFeed={nowPlayingFeed} />}
-      </Box>
-      <DetailTabs showHeading={false} tabs={tabs}>
-        <Box sx={{ p: 3 }}>
-          {host && (
-            <Paper
-              elevation={0}
-              sx={{
-                backgroundColor: "accent1.main",
-                p: 2,
-                borderRadius: 1,
-              }}
-            >
-              <Typography variant="body2">
-                Hosted by <strong>{host.name}</strong>
-                <br />
-                <Link href={host.link} target="_blank" rel="noopener">
-                  Learn more or donate
-                </Link>{" "}
-                to support their work.
-              </Typography>
-            </Paper>
-          )}
+      <DetailTabs showHeading={true} tabs={tabs}>
+        <Box sx={{ px: 3, py: 1 }}>
           {feed?.introHtml ? (
             <div
               className="intro"
@@ -145,9 +82,9 @@ HydrophonePage.getLayout = function getLayout() {
   return (
     <MasterDataLayout>
       <HalfMapLayout
-        leftSlot={<LeftDetail />}
+        // leftSlot={<CandidatesStack />}
         centerSlot={<CenterDetail />}
-        rightSlot={<RightDetail />}
+        rightSlot={<FeedRightDetail />}
       />
     </MasterDataLayout>
   );

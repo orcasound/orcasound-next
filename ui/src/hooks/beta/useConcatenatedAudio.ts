@@ -53,8 +53,6 @@ export default function useConcatenatedAudio({
     endTime,
   });
 
-  console.log("feedSegments length", segmentsData?.feedSegments.results.length);
-
   const firstTimestamp = useMemo(() => {
     const tsList =
       segmentsData?.feedSegments?.results
@@ -77,13 +75,6 @@ export default function useConcatenatedAudio({
 
   const allLoaded = isFetched && !isLoading;
 
-  console.log("isReady", isReady);
-  console.log("stream", stream);
-  console.log("allLoaded", allLoaded);
-  console.log("feedId", feedId);
-  console.log("startTime", startTime);
-  console.log("endTime", endTime);
-
   useEffect(() => {
     if (!segmentsData?.feedSegments?.results?.length) {
       console.log("No segments found — clearing audioBlob");
@@ -102,11 +93,8 @@ export default function useConcatenatedAudio({
       !startTime ||
       !endTime
     ) {
-      console.log("useConcatenatedAudio skipped — missing deps");
       return;
     }
-
-    console.log("useConcatenatedAudio running with single stream");
 
     const abortController = new AbortController();
     let cancelled = false;

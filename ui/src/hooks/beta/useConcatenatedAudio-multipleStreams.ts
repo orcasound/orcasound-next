@@ -75,21 +75,8 @@ export default function useConcatenatedAudio({
     return sorted;
   }, [streams]);
 
-  console.log("isReady", isReady);
-  console.log("allStreams.length", allStreams.length);
-  useEffect(() => {
-    console.log("allStreams changed", allStreams);
-  }, [allStreams]);
-  useEffect(() => {
-    console.log("playlistTimestamps identity changed");
-  }, [playlistTimestamps]);
-
-  console.log("playlistTimestamps", playlistTimestamps);
-  console.log("feedId", feedId);
-  console.log("results");
-  console.log("startTime", startTime);
-  console.log("endTime", endTime);
-  console.log("allLoaded", allLoaded);
+  useEffect(() => {}, [allStreams]);
+  useEffect(() => {}, [playlistTimestamps]);
 
   useEffect(() => {
     if (
@@ -100,11 +87,8 @@ export default function useConcatenatedAudio({
       !startTime ||
       !endTime
     ) {
-      console.log("useConcatenatedAudio skipped -- missing params");
-
       return;
     }
-    console.log("useConcatenatedAudio running fetchAndConcat");
 
     const abortController = new AbortController();
     let cancelled = false;

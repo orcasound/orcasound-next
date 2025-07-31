@@ -72,13 +72,11 @@ export default function WavesurferPlayer({ audioUrl }: WaveformPlayerProps) {
 
       // Crucial: Set isReady only when Wavesurfer confirms it's ready.
       ws.on("ready", (duration) => {
-        console.log("Wavesurfer 'ready' event fired!");
         setIsReady(true);
         // Optionally, if `deferInit` was used for Spectrogram, initialize it here
         // ws.initPlugin('spectrogram');
       });
 
-      console.log("Loading audio:", audioUrl);
       ws.load(audioUrl).catch((error) => {
         console.error("Error loading audio in Wavesurfer:", error);
       });
@@ -199,7 +197,7 @@ export default function WavesurferPlayer({ audioUrl }: WaveformPlayerProps) {
       >
         {" "}
         {isPlaying ? pauseIcon : playIcon}
-        <div style={{ width: "200px" }}>
+        <div style={{ width: "240px" }}>
           <input
             type="range"
             min={calculateZoomLimits().minZoom || 0} // Ensure min value is available
