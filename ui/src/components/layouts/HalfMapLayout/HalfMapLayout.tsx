@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import React, { ReactElement, useRef } from "react";
 
 import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
-import { MobileDisplay } from "@/components/CandidateList/MobileDisplay";
 import HeaderNew from "@/components/HeaderNew";
 import { useLayout } from "@/context/LayoutContext";
 
@@ -136,32 +135,34 @@ export function HalfMapLayout({
             }}
           >
             <MapWrapper />
-            <Box
-              className="now-playing-drawer"
-              sx={{
-                px: 0,
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
-                overflowY: "auto",
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                borderRight: "1px solid rgba(255,255,255,.5)",
-                height:
-                  mdDown && playbarExpanded
-                    ? `calc(100vh)` // height calc gets complex on mobile due to browser bar
-                    : playbarExpanded
-                      ? `calc(100vh - ${headerHeight})`
-                      : 0,
-                backgroundColor: "background.default",
-                zIndex: (theme) => theme.zIndex.drawer + 1,
-                transition: "height .66s ease",
-              }}
-            >
-              {playbarExpanded && centerSlot}
-            </Box>
+            {!mdDown && (
+              <Box
+                className="now-playing-drawer"
+                sx={{
+                  px: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: 1,
+                  overflowY: "auto",
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  borderRight: "1px solid rgba(255,255,255,.5)",
+                  height:
+                    mdDown && playbarExpanded
+                      ? `calc(100vh)` // height calc gets complex on mobile due to browser bar
+                      : playbarExpanded
+                        ? `calc(100vh - ${headerHeight})`
+                        : 0,
+                  backgroundColor: "background.default",
+                  zIndex: (theme) => theme.zIndex.drawer + 1,
+                  transition: "height .66s ease",
+                }}
+              >
+                {playbarExpanded && centerSlot}
+              </Box>
+            )}
           </Box>
           {!mdDown && (
             <SideList position="right">
@@ -195,7 +196,7 @@ export function HalfMapLayout({
             </SideList>
           )}
           {/* // mobile view */}
-          {mdDown && (
+          {/* {mdDown && (
             <Box
               className={"mobile-view"}
               sx={{
@@ -211,7 +212,7 @@ export function HalfMapLayout({
                 <MobileDisplay masterPlayerTimeRef={masterPlayerTimeRef} />
               )}
             </Box>
-          )}
+          )} */}
         </Box>
 
         <Footer masterPlayerTimeRef={masterPlayerTimeRef} />

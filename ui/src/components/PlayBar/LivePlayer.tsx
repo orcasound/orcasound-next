@@ -2,9 +2,9 @@ import { ErrorOutline, PauseCircle, PlayCircle } from "@mui/icons-material";
 import {
   Box,
   CircularProgress,
-  Stack,
+  Theme,
   Tooltip,
-  Typography,
+  useMediaQuery,
 } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -17,6 +17,8 @@ import useFeedPresence from "@/hooks/useFeedPresence";
 import { useTimestampFetcher } from "@/hooks/useTimestampFetcher";
 import fin512 from "@/public/photos/fin-512x512.png";
 import { analytics } from "@/utils/analytics";
+
+import { PlayerBase } from "./PlayerBase";
 
 // // dynamically import VideoJS to speed up initial page load
 // const VideoJS = dynamic(() => import("@/components/Player/VideoJS"));
@@ -53,6 +55,7 @@ export default function LivePlayer({
   const [playerStatus, setPlayerStatus] = useState<PlayerStatus>("idle");
   const playerRef = useRef<VideoJSPlayer | null>(null);
   const { setPlaybarExpanded } = useLayout();
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   const { timestamp, hlsURI } = useTimestampFetcher(
     currentFeed?.bucket,
@@ -177,7 +180,7 @@ export default function LivePlayer({
 
     setNowPlayingFeed(currentFeed);
     setNowPlayingCandidate(null);
-    if (playerStatus !== "playing") setPlaybarExpanded(true);
+    if (playerStatus !== "playing" && !mdDown) setPlaybarExpanded(true);
 
     if (playerStatus === "error") {
       setPlayerStatus("idle");
@@ -262,52 +265,23 @@ export default function LivePlayer({
   );
 
   return (
-    <div
-      className="live-player-container"
-      style={{
-        display: "flex",
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        width: "100%",
-        gap: "1rem",
-      }}
-    >
-      <div
-        className="live-player"
-        style={{ display: "flex", gap: "16px", marginLeft: "4px" }}
-      >
-        {playPause}
-        {/* {!active || masterPlayerStatus !== "playing" ? playIcon : pauseIcon} */}
-        <Stack
-          className="live-player-text"
-          sx={{
-            justifyContent: "center",
-          }}
-        >
-          <Typography sx={{ fontSize: "20px" }}>Listen Live</Typography>
-          <Typography sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
-            {currentFeed &&
-              `${listenerCount} listener${listenerCount > 1 ? "s" : ""}`}
-          </Typography>
-        </Stack>
-      </div>
-
-      {/* <div className="detection-button" style={{ maxWidth: "50%" }}>
-        {(playerStatus === "playing" || playerStatus === "loading") &&
-          currentFeed && (
-            <DetectionDialog
-              isPlaying={playerStatus === "playing"}
-              feed={currentFeed}
-              timestamp={timestamp}
-              getPlayerTime={() => playerRef.current?.currentTime()}
-              listenerCount={listenerCount}
-            >
-              <DetectionButton />
-            </DetectionDialog>
-          )}
-      </div> */}
+    <>
+      {/* {mdDown && (
+        <div className="detection-button" style={{ maxWidth: "50%" }}>
+          {(playerStatus === "playing" || playerStatus === "loading") &&
+            currentFeed && (
+              <DetectionDialog
+                isPlaying={playerStatus === "playing"}
+                feed={currentFeed}
+                timestamp={timestamp}
+                getPlayerTime={() => playerRef.current?.currentTime()}
+                listenerCount={listenerCount}
+              >
+                <DetectionButton />
+              </DetectionDialog>
+            )}
+        </div>
+      )} */}
       {/* {playerStatus !== "playing" && playerStatus !== "loading" && (
           <DetectionButton disabled={true} />
         )} */}
@@ -322,7 +296,7 @@ export default function LivePlayer({
         />
       </Box>
 
-      {/* <div style={{ display: "none" }}>
+      {mdDown && (
         <PlayerBase
           key={currentFeed.id}
           type="feed"
@@ -335,11 +309,11 @@ export default function LivePlayer({
           image={currentFeed.imageUrl?.toString()}
           timestamp={timestamp}
           listenerCount={listenerCount}
-          playerTitle={playerText}
+          playerTitle={currentFeed.name}
           playerSubtitle={""}
         />
-      </div> */}
-    </div>
+      )}
+    </>
   );
 }
 

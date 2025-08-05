@@ -1,6 +1,7 @@
 import { Box, Stack, Theme, useMediaQuery } from "@mui/material";
 import React, { MutableRefObject } from "react";
 
+import PlayBar from "@/components/PlayBar/PlayBar";
 import { useLayout } from "@/context/LayoutContext";
 
 export default function Footer({
@@ -10,7 +11,7 @@ export default function Footer({
 }) {
   // const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
-  const { mobileMenuHeight } = useLayout();
+  const { mobileMenuHeight, playbarExpanded } = useLayout();
 
   return (
     <Stack
@@ -18,13 +19,17 @@ export default function Footer({
       className={"bottom-controls-stack"}
       sx={{
         position: "absolute",
-        bottom: mdDown ? mobileMenuHeight : 0,
-        // top: "8rem",
+        bottom: playbarExpanded ? 0 : `calc(${mobileMenuHeight} + 2px)`,
+        top: playbarExpanded
+          ? "0px"
+          : `calc(100% - 72px - ${mobileMenuHeight})`, // 72px value comes from visual estimate
         zIndex: (theme) => theme.zIndex.drawer + 1,
-        width: "100%",
-        margin: "auto",
-        justifyContent: "flex-end",
+        width: playbarExpanded ? "100%" : "calc(100% - .5rem)",
+        ml: playbarExpanded ? 0 : ".25rem",
         alignItems: "center",
+        transition: "top .33s ease, bottom 0s linear",
+        // height: playbarExpanded ? "100%" : `70px`,
+        justifyContent: playbarExpanded ? "flex-start" : "flex-end",
         // backgroundColor: "rgba(0,0,0,.15)",
         // backdropFilter: "blur(10px)",
         // WebkitBackdropFilter: "blur(10px)",
@@ -37,11 +42,17 @@ export default function Footer({
       <Box
         className="playbar-container"
         sx={{
-          width: mdDown ? "calc(100% - .5rem)" : "46%",
+          width: mdDown ? "100%" : "46%",
+          height: "100%",
           mb: mdDown ? "2px" : "2rem",
+          borderRadius: playbarExpanded ? 0 : "8px",
+          border: playbarExpanded ? "none" : "1px solid rgba(255,255,255,.25)",
+          backgroundColor: "base.main",
+
+          overflow: "hidden",
         }}
       >
-        {/* <PlayBar masterPlayerTimeRef={masterPlayerTimeRef} /> */}
+        <PlayBar masterPlayerTimeRef={masterPlayerTimeRef} />
       </Box>
     </Stack>
   );

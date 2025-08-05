@@ -133,6 +133,9 @@ export default function PlayBar({
         />
       )}
       {nowPlayingFeed && <LivePlayer currentFeed={nowPlayingFeed} />}
+      {!nowPlayingCandidate && !nowPlayingFeed && (
+        <>Please select a hydrophone stream</>
+      )}
     </>
   );
 }

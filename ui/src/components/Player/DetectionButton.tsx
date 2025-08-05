@@ -9,7 +9,7 @@ export default function DetectionButton() {
       color="secondary"
       sx={{
         position: "absolute",
-        bottom: 100,
+        bottom: 80,
         left: 0,
         right: 0,
         margin: "auto",
@@ -17,7 +17,7 @@ export default function DetectionButton() {
 
         // style to look like outlined button
         backgroundColor: "white",
-        color: "primary.main",
+        color: "base.main",
         borderColor: "primary.main",
         borderStyle: "solid",
         borderWidth: "2px",
@@ -34,7 +34,7 @@ export default function DetectionButton() {
           alignItems: "center",
         }}
       >
-        <GraphicEq sx={{ mr: 1 }} />
+        <GraphicEq sx={{ mr: 1, color: "base.main" }} />
         Report sound
       </Box>
     </Fab>
