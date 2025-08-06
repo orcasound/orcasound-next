@@ -23,9 +23,11 @@ import ReportsBarChart from "./ReportsBarChart";
 export const CandidatesStack = ({
   feed,
   showChart = false,
+  showHeading = true,
 }: {
   feed?: Feed;
   showChart?: boolean;
+  showHeading?: boolean;
 }) => {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const { filters, sortedCandidates, filteredData } = useData();
@@ -88,7 +90,7 @@ export const CandidatesStack = ({
         mt: showChart ? 2 : 3,
       }}
     >
-      {!showChart && (
+      {!showChart && !showHeading && (
         <Box mb={2}>
           <Typography component="h2" variant="h5" mb={1}>
             Recordings

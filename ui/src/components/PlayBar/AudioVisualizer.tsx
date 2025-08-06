@@ -1,5 +1,5 @@
 import { KeyboardArrowDown } from "@mui/icons-material";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Theme, useMediaQuery } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useLayout } from "@/context/LayoutContext";
@@ -29,7 +29,13 @@ const getFrequencyData = (analyser: AnalyserNode): Uint8Array | null => {
   return data;
 };
 
-function AudioVisualizer() {
+function AudioVisualizer({
+  showOscilloscope = false,
+}: {
+  showOscilloscope?: boolean;
+}) {
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
+
   const {
     analyserNodeRef,
     masterPlayerRef,
@@ -194,18 +200,21 @@ function AudioVisualizer() {
 
   return (
     <div
-      className={`playerbase ${nowPlayingFeed?.slug}`}
+      className={`audio-visualizer ${nowPlayingFeed?.slug}`}
       style={{
         flex: 1,
         display: "flex",
         flexDirection: "column",
+        maxHeight: "400px",
       }}
     >
       <Box
-        className="drawer-controls"
+        className="live-spectrogram-controls"
         sx={{
           minHeight: "36px",
-          display: "flex",
+          // display: "flex",
+          // hiding this for now
+          display: "none",
           alignItems: "center",
           gap: "8px",
           paddingX: "8px",
@@ -244,15 +253,17 @@ function AudioVisualizer() {
             </select>
           </label>
         </div>
-        <Button
-          size="small"
-          endIcon={<KeyboardArrowDown />}
-          onClick={() => {
-            setPlaybarExpanded(false);
-          }}
-        >
-          Show map
-        </Button>
+        {!mdDown && (
+          <Button
+            size="small"
+            endIcon={<KeyboardArrowDown />}
+            onClick={() => {
+              setPlaybarExpanded(false);
+            }}
+          >
+            Show map
+          </Button>
+        )}
       </Box>
       <canvas
         ref={waveformRef}
@@ -266,35 +277,42 @@ function AudioVisualizer() {
         height={heightSpectrogram}
         style={{ width: "100%", flex: 1 }}
       />
-      <WaveformCanvas analyser={analyserNodeRef.current} />
-      <SpectrogramCanvas analyser={analyserNodeRef.current} />
-      <div
-        style={{
-          height: "150px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      {showOscilloscope && (
+        <>
+          <WaveformCanvas analyser={analyserNodeRef.current} />
+          <SpectrogramCanvas analyser={analyserNodeRef.current} />
+        </>
+      )}
+      {!mdDown && (
         <div
-          className="detection-button"
-          style={{ width: "66%", height: "35%" }}
+          className="detection-button-container"
+          style={{
+            height: "150px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          {(masterPlayerStatus === "playing" ||
-            masterPlayerStatus === "loading") &&
-            nowPlayingFeed && (
-              <DetectionDialog
-                isPlaying={masterPlayerStatus === "playing"}
-                feed={nowPlayingFeed}
-                timestamp={timestamp}
-                getPlayerTime={() => masterPlayerRef.current?.currentTime()}
-                listenerCount={listenerCount}
-              >
-                <DetectionButton />
-              </DetectionDialog>
-            )}
+          <div
+            className="detection-button"
+            style={{ width: "66%", height: "35%" }}
+          >
+            {(masterPlayerStatus === "playing" ||
+              masterPlayerStatus === "loading") &&
+              nowPlayingFeed && (
+                <DetectionDialog
+                  isPlaying={masterPlayerStatus === "playing"}
+                  feed={nowPlayingFeed}
+                  timestamp={timestamp}
+                  getPlayerTime={() => masterPlayerRef.current?.currentTime()}
+                  listenerCount={listenerCount}
+                >
+                  <DetectionButton />
+                </DetectionDialog>
+              )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

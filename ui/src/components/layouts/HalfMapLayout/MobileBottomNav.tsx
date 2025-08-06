@@ -1,4 +1,4 @@
-import { Earbuds, Map, Mic, Public } from "@mui/icons-material";
+import { Earbuds, Mic, Public } from "@mui/icons-material";
 import { BottomNavigation, BottomNavigationAction } from "@mui/material";
 import { useRouter } from "next/router";
 import React from "react";
@@ -9,7 +9,7 @@ import { useNowPlaying } from "@/context/NowPlayingContext";
 export function MobileBottomNav() {
   const router = useRouter();
   const { mobileTab, setMobileTab } = useLayout();
-  const { setNowPlayingCandidate } = useNowPlaying();
+  const { setNowPlayingCandidate, setNowPlayingFeed } = useNowPlaying();
 
   return (
     <BottomNavigation
@@ -37,19 +37,21 @@ export function MobileBottomNav() {
       }}
     >
       <BottomNavigationAction
-        label="Map"
-        icon={<Map />}
+        label="Listen live"
+        icon={<Mic />}
         onClick={() => {
           router.push("/beta");
           setNowPlayingCandidate(null);
         }}
       />
       <BottomNavigationAction
-        label="Hydrophones"
-        icon={<Mic />}
-        onClick={() => router.push("/beta/hydrophones")}
+        label="Explore bouts"
+        icon={<Earbuds />}
+        onClick={() => {
+          router.push("/beta/explore");
+          setNowPlayingFeed(null);
+        }}
       />
-      <BottomNavigationAction label="Explore" icon={<Earbuds />} />
       <BottomNavigationAction label="Take Action" icon={<Public />} />
     </BottomNavigation>
   );

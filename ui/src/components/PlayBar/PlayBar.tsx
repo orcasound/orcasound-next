@@ -133,8 +133,30 @@ export default function PlayBar({
         />
       )}
       {nowPlayingFeed && <LivePlayer currentFeed={nowPlayingFeed} />}
-      {!nowPlayingCandidate && !nowPlayingFeed && (
-        <>Please select a hydrophone stream</>
+      {!nowPlayingCandidate && !nowPlayingFeed && false && (
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              height: "48px",
+              padding: "0 24px",
+              borderRadius: "100px",
+              background: "black",
+              color: "rgba(255,255,255,.95)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            Tap a hydrophone to begin listening
+          </div>
+        </div>
       )}
     </>
   );

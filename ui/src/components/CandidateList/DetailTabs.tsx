@@ -210,12 +210,14 @@ const DetailTabs = ({
         </Box>
       )}
       <Box
+        className="live-player-container"
         sx={{
           m: 2,
         }}
       >
         {nowPlayingFeed && <LivePlayer currentFeed={nowPlayingFeed} />}
       </Box>
+
       {host && (
         <Paper
           elevation={0}

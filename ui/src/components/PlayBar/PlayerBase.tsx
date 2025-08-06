@@ -11,7 +11,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import dynamic from "next/dynamic";
-import { MutableRefObject, ReactNode, useMemo } from "react";
+import { MutableRefObject, ReactNode, SetStateAction, useMemo } from "react";
 
 import PlayBarPlayPauseButton from "@/components/PlayBar/CandidatePlayPauseButton";
 import { type PlayerStatus } from "@/components/Player/Player";
@@ -48,6 +48,7 @@ type PlayerBaseProps = {
   image?: string | undefined;
   playerTitle: string | undefined; // change this to player title
   playerSubtitle: string | undefined; // change this to player subtitle
+  setAudioVisualizerOpen: React.Dispatch<SetStateAction<boolean>>;
 
   // Feed only
   timestamp?: number | undefined;
@@ -81,6 +82,7 @@ export function PlayerBase({
   marks,
   playerTime = 0,
   timestamp,
+  setAudioVisualizerOpen,
 }: PlayerBaseProps) {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const { nowPlayingCandidate, nowPlayingFeed } = useNowPlaying();
@@ -133,10 +135,14 @@ export function PlayerBase({
       color="base"
       sx={{
         top: "auto",
-        height: "100%",
+        height: playbarExpanded ? "auto" : "100%",
         padding: "6px 0",
         alignItems: "center",
         display: "flex",
+        borderRadius: playbarExpanded ? 0 : "8px",
+        border: playbarExpanded ? "none" : "1px solid rgba(255,255,255,.5)",
+        background: playbarExpanded ? "black" : "base.main",
+        pt: playbarExpanded ? "16px" : "6px",
       }}
     >
       <Toolbar
@@ -289,7 +295,12 @@ export function PlayerBase({
             setPlaybarExpanded(!playbarExpanded);
           }}
         >
-          <ExpandLess sx={{}} />
+          <ExpandLess
+            sx={{ transform: playbarExpanded ? "rotate(180deg)" : "none" }}
+            onClick={() => {
+              if (playbarExpanded) setAudioVisualizerOpen(false);
+            }}
+          />
         </Box>
       </Toolbar>
     </AppBar>

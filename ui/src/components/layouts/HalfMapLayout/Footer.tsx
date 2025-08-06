@@ -24,13 +24,13 @@ export default function Footer({
           ? "0px"
           : `calc(100% - 72px - ${mobileMenuHeight})`, // 72px value comes from visual estimate
         zIndex: (theme) => theme.zIndex.drawer + 1,
-        width: playbarExpanded ? "100%" : "calc(100% - .5rem)",
-        ml: playbarExpanded ? 0 : ".25rem",
+        width: playbarExpanded ? "100%" : "calc(100% - .2rem)",
+        ml: playbarExpanded ? 0 : ".1rem",
         alignItems: "center",
         transition: "top .33s ease, bottom 0s linear",
-        // height: playbarExpanded ? "100%" : `70px`,
         justifyContent: playbarExpanded ? "flex-start" : "flex-end",
-        // backgroundColor: "rgba(0,0,0,.15)",
+        backgroundColor: playbarExpanded ? "rgba(0,0,0)" : "transparent",
+        overflowY: "scroll",
         // backdropFilter: "blur(10px)",
         // WebkitBackdropFilter: "blur(10px)",
 
@@ -45,11 +45,9 @@ export default function Footer({
           width: mdDown ? "100%" : "46%",
           height: "100%",
           mb: mdDown ? "2px" : "2rem",
-          borderRadius: playbarExpanded ? 0 : "8px",
-          border: playbarExpanded ? "none" : "1px solid rgba(255,255,255,.25)",
-          backgroundColor: "base.main",
-
-          overflow: "hidden",
+          // backgroundColor: "base.main",
+          // overflow: "hidden",
+          display: "flex",
         }}
       >
         <PlayBar masterPlayerTimeRef={masterPlayerTimeRef} />

@@ -4,18 +4,21 @@ import {
   ListItemAvatar,
   ListItemButton,
   ListItemText,
+  Theme,
+  useMediaQuery,
 } from "@mui/material";
 
-import { Candidate } from "@/types/DataTypes";
+import { CombinedData } from "@/types/DataTypes";
 
-export const DetectionsList = ({ candidate }: { candidate: Candidate }) => {
+export const DetectionsList = ({ array }: { array: CombinedData[] }) => {
   const userName = "Orcasound Listener";
   const aiName = "Orcahello AI";
   const sightingName = "Cascadia Trusted Observer";
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   return (
-    <List>
-      {candidate?.array.map((el, index) => (
+    <List sx={{ mx: 3 }}>
+      {array?.map((el, index) => (
         <ListItemButton
           key={index}
           sx={{

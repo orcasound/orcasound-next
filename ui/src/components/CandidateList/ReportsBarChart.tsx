@@ -43,7 +43,7 @@ export default function ReportsBarChart({
         dataKey: "detections",
       },
     ],
-    height: showYAxis ? 230 : mdDown ? 50 : 100,
+    height: showYAxis ? 230 : 70,
     margin: {
       top: showXAxis ? 10 : 0,
       right: showYAxis ? 20 : 0,
@@ -179,9 +179,11 @@ export default function ReportsBarChart({
 
   return (
     <Box
+      className="reports-bar-chart"
       sx={{
         width: "100%",
         overflowX: "auto",
+        height: "150px",
       }}
     >
       <BarChart
@@ -206,11 +208,22 @@ export default function ReportsBarChart({
         {...chartSetting}
       />
       <style jsx global>{`
+        .hide-y-axis {
+          height: 100%;
+        }
+
+        .hide-x-axis {
+          height: 100%;
+        }
+
         .hide-y-axis .MuiChartsAxis-left {
           display: none !important;
         }
 
         .hide-x-axis .MuiChartsAxis-tickContainer {
+          display: none !important;
+        }
+        .hide-x-axis .MuiChartsAxis-label {
           display: none !important;
         }
         .hide-x-axis .MuiChartsAxis-line {

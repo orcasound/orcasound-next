@@ -8,7 +8,6 @@ import { useLayout } from "@/context/LayoutContext";
 
 import { MasterDataLayout } from "../MasterDataLayout";
 import Footer from "./Footer";
-import { MapWrapper } from "./MapWrapper";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { SideList } from "./SideList";
 
@@ -116,7 +115,7 @@ export function HalfMapLayout({
             flexFlow: mdDown ? "column" : "row",
             flex: 1,
             position: "relative",
-            overflow: "hidden",
+            overflowY: "scroll",
           }}
         >
           {/* // desktop view */}
@@ -134,7 +133,7 @@ export function HalfMapLayout({
               borderLeft: "1px solid rgba(255,255,255,.5)",
             }}
           >
-            <MapWrapper />
+            {children}
             {!mdDown && (
               <Box
                 className="now-playing-drawer"
@@ -157,7 +156,7 @@ export function HalfMapLayout({
                         : 0,
                   backgroundColor: "background.default",
                   zIndex: (theme) => theme.zIndex.drawer + 1,
-                  transition: "height .66s ease",
+                  transition: "height .33s ease",
                 }}
               >
                 {playbarExpanded && centerSlot}
@@ -188,7 +187,7 @@ export function HalfMapLayout({
                         : 0,
                   backgroundColor: "background.default",
                   zIndex: (theme) => theme.zIndex.drawer + 1,
-                  transition: "height .66s ease",
+                  transition: "height .33s ease",
                 }}
               >
                 {rightDrawer}
@@ -196,26 +195,11 @@ export function HalfMapLayout({
             </SideList>
           )}
           {/* // mobile view */}
-          {/* {mdDown && (
-            <Box
-              className={"mobile-view"}
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
-                overflowY: "auto",
-              }}
-            >
-              {!!router.query.feedSlug || !!router.query.candidateId ? (
-                children
-              ) : (
-                <MobileDisplay masterPlayerTimeRef={masterPlayerTimeRef} />
-              )}
-            </Box>
-          )} */}
         </Box>
 
-        <Footer masterPlayerTimeRef={masterPlayerTimeRef} />
+        {router.asPath !== "/beta/explore" && (
+          <Footer masterPlayerTimeRef={masterPlayerTimeRef} />
+        )}
 
         {mdDown && <MobileBottomNav />}
       </Box>

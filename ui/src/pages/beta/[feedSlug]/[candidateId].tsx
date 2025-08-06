@@ -159,7 +159,7 @@ const RightDetail = ({
             <DetailTabs showHeading={false} tabs={tabs}>
               {candidate && (
                 <div style={{ margin: "0 24px" }}>
-                  <DetectionsList candidate={candidate} />
+                  <DetectionsList array={candidate.array} />
                 </div>
               )}
             </DetailTabs>

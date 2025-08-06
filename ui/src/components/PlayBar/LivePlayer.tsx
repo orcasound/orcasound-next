@@ -1,7 +1,14 @@
-import { ErrorOutline, PauseCircle, PlayCircle } from "@mui/icons-material";
+import {
+  ErrorOutline,
+  GraphicEq,
+  PauseCircle,
+  PlayCircle,
+} from "@mui/icons-material";
 import {
   Box,
+  Button,
   CircularProgress,
+  Stack,
   Theme,
   Tooltip,
   useMediaQuery,
@@ -16,9 +23,47 @@ import type { Feed } from "@/graphql/generated";
 import useFeedPresence from "@/hooks/useFeedPresence";
 import { useTimestampFetcher } from "@/hooks/useTimestampFetcher";
 import fin512 from "@/public/photos/fin-512x512.png";
+import darkTheme from "@/styles/darkTheme";
 import { analytics } from "@/utils/analytics";
 
+import { DetectionsList } from "../CandidateList/DetectionsList";
+import ReportsBarChart from "../CandidateList/ReportsBarChart";
+import Link from "../Link";
+import AudioVisualizer from "./AudioVisualizer";
 import { PlayerBase } from "./PlayerBase";
+
+const hosts = [
+  {
+    hydrophone: "orcasound-lab",
+    name: "Beam Reach",
+    link: "http://www.beamreach.blue/",
+  },
+  {
+    hydrophone: "north-sjc",
+    name: "Orca Behavior Institute",
+    link: "https://www.orcabehaviorinstitute.org/",
+  },
+  {
+    hydrophone: "sunset-bay",
+    name: "Beach Camp at Sunset Bay",
+    link: "https://www.sunsetbaywharf.com/",
+  },
+  {
+    hydrophone: "port-townsend",
+    name: "Port Townsend Marine Science Center",
+    link: "http://www.ptmsc.org/",
+  },
+  {
+    hydrophone: "bush-point",
+    name: "Orca Network",
+    link: "https://orcanetwork.org/",
+  },
+];
+
+type Tab = {
+  title: string;
+  slug: string;
+};
 
 // // dynamically import VideoJS to speed up initial page load
 // const VideoJS = dynamic(() => import("@/components/Player/VideoJS"));
@@ -51,11 +96,13 @@ export default function LivePlayer({
     setNowPlayingCandidate,
     setNowPlayingFeed,
   } = useNowPlaying();
-  const { autoPlayOnReady } = useData();
+  const { autoPlayOnReady, filteredData } = useData();
   const [playerStatus, setPlayerStatus] = useState<PlayerStatus>("idle");
   const playerRef = useRef<VideoJSPlayer | null>(null);
-  const { setPlaybarExpanded } = useLayout();
+  const { playbarExpanded, setPlaybarExpanded } = useLayout();
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
+
+  const host = hosts.find((host) => currentFeed.slug === host.hydrophone);
 
   const { timestamp, hlsURI } = useTimestampFetcher(
     currentFeed?.bucket,
@@ -147,6 +194,7 @@ export default function LivePlayer({
         setPlayerStatus("playing");
         setMasterPlayerStatus("playing");
         autoPlayOnReady.current = true;
+        setAudioVisualizerOpen(true);
 
         if (currentFeed?.slug) analytics.stream.started(currentFeed.slug);
       });
@@ -228,6 +276,40 @@ export default function LivePlayer({
     console.log("masterPlayerStatus: " + masterPlayerStatus);
   }, [playerStatus, masterPlayerStatus]);
 
+  const tabRow = (tabs: Tab[]) => (
+    <Stack
+      direction="row"
+      gap="40px"
+      sx={{
+        borderBottom: "1px solid rgba(255,255,255,.33)",
+        px: 3,
+      }}
+    >
+      {tabs.map((tab, index) => {
+        const active = index === 0;
+        return (
+          <Link
+            key={tab.title}
+            href={tab.slug}
+            style={{
+              color: active
+                ? darkTheme.palette.text.primary
+                : darkTheme.palette.text.secondary,
+              textDecoration: "none",
+              height: "100%",
+              padding: "16px 0",
+              borderBottom: active
+                ? "1px solid " + darkTheme.palette.accent3.main
+                : "none",
+            }}
+          >
+            {tab.title}
+          </Link>
+        );
+      })}
+    </Stack>
+  );
+
   const playPause = (
     <Box
       sx={{
@@ -264,8 +346,17 @@ export default function LivePlayer({
     </Box>
   );
 
+  const [audioVisualizerOpen, setAudioVisualizerOpen] = useState(false);
+
   return (
-    <>
+    <Box
+      className="live-player"
+      sx={{
+        display: "flex",
+        flex: 1,
+        flexDirection: "column",
+      }}
+    >
       {/* {mdDown && (
         <div className="detection-button" style={{ maxWidth: "50%" }}>
           {(playerStatus === "playing" || playerStatus === "loading") &&
@@ -297,23 +388,99 @@ export default function LivePlayer({
       </Box>
 
       {mdDown && (
-        <PlayerBase
-          key={currentFeed.id}
-          type="feed"
-          playerOptions={playerOptions}
-          handleReady={handleReady}
-          playerStatus={playerStatus}
-          feed={currentFeed}
-          playerRef={playerRef}
-          handlePlayPauseClickFeed={handlePlayPauseClick}
-          image={currentFeed.imageUrl?.toString()}
-          timestamp={timestamp}
-          listenerCount={listenerCount}
-          playerTitle={currentFeed.name}
-          playerSubtitle={""}
-        />
+        <div style={{ position: "fixed", width: "100%", zIndex: 1000 }}>
+          <PlayerBase
+            key={currentFeed.id}
+            type="feed"
+            playerOptions={playerOptions}
+            handleReady={handleReady}
+            playerStatus={playerStatus}
+            feed={currentFeed}
+            playerRef={playerRef}
+            handlePlayPauseClickFeed={handlePlayPauseClick}
+            image={currentFeed.imageUrl?.toString()}
+            timestamp={timestamp}
+            listenerCount={listenerCount}
+            playerTitle={currentFeed.name}
+            playerSubtitle={""}
+            setAudioVisualizerOpen={setAudioVisualizerOpen}
+          />
+        </div>
       )}
-    </>
+      {playbarExpanded && audioVisualizerOpen && (
+        <div style={{ marginTop: "calc(68px + 1rem)" }}>
+          <AudioVisualizer />
+        </div>
+      )}
+      {playbarExpanded && (
+        <>
+          <div
+            style={{
+              marginTop: audioVisualizerOpen ? "1rem" : "calc(68px + 1rem)", // 68px is the height of PlayerBase which is fixed
+            }}
+          >
+            {tabRow([
+              { title: "Reports", slug: "#" },
+              { title: "About", slug: "#" },
+              { title: "Updates", slug: "#" },
+            ])}
+          </div>
+          <Stack
+            sx={{
+              minHeight: "150px",
+              mx: 3,
+              pt: 1,
+              alignItems: "center",
+              mb: 1,
+              color: "rgba(255,255,255,.75)",
+            }}
+          >
+            <ReportsBarChart
+              showLegend={false}
+              showYAxis={false}
+              showXAxis={false}
+              feed={currentFeed}
+            />
+            Last 7 days
+          </Stack>
+          <DetectionsList
+            array={filteredData.filter(
+              (d) => d.hydrophone === currentFeed.name,
+            )}
+          />
+          <Box className="spacer-70px" sx={{ minHeight: "70px" }}></Box>
+        </>
+      )}
+      {playbarExpanded && playerStatus === "playing" && (
+        <Box
+          className="fixed-detection-button-container"
+          sx={{
+            width: "100%",
+            height: "70px",
+            background: "black",
+            position: "fixed",
+            bottom: 0,
+            py: 1.5,
+            px: 2,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <Button
+            sx={{
+              width: "100%",
+              height: "100%",
+              background: "white",
+              color: "black",
+              borderRadius: "100px",
+            }}
+          >
+            <GraphicEq sx={{ color: "black", mr: ".5rem" }} />
+            Report sound
+          </Button>
+        </Box>
+      )}
+    </Box>
   );
 }
 

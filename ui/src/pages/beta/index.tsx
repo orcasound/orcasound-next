@@ -1,9 +1,10 @@
 import { HydrophonesStack } from "@/components/CandidateList/HydrophonesStack";
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
+import { MapWrapper } from "@/components/layouts/HalfMapLayout/MapWrapper";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 
 function HomePage() {
-  return <></>;
+  return <MapWrapper />;
 }
 
 HomePage.getLayout = function getLayout(page: React.ReactElement) {
