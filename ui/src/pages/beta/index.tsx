@@ -1,21 +1,33 @@
+import { useEffect } from "react";
+
 import { HydrophonesStack } from "@/components/CandidateList/HydrophonesStack";
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
-import { MapWrapper } from "@/components/layouts/HalfMapLayout/MapWrapper";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
+import { useData } from "@/context/DataContext";
+import { useLayout } from "@/context/LayoutContext";
 
 function HomePage() {
-  return <MapWrapper />;
+  const { setPlaybarExpanded } = useLayout();
+  const { setFilters } = useData();
+
+  useEffect(() => {
+    setPlaybarExpanded(false);
+  }, [setPlaybarExpanded]);
+
+  useEffect(() => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      hydrophone: "All hydrophones",
+    }));
+  }, [setFilters]);
+
+  return <></>;
 }
 
 HomePage.getLayout = function getLayout(page: React.ReactElement) {
   return (
     <MasterDataLayout>
-      <HalfMapLayout
-        // leftSlot={<CandidatesStack />}
-        rightSlot={<HydrophonesStack />}
-      >
-        {page}
-      </HalfMapLayout>
+      <HalfMapLayout leftSlot={<HydrophonesStack />}>{page}</HalfMapLayout>
     </MasterDataLayout>
   );
 };

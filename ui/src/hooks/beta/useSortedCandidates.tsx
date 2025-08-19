@@ -187,7 +187,10 @@ export function useSortedCandidates(
   detectionsGreaterThan: number,
 ): Candidate[] {
   return useMemo(() => {
-    const inRange = rawData.filter((d) => d.hydrophone !== "out of range");
+    // disabling for now, add to filters
+    const inRange = rawData.filter(
+      (d) => d.hydrophone !== "Out of audible range",
+    );
     const created = createCandidates(inRange, timeIncrement);
     const sorted = sortCandidates(created, sortOrder);
     const filtered = filterGreaterThan(sorted, detectionsGreaterThan);

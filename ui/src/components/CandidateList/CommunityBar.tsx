@@ -1,4 +1,8 @@
-import { BookmarkBorder, ChatBubbleOutline } from "@mui/icons-material";
+import {
+  BookmarkBorder,
+  ChatBubbleOutline,
+  FileDownloadOutlined,
+} from "@mui/icons-material";
 import { Box, Button } from "@mui/material";
 
 const upvote = (
@@ -49,7 +53,17 @@ const shareIcon = (
   </svg>
 );
 
-export default function CommunityBar({ votes }: { votes: number }) {
+export default function CommunityBar({
+  votes,
+  downloadReady = false,
+  audioUrl,
+  clipId,
+}: {
+  votes: number;
+  downloadReady?: boolean;
+  audioUrl?: string | undefined;
+  clipId?: string;
+}) {
   return (
     <Box
       className="community-bar"
@@ -57,6 +71,7 @@ export default function CommunityBar({ votes }: { votes: number }) {
         display: "flex",
         gap: "12px",
         alignItems: "center",
+        flexWrap: "wrap",
       }}
     >
       <Box className="upvote-button">
@@ -149,6 +164,29 @@ export default function CommunityBar({ votes }: { votes: number }) {
         </div>
         Share
       </Button>
+      {downloadReady && (
+        <Button
+          variant="outlined"
+          href={audioUrl ? audioUrl : ""}
+          download={`clip-${clipId}.mp3`}
+          sx={{
+            borderRadius: 100,
+            p: "6px 12px",
+            display: "flex",
+            gap: "8px",
+            lineHeight: 1,
+            minWidth: 0,
+            minHeight: "20px",
+          }}
+        >
+          <FileDownloadOutlined
+            sx={{
+              opacity: 0.75,
+              height: "20px",
+            }}
+          />
+        </Button>
+      )}
     </Box>
   );
 }

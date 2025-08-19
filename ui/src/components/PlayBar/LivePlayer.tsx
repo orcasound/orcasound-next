@@ -23,12 +23,13 @@ import type { Feed } from "@/graphql/generated";
 import useFeedPresence from "@/hooks/useFeedPresence";
 import { useTimestampFetcher } from "@/hooks/useTimestampFetcher";
 import fin512 from "@/public/photos/fin-512x512.png";
-import darkTheme from "@/styles/darkTheme";
 import { analytics } from "@/utils/analytics";
 
+import { timeRangeSelect } from "../CandidateList/CandidateListFilters";
+import DetailTabs from "../CandidateList/DetailTabs";
 import { DetectionsList } from "../CandidateList/DetectionsList";
+import { HydrophoneHost } from "../CandidateList/HydrophoneHost";
 import ReportsBarChart from "../CandidateList/ReportsBarChart";
-import Link from "../Link";
 import AudioVisualizer from "./AudioVisualizer";
 import { PlayerBase } from "./PlayerBase";
 
@@ -60,11 +61,6 @@ const hosts = [
   },
 ];
 
-type Tab = {
-  title: string;
-  slug: string;
-};
-
 // // dynamically import VideoJS to speed up initial page load
 // const VideoJS = dynamic(() => import("@/components/Player/VideoJS"));
 
@@ -73,7 +69,7 @@ type PlayerStatus = "idle" | "loading" | "playing" | "paused" | "error";
 export default function LivePlayer({
   currentFeed,
 }: {
-  currentFeed: Feed;
+  currentFeed: Feed | null;
 
   // Pick<
   //   Feed,
@@ -102,7 +98,10 @@ export default function LivePlayer({
   const { playbarExpanded, setPlaybarExpanded } = useLayout();
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
-  const host = hosts.find((host) => currentFeed.slug === host.hydrophone);
+  const { filters } = useData();
+  const selectedTimeRange = timeRangeSelect.find(
+    (el) => el.value === filters.timeRange,
+  );
 
   const { timestamp, hlsURI } = useTimestampFetcher(
     currentFeed?.bucket,
@@ -276,39 +275,61 @@ export default function LivePlayer({
     console.log("masterPlayerStatus: " + masterPlayerStatus);
   }, [playerStatus, masterPlayerStatus]);
 
-  const tabRow = (tabs: Tab[]) => (
-    <Stack
-      direction="row"
-      gap="40px"
-      sx={{
-        borderBottom: "1px solid rgba(255,255,255,.33)",
-        px: 3,
-      }}
-    >
-      {tabs.map((tab, index) => {
-        const active = index === 0;
-        return (
-          <Link
-            key={tab.title}
-            href={tab.slug}
-            style={{
-              color: active
-                ? darkTheme.palette.text.primary
-                : darkTheme.palette.text.secondary,
-              textDecoration: "none",
-              height: "100%",
-              padding: "16px 0",
-              borderBottom: active
-                ? "1px solid " + darkTheme.palette.accent3.main
-                : "none",
-            }}
-          >
-            {tab.title}
-          </Link>
-        );
-      })}
-    </Stack>
+  const descDetections = filteredData
+    .filter((d) => d.hydrophone === currentFeed?.name)
+    .sort(
+      (a, b) =>
+        Date.parse(b.timestamp.toString()) - Date.parse(a.timestamp.toString()),
+    );
+
+  const reportsContent = (
+    <>
+      <Stack
+        sx={{
+          mb: "70px",
+          alignItems: "center",
+        }}
+      >
+        <ReportsBarChart
+          showLegend={false}
+          showYAxis={false}
+          showXAxis={false}
+          feed={currentFeed ?? null}
+        />
+        <DetectionsList array={descDetections} />
+      </Stack>
+    </>
   );
+
+  const aboutContent = currentFeed?.introHtml && (
+    <>
+      <Box
+        sx={{
+          my: 1,
+        }}
+      >
+        <HydrophoneHost feedSlug={currentFeed.slug} />
+      </Box>
+      <div
+        className="intro"
+        dangerouslySetInnerHTML={{ __html: currentFeed?.introHtml }}
+      />
+    </>
+  );
+
+  const tabs = [
+    {
+      label: selectedTimeRange?.label,
+      value: "reports",
+      content: reportsContent,
+    },
+    {
+      label: "About",
+      value: "about",
+      content: aboutContent,
+    },
+    { label: "Images", value: "images", content: <></> },
+  ];
 
   const playPause = (
     <Box
@@ -387,71 +408,49 @@ export default function LivePlayer({
         />
       </Box>
 
-      {mdDown && (
-        <div style={{ position: "fixed", width: "100%", zIndex: 1000 }}>
-          <PlayerBase
-            key={currentFeed.id}
-            type="feed"
-            playerOptions={playerOptions}
-            handleReady={handleReady}
-            playerStatus={playerStatus}
-            feed={currentFeed}
-            playerRef={playerRef}
-            handlePlayPauseClickFeed={handlePlayPauseClick}
-            image={currentFeed.imageUrl?.toString()}
-            timestamp={timestamp}
-            listenerCount={listenerCount}
-            playerTitle={currentFeed.name}
-            playerSubtitle={""}
-            setAudioVisualizerOpen={setAudioVisualizerOpen}
-          />
-        </div>
-      )}
-      {playbarExpanded && audioVisualizerOpen && (
+      <div
+        style={{
+          position: mdDown ? "fixed" : "relative",
+          width: "100%",
+          zIndex: 1000,
+        }}
+      >
+        <PlayerBase
+          key={currentFeed?.id}
+          type="feed"
+          playerOptions={playerOptions}
+          handleReady={handleReady}
+          playerStatus={playerStatus}
+          feed={currentFeed ?? null}
+          playerRef={playerRef}
+          handlePlayPauseClickFeed={handlePlayPauseClick}
+          image={currentFeed?.imageUrl?.toString()}
+          timestamp={timestamp}
+          listenerCount={listenerCount}
+          playerTitle={currentFeed?.name}
+          playerSubtitle={""}
+          setAudioVisualizerOpen={setAudioVisualizerOpen}
+        />
+      </div>
+
+      {mdDown && playbarExpanded && audioVisualizerOpen && (
         <div style={{ marginTop: "calc(68px + 1rem)" }}>
           <AudioVisualizer />
         </div>
       )}
-      {playbarExpanded && (
-        <>
-          <div
-            style={{
-              marginTop: audioVisualizerOpen ? "1rem" : "calc(68px + 1rem)", // 68px is the height of PlayerBase which is fixed
-            }}
-          >
-            {tabRow([
-              { title: "Reports", slug: "#" },
-              { title: "About", slug: "#" },
-              { title: "Updates", slug: "#" },
-            ])}
-          </div>
-          <Stack
-            sx={{
-              minHeight: "150px",
-              mx: 3,
-              pt: 1,
-              alignItems: "center",
-              mb: 1,
-              color: "rgba(255,255,255,.75)",
-            }}
-          >
-            <ReportsBarChart
-              showLegend={false}
-              showYAxis={false}
-              showXAxis={false}
-              feed={currentFeed}
-            />
-            Last 7 days
-          </Stack>
-          <DetectionsList
-            array={filteredData.filter(
-              (d) => d.hydrophone === currentFeed.name,
-            )}
-          />
-          <Box className="spacer-70px" sx={{ minHeight: "70px" }}></Box>
-        </>
+
+      {mdDown && playbarExpanded && (
+        <Box
+          sx={{
+            mt: audioVisualizerOpen ? "1rem" : "calc(68px + 1rem)", // 68px is the height of PlayerBase which is fixed
+            mb: "70px",
+          }}
+        >
+          <DetailTabs tabs={tabs} />
+        </Box>
       )}
-      {playbarExpanded && playerStatus === "playing" && (
+
+      {mdDown && playbarExpanded && playerStatus === "playing" && (
         <Box
           className="fixed-detection-button-container"
           sx={{

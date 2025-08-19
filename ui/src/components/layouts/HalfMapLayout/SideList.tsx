@@ -44,8 +44,8 @@ export const SideList = ({ children, position = "left" }: SideListProps) => {
         borderRightStyle: "solid",
         borderRightWidth: 1,
         width: "25%",
-        minWidth: "367px",
-        maxWidth: "550px",
+        // minWidth: "367px",
+        // maxWidth: "550px",
         overflow: "auto",
         position: "relative",
       }}

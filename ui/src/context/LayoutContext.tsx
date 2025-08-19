@@ -3,6 +3,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   createContext,
   Dispatch,
+  ReactNode,
   SetStateAction,
   useContext,
   useState,
@@ -19,6 +20,10 @@ type LayoutContextType = {
   setMobileTab: Dispatch<SetStateAction<number>>;
   candidatePreview: boolean;
   setCandidatePreview: Dispatch<SetStateAction<boolean>>;
+  drawerContent: ReactNode | null;
+  setDrawerContent: Dispatch<SetStateAction<ReactNode | null>>;
+  drawerSide: "left" | "right";
+  setDrawerSide: Dispatch<SetStateAction<"left" | "right">>;
 };
 
 const LayoutContext = createContext<LayoutContextType | null>(null);
@@ -42,6 +47,10 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [candidatePreview, setCandidatePreview] = useState(true);
 
+  const [drawerContent, setDrawerContent] = useState<ReactNode | null>(null);
+
+  const [drawerSide, setDrawerSide] = useState<"left" | "right">("right");
+
   // menuTab is the state of the mobile <MobileBottomNav>
   const [mobileTab, setMobileTab] = useState(0);
 
@@ -58,6 +67,10 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
         setMobileTab,
         candidatePreview,
         setCandidatePreview,
+        drawerContent,
+        setDrawerContent,
+        drawerSide,
+        setDrawerSide,
       }}
     >
       {children}

@@ -17,7 +17,7 @@ export const DetectionsList = ({ array }: { array: CombinedData[] }) => {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   return (
-    <List sx={{ mx: 3 }}>
+    <List sx={{ p: 0 }}>
       {array?.map((el, index) => (
         <ListItemButton
           key={index}

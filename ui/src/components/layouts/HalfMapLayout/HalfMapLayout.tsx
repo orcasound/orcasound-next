@@ -1,92 +1,106 @@
-import { Box, Tab, Tabs, Theme, useMediaQuery } from "@mui/material";
+import { Box, Button, Theme, useMediaQuery } from "@mui/material";
 import { useRouter } from "next/router";
-import React, { ReactElement, useRef } from "react";
+import React, { ReactElement, useEffect, useRef } from "react";
 
 import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
+import { HydrophonesStack } from "@/components/CandidateList/HydrophonesStack";
 import HeaderNew from "@/components/HeaderNew";
 import { useLayout } from "@/context/LayoutContext";
 
 import { MasterDataLayout } from "../MasterDataLayout";
-import Footer from "./Footer";
+import { DesktopDrawer } from "./DesktopDrawer";
+import { FeedDetail } from "./FeedDetail";
+import { MapWrapper } from "./MapWrapper";
 import { MobileBottomNav } from "./MobileBottomNav";
+import MobileDrawer from "./MobileDrawer";
 import { SideList } from "./SideList";
 
+const routes = [
+  { label: "Hydrophones", href: "/beta" },
+  { label: "Explore", href: "/beta/explore" },
+  { label: "Take Action", href: "/beta/action" },
+];
+
+const tabButtonSx = {
+  padding: "7px 16px",
+  margin: "0 8px",
+  minWidth: 0,
+  minHeight: "unset",
+  lineHeight: 1.2,
+  borderRadius: "4px",
+  textTransform: "uppercase",
+  color: "inherit",
+  "&:hover": {
+    color: "primary.main",
+    backgroundColor: "rgba(255,255,255,.10)",
+  },
+};
+
+const activeButtonSx = {
+  backgroundColor: "rgba(255,255,255,.15)",
+  "&:hover": {
+    backgroundColor: "rgba(255,255,255,.18)",
+  },
+};
+
+function NavTabs({ mdDown }: { mdDown?: boolean }) {
+  const router = useRouter();
+  const currentPath = router.pathname;
+
+  return (
+    <Box
+      role="navigation"
+      aria-label="Main navigation"
+      display="flex"
+      justifyContent={mdDown ? "center" : "start"}
+    >
+      {routes.map(({ label, href }) => {
+        const isActive = currentPath === href;
+        return (
+          <Button
+            key={href}
+            sx={{ ...tabButtonSx, ...(isActive ? activeButtonSx : {}) }}
+            onClick={() => router.push(href)}
+            aria-current={isActive ? "page" : undefined}
+          >
+            {label}
+          </Button>
+        );
+      })}
+    </Box>
+  );
+}
+
 type HalfMapLayoutProps = {
-  // leftSlot?: React.ReactNode;
-  centerSlot?: React.ReactNode;
-  rightSlot?: React.ReactNode;
-  rightDrawer?: React.ReactNode;
+  leftSlot?: React.ReactNode;
+  drawer?: React.ReactNode;
   children?: React.ReactNode;
 };
 
 export function HalfMapLayout({
-  // leftSlot,
-  centerSlot,
-  rightSlot,
-  rightDrawer,
+  leftSlot,
+  drawer,
   children,
 }: HalfMapLayoutProps) {
   const router = useRouter();
-  const { playbarExpanded, headerHeight } = useLayout();
+  const { setDrawerSide, drawerContent } = useLayout();
+
+  const isHome = router.asPath === routes[0].href;
+  const isExplore = router.asPath === routes[1].href;
+  const isAction = router.asPath === routes[2].href;
+
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   const masterPlayerTimeRef = useRef(0);
 
-  function a11yProps(index: number) {
-    return {
-      id: `simple-tab-${index}`,
-      "aria-controls": `simple-tabpanel-${index}`,
-    };
-  }
-
-  const tabSx = {
-    padding: "7px 16px !important",
-    margin: "0 8px !important",
-    minWidth: 0,
-    minHeight: "unset",
-    lineHeight: 1.2,
-    borderRadius: "4px",
-    "&.Mui-selected": {
-      backgroundColor: "rgba(255,255,255,.15)",
-      "&:hover": {
-        backgroundColor: "rgba(255,255,255,.18)",
-      },
-    },
-    "&:hover": {
-      color: "primary.main",
-    },
-  };
-
-  const tabsSx = {
-    minHeight: "unset", // prevent Tabs from enforcing height on children
-    ".MuiTabs-indicator": {
-      height: "0px",
-      bottom: -1,
-      backgroundColor: "accent3.main",
-    },
-  };
-
-  const tabs = (
-    <Tabs
-      value={0}
-      // onChange={handleChange}
-      aria-label="navigation tabs"
-      centered={mdDown ? true : false}
-      sx={tabsSx}
-    >
-      <Tab
-        className="first-tab"
-        sx={tabSx}
-        label="Hydrophones"
-        onClick={() => {
-          router.push(`/beta`);
-        }}
-        {...a11yProps(0)}
-      />
-      <Tab sx={tabSx} label="Explore" {...a11yProps(1)} />
-      <Tab sx={tabSx} label="Take Action" {...a11yProps(2)} />
-    </Tabs>
-  );
+  useEffect(() => {
+    if (!router) return;
+    if (router.query.candidateId) {
+      setDrawerSide("left");
+    } else {
+      setDrawerSide("right");
+    }
+  }, [setDrawerSide]);
 
   return (
     <>
@@ -107,7 +121,11 @@ export function HalfMapLayout({
           minHeight: 0, // important for mobile scrolling
         }}
       >
-        <HeaderNew tabs={tabs} />
+        <HeaderNew tabs={<NavTabs />} />
+
+        {/* children are only used in this layout so individual pages can run logic on load */}
+        {children}
+
         <Box
           component="main"
           sx={{
@@ -115,13 +133,13 @@ export function HalfMapLayout({
             flexFlow: mdDown ? "column" : "row",
             flex: 1,
             position: "relative",
-            overflowY: "scroll",
+            overflowY: mdDown ? "scroll" : "hidden",
           }}
         >
           {/* // desktop view */}
           {!mdDown && (
             <SideList position="left">
-              <CandidatesStack />
+              {router.query.feedSlug ? <FeedDetail /> : <HydrophonesStack />}
             </SideList>
           )}
           <Box
@@ -130,78 +148,21 @@ export function HalfMapLayout({
               display: "flex",
               flexGrow: 1,
               position: "relative",
-              borderLeft: "1px solid rgba(255,255,255,.5)",
             }}
           >
-            {children}
-            {!mdDown && (
-              <Box
-                className="now-playing-drawer"
-                sx={{
-                  px: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  flex: 1,
-                  overflowY: "auto",
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  borderRight: "1px solid rgba(255,255,255,.5)",
-                  height:
-                    mdDown && playbarExpanded
-                      ? `calc(100vh)` // height calc gets complex on mobile due to browser bar
-                      : playbarExpanded
-                        ? `calc(100vh - ${headerHeight})`
-                        : 0,
-                  backgroundColor: "background.default",
-                  zIndex: (theme) => theme.zIndex.drawer + 1,
-                  transition: "height .33s ease",
-                }}
-              >
-                {playbarExpanded && centerSlot}
-              </Box>
-            )}
+            {isExplore ? <CandidatesStack /> : <MapWrapper />}
           </Box>
           {!mdDown && (
             <SideList position="right">
-              {rightSlot}
-              <Box
-                className="right-slot-drawer"
-                sx={{
-                  px: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  flex: 1,
-                  overflowY: "auto",
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  borderRight: "1px solid rgba(255,255,255,.5)",
-                  height:
-                    mdDown && playbarExpanded && router.query.candidateId
-                      ? `calc(100vh)` // height calc gets complex on mobile due to browser bar
-                      : playbarExpanded && router.query.candidateId
-                        ? `calc(100vh - ${headerHeight})`
-                        : 0,
-                  backgroundColor: "background.default",
-                  zIndex: (theme) => theme.zIndex.drawer + 1,
-                  transition: "height .33s ease",
-                }}
-              >
-                {rightDrawer}
-              </Box>
+              <CandidatesStack showChart={true} />
             </SideList>
           )}
           {/* // mobile view */}
         </Box>
 
-        {router.asPath !== "/beta/explore" && (
-          <Footer masterPlayerTimeRef={masterPlayerTimeRef} />
-        )}
-
+        {mdDown && <MobileDrawer masterPlayerTimeRef={masterPlayerTimeRef} />}
         {mdDown && <MobileBottomNav />}
+        {!mdDown && <DesktopDrawer>{drawerContent}</DesktopDrawer>}
       </Box>
     </>
   );

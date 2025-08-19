@@ -41,14 +41,14 @@ type PlayerBaseProps = {
   handleReady: (player: VideoJSPlayer) => void;
   playerStatus: PlayerStatus;
   // setPlayerStatus: React.Dispatch<SetStateAction<PlayerStatus>>;
-  feed: Feed;
+  feed: Feed | null;
   playerRef: MutableRefObject<VideoJSPlayer | null>;
   handlePlayPauseClickCandidate?: () => void;
   handlePlayPauseClickFeed?: () => Promise<void>;
   image?: string | undefined;
   playerTitle: string | undefined; // change this to player title
   playerSubtitle: string | undefined; // change this to player subtitle
-  setAudioVisualizerOpen: React.Dispatch<SetStateAction<boolean>>;
+  setAudioVisualizerOpen?: React.Dispatch<SetStateAction<boolean>>;
 
   // Feed only
   timestamp?: number | undefined;
@@ -128,6 +128,33 @@ export function PlayerBase({
     />
   );
 
+  const playerState =
+    `${!mdDown ? "desktop" : "mobile"}${mdDown && playbarExpanded ? "Expanded" : ""}` as keyof typeof appBarStyles;
+
+  const appBarStyles = {
+    desktop: {
+      height: "100%",
+      borderRadius: "8px",
+      border: "none",
+      background: "transparent",
+      p: 0,
+    },
+    mobile: {
+      height: "100%",
+      borderRadius: "8px",
+      border: "1px solid rgba(255,255,255,.5)",
+      background: "base.main",
+      pt: "6px",
+    },
+    mobileExpanded: {
+      height: "auto",
+      borderRadius: 0,
+      border: "none",
+      background: "black",
+      pt: "16px",
+    },
+  };
+
   return (
     <AppBar
       position="relative"
@@ -135,21 +162,17 @@ export function PlayerBase({
       color="base"
       sx={{
         top: "auto",
-        height: playbarExpanded ? "auto" : "100%",
         padding: "6px 0",
         alignItems: "center",
         display: "flex",
-        borderRadius: playbarExpanded ? 0 : "8px",
-        border: playbarExpanded ? "none" : "1px solid rgba(255,255,255,.5)",
-        background: playbarExpanded ? "black" : "base.main",
-        pt: playbarExpanded ? "16px" : "6px",
+        ...appBarStyles[playerState],
       }}
     >
       <Toolbar
         className="toolbar"
         sx={{
           width: "100%",
-          px: "1rem !important",
+          px: mdDown ? "1rem !important" : "0 !important",
         }}
       >
         <Stack spacing={1} sx={{ width: "100%" }}>
@@ -159,7 +182,7 @@ export function PlayerBase({
               display: "flex",
               alignItems: "center",
               justifyContent: "flex-start",
-              px: [0, 2],
+              px: 0,
               position: "relative",
               // className: "candidate-card-player",
               // Keep player above the sliding drawer
@@ -240,11 +263,18 @@ export function PlayerBase({
                       fontSize: mdDown ? "14px" : "1rem",
                     }}
                   >
-                    <span style={{ fontWeight: "bold" }}>{playerTitle}</span>
-                    {mdDown ? <br /> : " · "}
+                    <span
+                      style={{
+                        fontWeight: mdDown ? "bold" : 500,
+                        fontSize: mdDown ? "inherit" : "20px",
+                      }}
+                    >
+                      {mdDown ? playerTitle : "Listen Live"}
+                    </span>
+                    <br />
                     {playerSubtitle && playerSubtitle}
                     {type === "feed" &&
-                      `${detectionsThisFeed} reports · ${listenerCount} listener${listenerCount !== 1 ? "s" : ""}`}
+                      `${listenerCount} listener${listenerCount !== 1 ? "s" : ""}`}
                     {type === "candidate" && " · " + duration}
                   </Typography>
                   {/* {!mdDown && nowPlayingFeed && (
@@ -267,7 +297,8 @@ export function PlayerBase({
         </Stack>
         {(playerStatus === "playing" || playerStatus === "loading") &&
           feed &&
-          nowPlayingFeed && (
+          nowPlayingFeed &&
+          mdDown && (
             <DetectionDialog
               isPlaying={playerStatus === "playing"}
               feed={feed}
@@ -298,7 +329,8 @@ export function PlayerBase({
           <ExpandLess
             sx={{ transform: playbarExpanded ? "rotate(180deg)" : "none" }}
             onClick={() => {
-              if (playbarExpanded) setAudioVisualizerOpen(false);
+              if (playbarExpanded && setAudioVisualizerOpen)
+                setAudioVisualizerOpen(true);
             }}
           />
         </Box>

@@ -6,6 +6,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
+import { useRouter } from "next/router";
 import React, { useState } from "react";
 
 import { useData } from "@/context/DataContext";
@@ -30,8 +31,12 @@ export const CandidatesStack = ({
   showHeading?: boolean;
 }) => {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
-  const { filters, sortedCandidates, filteredData } = useData();
-
+  const { feeds, filters, sortedCandidates, filteredData } = useData();
+  const router = useRouter();
+  if (!feed && router.query.feedSlug) {
+    const routerFeed = feeds.find((f) => f.slug === router.query.feedSlug);
+    feed = routerFeed;
+  }
   const candidates = feed
     ? sortedCandidates.filter(
         (c) => c.hydrophone === standardizeFeedName(feed?.name),
@@ -66,8 +71,6 @@ export const CandidatesStack = ({
       })
       .filter((c) => c); // filters out the null items
 
-    console.log("items", items);
-
     // Interleave with separators
     const interleaved = items.flatMap((item, index) =>
       index < items.length - 1
@@ -75,7 +78,18 @@ export const CandidatesStack = ({
         : [item],
     );
 
-    return <div style={{ display: "flex", gap: "8px" }}>{interleaved}</div>;
+    return (
+      <div
+        style={{
+          display: "flex",
+          columnGap: "8px",
+          flexWrap: "wrap",
+          lineHeight: 1.6,
+        }}
+      >
+        {interleaved}
+      </div>
+    );
   }
 
   const [showFilters, setShowFilters] = useState(false);
@@ -111,11 +125,12 @@ export const CandidatesStack = ({
       )}
       {showChart && (
         <Stack className="chart-heading" gap={0.5}>
-          <Typography component="h2" variant="h6">
+          <Typography component="h2" variant="h6" sx={{ mt: "6px" }}>
             {
               timeRangeSelect.find((el) => el.value === filters.timeRange)
                 ?.label
             }
+            {feed && " · " + feed.name}
           </Typography>
           {countString(detections)}
         </Stack>

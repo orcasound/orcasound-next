@@ -11,17 +11,18 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import Link from "@/components/Link";
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
+import useConcatenatedAudio from "@/hooks/beta/useConcatenatedAudio";
 import { Candidate, CombinedData } from "@/types/DataTypes";
 import formatDuration from "@/utils/masterDataHelpers";
 import { formatTimestamp } from "@/utils/time";
 
 import { useComputedPlaybackFields } from "../../hooks/beta/useComputedPlaybackFields";
+import { CandidateDrawer } from "../layouts/HalfMapLayout/CandidateDrawer";
 import CommunityBar from "./CommunityBar";
 
 const tagRegex = [
@@ -50,7 +51,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
   } = useNowPlaying();
   const router = useRouter();
 
-  const { setPlaybarExpanded } = useLayout();
+  const { setPlaybarExpanded, setDrawerContent, setDrawerSide } = useLayout();
 
   const candidate = props.candidate;
   const active = candidate.id === nowPlayingCandidate?.id;
@@ -59,6 +60,64 @@ export default function CandidateCard(props: { candidate: Candidate }) {
   const feed = feeds.find(
     (feed) => feed.id === props.candidate.array[0].feedId,
   );
+  const feedId = feed?.id ?? "";
+
+  const startEnd = useMemo(() => {
+    return typeof candidate.id === "string" ? candidate.id?.split("_") : [];
+  }, [candidate.id]);
+  const startTimeString = startEnd[0];
+  const endTimeString = startEnd[startEnd.length - 1];
+
+  const {
+    audioBlob,
+    spectrogramUrl,
+    isProcessing,
+    error,
+    totalDurationMs,
+    droppedSeconds,
+  } = useConcatenatedAudio({
+    feedId,
+    startTime: startTimeString,
+    endTime: endTimeString,
+  });
+
+  const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!startTimeString || !endTimeString) return;
+
+    let url: string | null = null;
+
+    if (audioBlob) {
+      url = URL.createObjectURL(audioBlob);
+      setAudioUrl(url);
+    } else {
+      setAudioUrl(undefined);
+    }
+
+    return () => {
+      if (url) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, [audioBlob, startTimeString, endTimeString]);
+
+  const handleDrawerOpen = () => {
+    setPlaybarExpanded(true);
+    setDrawerSide("left");
+    setDrawerContent(
+      <CandidateDrawer
+        clipId={startTimeString}
+        audioUrl={audioUrl}
+        spectrogramUrl={spectrogramUrl}
+        isProcessing={isProcessing}
+        error={error}
+        totalDurationMs={totalDurationMs}
+        droppedSeconds={droppedSeconds}
+        candidate={candidate}
+      />,
+    );
+  };
 
   const { duration, durationString } = useComputedPlaybackFields(
     props.candidate,
@@ -214,14 +273,13 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                 gap: "1rem",
               }}
             >
-              <Link
+              <Box
                 // custom Link component based on NextLink, not MUI Link, is required here to persist layout and avoid page reset
-                href={href}
                 onClick={() => {
-                  autoPlayOnReady.current = false;
-                  setPlaybarExpanded(false);
-                  setNowPlayingCandidate(candidate);
-                  setNowPlayingFeed(null);
+                  // autoPlayOnReady.current = false;
+                  handleDrawerOpen();
+                  // setNowPlayingCandidate(candidate);
+                  // setNowPlayingFeed(null);
                   sessionStorage.setItem(
                     "scrollBox",
                     String(scrollBox?.scrollTop),
@@ -246,17 +304,19 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                     alignItems: "center",
                   }}
                 >
-                  <Box
-                    sx={{
-                      backgroundImage: `url(${image})`,
-                      backgroundPosition: "center",
-                      backgroundSize: "cover",
-                      backgroundRepeat: "no-repeat",
-                      minWidth: mdDown ? "40px" : "60px",
-                      minHeight: mdDown ? "40px" : "60px",
-                      borderRadius: "4px",
-                    }}
-                  ></Box>
+                  {candidate.hydrophone !== "Out of audible range" && (
+                    <Box
+                      sx={{
+                        backgroundImage: `url(${image})`,
+                        backgroundPosition: "center",
+                        backgroundSize: "cover",
+                        backgroundRepeat: "no-repeat",
+                        minWidth: mdDown ? "40px" : "60px",
+                        minHeight: mdDown ? "40px" : "60px",
+                        borderRadius: "4px",
+                      }}
+                    ></Box>
+                  )}
 
                   <Stack>
                     <Typography
@@ -274,12 +334,12 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                       {candidate.hydrophone}
                       {" · "}
                       {timeAgoString} ago
-                      {" · "}
-                      {durationString}
+                      {candidate.hydrophone !== "Out of audible range" &&
+                        ` · ${durationString}`}
                     </Typography>
                   </Stack>
                 </Box>
-              </Link>
+              </Box>
               <Box
                 style={{
                   paddingTop: mdDown ? "8px" : "12px",
@@ -292,13 +352,16 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                     : masterPlayerStatus !== "playing"
                       ? playIcon
                       : pauseIcon
-                  : playIconDisabled}
+                  : candidate.hydrophone !== "Out of audible range"
+                    ? playIconDisabled
+                    : null}
               </Box>
             </Box>
-            <Link
+            <Box
               // custom Link component based on NextLink, not MUI Link, is required here to persist layout and avoid page reset
-              href={href}
-              onClick={() => (autoPlayOnReady.current = false)}
+              onClick={() => {
+                handleDrawerOpen();
+              }}
               style={{
                 width: "100%",
                 color: "inherit",
@@ -362,7 +425,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                   ))}
                 </Box>
               )}
-            </Link>
+            </Box>
           </CardContent>
         </CardActionArea>
         <div style={{ padding: mdDown ? "12px" : "1rem" }}>

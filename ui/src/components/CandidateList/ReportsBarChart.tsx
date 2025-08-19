@@ -29,7 +29,7 @@ export default function ReportsBarChart({
   showLegend?: boolean;
   showYAxis?: boolean;
   showXAxis?: boolean;
-  feed?: Feed;
+  feed?: Feed | null;
 }) {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
@@ -43,7 +43,7 @@ export default function ReportsBarChart({
         dataKey: "detections",
       },
     ],
-    height: showYAxis ? 230 : 70,
+    height: showYAxis ? 230 : mdDown ? 70 : 100,
     margin: {
       top: showXAxis ? 10 : 0,
       right: showYAxis ? 20 : 0,
@@ -183,7 +183,7 @@ export default function ReportsBarChart({
       sx={{
         width: "100%",
         overflowX: "auto",
-        height: "150px",
+        height: "120px",
       }}
     >
       <BarChart

@@ -41,6 +41,8 @@ export const standardizeFeedName = (name: string) => {
       return "North San Juan Channel";
     case "Haro Strait":
       return "Orcasound Lab";
+    case "out of range":
+      return "Out of audible range";
     default:
       return name;
   }

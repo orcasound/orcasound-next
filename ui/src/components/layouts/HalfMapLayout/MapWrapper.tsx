@@ -53,44 +53,46 @@ export function MapWrapper({
 
   return (
     <Box className={"map-wrapper"} sx={{ flexGrow: 1, position: "relative" }}>
-      <Box
-        className="map-title"
-        sx={{
-          position: "absolute",
-          top: 16,
-          left: 16,
-          // width: mdDown ? "250px" : "300px",
-          zIndex: (theme) => theme.zIndex.fab,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          gap: "4px",
-        }}
-      >
-        <Stack direction="row" gap=".5rem">
-          <Box
-            sx={{
-              width: "auto",
-              backgroundColor: "background.default",
-              marginBottom: "6px",
-              padding: "6px 12px",
-              borderRadius: "4px",
-              color: "primary.main",
-            }}
-          >
-            {nowPlayingCandidate
-              ? timeAgoString + " ago"
-              : timeRangeSelect.find((el) => el.value === filters.timeRange)
-                  ?.label}
-          </Box>
-        </Stack>
-        {/* {nowPlayingCandidate && (
+      {mdDown && (
+        <Box
+          className="map-title"
+          sx={{
+            position: "absolute",
+            top: 16,
+            left: 16,
+            // width: mdDown ? "250px" : "300px",
+            zIndex: (theme) => theme.zIndex.fab,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: "4px",
+          }}
+        >
+          <Stack direction="row" gap=".5rem">
+            <Box
+              sx={{
+                width: "auto",
+                backgroundColor: "background.default",
+                marginBottom: "6px",
+                padding: "6px 12px",
+                borderRadius: "4px",
+                color: "primary.main",
+              }}
+            >
+              {nowPlayingCandidate
+                ? timeAgoString + " ago"
+                : timeRangeSelect.find((el) => el.value === filters.timeRange)
+                    ?.label}
+            </Box>
+          </Stack>
+          {/* {nowPlayingCandidate && (
           <PlayerTimeDisplay
             masterPlayerTimeRef={masterPlayerTimeRef}
             startOffset={startOffset} // needs to be passed in, don't recalculate the startOffset hook on every change
           />
         )} */}
-      </Box>
+        </Box>
+      )}
 
       {mdDown && nowPlayingCandidate && (
         <IconButton

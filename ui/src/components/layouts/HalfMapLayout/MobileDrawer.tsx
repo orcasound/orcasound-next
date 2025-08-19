@@ -4,7 +4,7 @@ import React, { MutableRefObject } from "react";
 import PlayBar from "@/components/PlayBar/PlayBar";
 import { useLayout } from "@/context/LayoutContext";
 
-export default function Footer({
+export default function MobileDrawer({
   masterPlayerTimeRef,
 }: {
   masterPlayerTimeRef: MutableRefObject<number>;
@@ -24,8 +24,8 @@ export default function Footer({
           ? "0px"
           : `calc(100% - 72px - ${mobileMenuHeight})`, // 72px value comes from visual estimate
         zIndex: (theme) => theme.zIndex.drawer + 1,
-        width: playbarExpanded ? "100%" : "calc(100% - .2rem)",
-        ml: playbarExpanded ? 0 : ".1rem",
+        width: playbarExpanded ? "100%" : "calc(100% - .4rem)",
+        ml: playbarExpanded ? 0 : ".2rem",
         alignItems: "center",
         transition: "top .33s ease, bottom 0s linear",
         justifyContent: playbarExpanded ? "flex-start" : "flex-end",
