@@ -18,9 +18,7 @@ import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Feed } from "@/graphql/generated";
 import { useAudioAnalyser } from "@/hooks/beta/useAudioAnalyzer";
 import { getHlsURI } from "@/hooks/useTimestampFetcher";
-import { colormapOptions } from "@/utils/colorMaps";
 
-import AudioVisualizer from "./AudioVisualizer";
 import { PlayerBase } from "./PlayerBase";
 import SpectrogramCanvas from "./SpectrogramCanvas";
 import WaveformCanvas from "./WaveformCanvas";
@@ -61,6 +59,7 @@ export function CandidatePlayer({
     masterPlayerStatus,
     setMasterPlayerStatus,
     onPlayerEnd,
+    nowPlayingCandidate,
   } = useNowPlaying();
   const { autoPlayOnReady } = useData();
   const [playerStatus, setPlayerStatus] = useState<PlayerStatus>("idle");
@@ -215,6 +214,7 @@ export function CandidatePlayer({
   return (
     <div className="playerbase">
       <PlayerBase
+        key={nowPlayingCandidate?.id}
         type="candidate"
         playerOptions={playerOptions}
         startOffset={startOffset}
@@ -232,43 +232,9 @@ export function CandidatePlayer({
         onAudioPlay={onAudioPlay}
         handlePlayPauseClickCandidate={handlePlayPauseClick}
       />
-      {videoEl && analyser && <WaveformCanvas analyser={analyser} />}
-      {videoEl && analyser && <SpectrogramCanvas analyser={analyser} />}
-      {videoEl && (
-        <>
-          {" "}
-          <label>
-            Color scheme:
-            <select
-              value={selectedMap}
-              onChange={(e) => setSelectedMap(e.target.value)}
-            >
-              {colormapOptions.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Scale:
-            <select
-              value={selectedScale}
-              onChange={(e) =>
-                setSelectedScale(e.target.value as "linear" | "log")
-              }
-            >
-              <option key={1} value={"linear"}>
-                Linear
-              </option>
-              <option key={2} value={"log"}>
-                Logarithmic
-              </option>
-            </select>
-          </label>
-          <AudioVisualizer />
-        </>
-      )}
+      {/* Hiding these for now */}
+      {false && analyser && <WaveformCanvas analyser={analyser} />}
+      {false && analyser && <SpectrogramCanvas analyser={analyser} />}
     </div>
   );
 }

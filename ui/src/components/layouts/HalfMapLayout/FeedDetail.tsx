@@ -24,7 +24,7 @@ export const FeedDetail = () => {
     useNowPlaying();
 
   const { feeds, autoPlayOnReady } = useData();
-  const feed = feeds.find((feed) => feed.slug === feedSlug);
+  const feed = feeds.find((feed) => feed.slug === feedSlug) ?? null;
   // load the feed into nowPlaying on page load
   useEffect(() => {
     if (feed) {
@@ -146,7 +146,7 @@ export const FeedDetail = () => {
           mx: 3,
         }}
       >
-        <LivePlayer currentFeed={nowPlayingFeed ?? null} />
+        <LivePlayer feed={feed} key={router.asPath} />
       </Box>
       <Box
         sx={{

@@ -9,6 +9,7 @@ type Props = {
   feedId: string;
   startTime: string; // ISO string
   endTime: string; // ISO string
+  enabled?: boolean;
 };
 
 type Segment = {
@@ -33,6 +34,7 @@ export default function useConcatenatedAudio({
   feedId,
   startTime,
   endTime,
+  enabled = false,
 }: Props) {
   const {
     isReady,
@@ -91,7 +93,8 @@ export default function useConcatenatedAudio({
       !allLoaded ||
       !feedId ||
       !startTime ||
-      !endTime
+      !endTime ||
+      !enabled
     ) {
       return;
     }
@@ -224,6 +227,7 @@ export default function useConcatenatedAudio({
     stream,
     startTime,
     endTime,
+    enabled,
     // convertMultipleToMp3,
     convertMultipleToMp3WithSpectrogram,
     clearFiles,

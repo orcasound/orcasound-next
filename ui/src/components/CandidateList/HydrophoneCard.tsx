@@ -13,15 +13,17 @@ import { useRouter } from "next/router";
 
 import Link from "@/components/Link";
 import { useData } from "@/context/DataContext";
+import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Feed } from "@/graphql/generated";
 import useFeedPresence from "@/hooks/useFeedPresence";
 
 type Props = {
   feed: Feed;
+  handlePlayPauseClick: () => Promise<void>;
 };
 
-export default function HydrophoneCard({ feed }: Props) {
+export default function HydrophoneCard({ feed, handlePlayPauseClick }: Props) {
   const {
     nowPlayingFeed,
     setNowPlayingFeed,
@@ -29,6 +31,8 @@ export default function HydrophoneCard({ feed }: Props) {
     masterPlayerRef,
     masterPlayerStatus,
   } = useNowPlaying();
+
+  const { setDrawerContent } = useLayout();
 
   const { autoPlayOnReady } = useData();
 
@@ -41,14 +45,6 @@ export default function HydrophoneCard({ feed }: Props) {
   // const basePath = router.pathname.replace(/\[.*?\]/g, "").replace(/\/$/, ""); // remove the query in [], then remove any trailing slash
   const feedHref = `/beta/${feed.slug}`;
 
-  const handlePlay = (feed: Feed) => {
-    autoPlayOnReady.current = true;
-    setNowPlayingFeed(feed);
-    setNowPlayingCandidate(null);
-    masterPlayerRef?.current?.play();
-    router.push(`/beta/${feed.slug}`);
-  };
-
   const handlePause = () => {
     masterPlayerRef?.current?.pause();
   };
@@ -60,7 +56,12 @@ export default function HydrophoneCard({ feed }: Props) {
 
   const playIcon = (
     <PlayArrow
-      onClick={() => handlePlay(feed)}
+      onClick={() => {
+        setNowPlayingCandidate(null);
+        setNowPlayingFeed(feed);
+        // handlePlayPauseClick();
+        router.push(feedHref);
+      }}
       sx={{
         height: iconSize,
         width: iconSize,

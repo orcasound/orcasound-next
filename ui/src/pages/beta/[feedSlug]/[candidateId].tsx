@@ -21,18 +21,7 @@ const CandidateLayout = ({ children }: { children: React.ReactNode }) => {
   const { setNowPlayingCandidate, setNowPlayingFeed } = useNowPlaying();
 
   useEffect(() => {
-    setDrawerContent(
-      <CandidateDrawer
-        clipId={startTimeString}
-        audioUrl={audioUrl}
-        spectrogramUrl={spectrogramUrl}
-        isProcessing={isProcessing}
-        error={error}
-        totalDurationMs={totalDurationMs}
-        droppedSeconds={droppedSeconds}
-        candidate={candidate}
-      />,
-    );
+    setDrawerContent(<CandidateDrawer candidate={candidate} />);
   }, [setDrawerContent]);
 
   const { candidateId, feedSlug } = router.query;

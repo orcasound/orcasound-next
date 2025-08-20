@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
+import { Feed } from "@/graphql/generated";
 import useFeedPresence from "@/hooks/useFeedPresence";
 import { useTimestampFetcher } from "@/hooks/useTimestampFetcher";
 import { colormapOptions, generateColorScale } from "@/utils/colorMaps";
@@ -31,8 +32,10 @@ const getFrequencyData = (analyser: AnalyserNode): Uint8Array | null => {
 
 function AudioVisualizer({
   showOscilloscope = false,
+  feed,
 }: {
   showOscilloscope?: boolean;
+  feed?: Feed | null;
 }) {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
@@ -42,14 +45,17 @@ function AudioVisualizer({
     masterPlayerStatus,
     nowPlayingFeed,
   } = useNowPlaying();
+
+  const currentFeed = !feed ? nowPlayingFeed : feed;
+
   const { setPlaybarExpanded } = useLayout();
 
   const { timestamp } = useTimestampFetcher(
-    nowPlayingFeed?.bucket,
-    nowPlayingFeed?.nodeName,
+    currentFeed?.bucket,
+    currentFeed?.nodeName,
   );
 
-  const feedPresence = useFeedPresence(nowPlayingFeed?.slug);
+  const feedPresence = useFeedPresence(currentFeed?.slug);
   const listenerCount = feedPresence?.metas.length ?? 0;
 
   const [selectedMap, setSelectedMap] = useState("magma");
@@ -200,21 +206,21 @@ function AudioVisualizer({
 
   return (
     <div
-      className={`audio-visualizer ${nowPlayingFeed?.slug}`}
+      className={`audio-visualizer ${currentFeed?.slug}`}
       style={{
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        maxHeight: "400px",
+        maxHeight: mdDown ? "400px" : "none",
       }}
     >
       <Box
         className="live-spectrogram-controls"
         sx={{
           minHeight: "36px",
-          // display: "flex",
+          display: "flex",
           // hiding this for now
-          display: "none",
+          // display: "none",
           alignItems: "center",
           gap: "8px",
           paddingX: "8px",
@@ -222,7 +228,14 @@ function AudioVisualizer({
           justifyContent: "space-between",
         }}
       >
-        <div style={{ display: "flex", gap: "16px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "16px",
+            width: "100%",
+            justifyContent: "flex-start",
+          }}
+        >
           <label>
             Color scheme:
             <select
@@ -257,26 +270,32 @@ function AudioVisualizer({
           <Button
             size="small"
             endIcon={<KeyboardArrowDown />}
+            sx={{
+              whiteSpace: "nowrap",
+            }}
             onClick={() => {
               setPlaybarExpanded(false);
             }}
           >
-            Show map
+            Close visualizer
           </Button>
         )}
       </Box>
-      <canvas
-        ref={waveformRef}
-        width={width}
-        height={heightWaveform}
-        style={{ width: "100%" }}
-      />
-      <canvas
-        ref={spectrogramRef}
-        width={width}
-        height={heightSpectrogram}
-        style={{ width: "100%", flex: 1 }}
-      />
+      <Box className="live-visualizations">
+        <canvas
+          ref={waveformRef}
+          width={width}
+          height={heightWaveform}
+          style={{ width: "100%" }}
+        />
+        <canvas
+          ref={spectrogramRef}
+          width={width}
+          height={heightSpectrogram}
+          style={{ width: "100%", flex: 1 }}
+        />
+      </Box>
+
       {showOscilloscope && (
         <>
           <WaveformCanvas analyser={analyserNodeRef.current} />
@@ -289,8 +308,9 @@ function AudioVisualizer({
           style={{
             height: "150px",
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "center",
+            paddingTop: "24px",
           }}
         >
           <div
@@ -299,10 +319,10 @@ function AudioVisualizer({
           >
             {(masterPlayerStatus === "playing" ||
               masterPlayerStatus === "loading") &&
-              nowPlayingFeed && (
+              currentFeed && (
                 <DetectionDialog
                   isPlaying={masterPlayerStatus === "playing"}
-                  feed={nowPlayingFeed}
+                  feed={currentFeed}
                   timestamp={timestamp}
                   getPlayerTime={() => masterPlayerRef.current?.currentTime()}
                   listenerCount={listenerCount}

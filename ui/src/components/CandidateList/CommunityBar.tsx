@@ -166,7 +166,7 @@ export default function CommunityBar({
       </Button>
       {downloadReady && (
         <Button
-          variant="outlined"
+          variant="contained"
           href={audioUrl ? audioUrl : ""}
           download={`clip-${clipId}.mp3`}
           sx={{
@@ -177,12 +177,15 @@ export default function CommunityBar({
             lineHeight: 1,
             minWidth: 0,
             minHeight: "20px",
+            backgroundColor: "accent3.main",
+            textTransform: "none",
           }}
         >
           <FileDownloadOutlined
             sx={{
               opacity: 0.75,
               height: "20px",
+              color: "background.default",
             }}
           />
         </Button>

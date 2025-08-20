@@ -11,7 +11,13 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import dynamic from "next/dynamic";
-import { MutableRefObject, ReactNode, SetStateAction, useMemo } from "react";
+import {
+  MutableRefObject,
+  ReactNode,
+  SetStateAction,
+  useEffect,
+  useMemo,
+} from "react";
 
 import PlayBarPlayPauseButton from "@/components/PlayBar/CandidatePlayPauseButton";
 import { type PlayerStatus } from "@/components/Player/Player";
@@ -29,6 +35,7 @@ import Link from "../Link";
 import DetectionButton from "../Player/DetectionButton";
 import DetectionDialog from "../Player/DetectionDialog";
 import PlayPauseButton from "../Player/PlayPauseButton";
+import AudioVisualizer from "./AudioVisualizer";
 import { PlaybarSlider } from "./PlaybarSlider";
 
 // dynamically import VideoJS to speed up initial page load
@@ -85,12 +92,26 @@ export function PlayerBase({
   setAudioVisualizerOpen,
 }: PlayerBaseProps) {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
-  const { nowPlayingCandidate, nowPlayingFeed } = useNowPlaying();
+  const { nowPlayingCandidate, nowPlayingFeed, masterPlayerStatus } =
+    useNowPlaying();
   const { feeds, filteredData } = useData();
-  const { playbarExpanded, setPlaybarExpanded } = useLayout();
+  const {
+    playbarExpanded,
+    setPlaybarExpanded,
+    setDrawerContent,
+    setDrawerSide,
+    showPlayPrompt,
+    setShowPlayPrompt,
+  } = useLayout();
+
+  useEffect(() => {
+    if (playerStatus === "playing") {
+      setShowPlayPrompt(false);
+    }
+  }, [playerStatus]);
 
   const detectionsThisFeed = filteredData.filter(
-    (d) => d.hydrophone === nowPlayingFeed?.name,
+    (d) => d.hydrophone === feed?.name,
   ).length;
 
   const feedSlug = useMemo(() => {
@@ -129,7 +150,9 @@ export function PlayerBase({
   );
 
   const playerState =
-    `${!mdDown ? "desktop" : "mobile"}${mdDown && playbarExpanded ? "Expanded" : ""}` as keyof typeof appBarStyles;
+    type === "candidate" && !mdDown
+      ? "desktopCandidate"
+      : (`${!mdDown ? "desktop" : "mobile"}${mdDown && playbarExpanded ? "Expanded" : ""}` as keyof typeof appBarStyles);
 
   const appBarStyles = {
     desktop: {
@@ -138,6 +161,13 @@ export function PlayerBase({
       border: "none",
       background: "transparent",
       p: 0,
+    },
+    desktopCandidate: {
+      height: "auto",
+      borderRadius: "8px",
+      border: "none",
+      background: "transparent",
+      px: "1.5rem",
     },
     mobile: {
       height: "100%",
@@ -162,7 +192,7 @@ export function PlayerBase({
       color="base"
       sx={{
         top: "auto",
-        padding: "6px 0",
+        padding: "1rem 0",
         alignItems: "center",
         display: "flex",
         ...appBarStyles[playerState],
@@ -175,22 +205,23 @@ export function PlayerBase({
           px: mdDown ? "1rem !important" : "0 !important",
         }}
       >
-        <Stack spacing={1} sx={{ width: "100%" }}>
+        <Stack
+          spacing={2}
+          sx={{ width: "100%", display: "flex" }}
+          direction={playerState === "desktopCandidate" ? "row" : "column"}
+        >
           <Box
             sx={(theme) => ({
-              minHeight: mdDown ? 0 : theme.spacing(10),
               display: "flex",
               alignItems: "center",
               justifyContent: "flex-start",
               px: 0,
               position: "relative",
-              // className: "candidate-card-player",
               // Keep player above the sliding drawer
               zIndex: theme.zIndex.drawer + 1,
-              width: "100%",
-              // flexFlow: mdDown ? "row-reverse" : "row",
+              width: playerState === "desktopCandidate" ? "auto" : "100%",
               gap: mdDown ? 2 : 3,
-              marginRight: mdDown ? 0 : "2rem",
+              marginRight: mdDown ? 0 : "2rem !important",
             })}
           >
             <Box display="none" id="video-js">
@@ -200,104 +231,104 @@ export function PlayerBase({
                 key={`${startOffset}-${endOffset}`}
               />
             </Box>
-            <Box ml={0} id="play-pause-button">
-              {handlePlayPauseClickCandidate && (
+            <Box
+              ml={0}
+              id="play-pause-button"
+              sx={{
+                marginTop: playerState === "desktopCandidate" ? "-1rem" : 0,
+              }}
+            >
+              {type === "candidate" && handlePlayPauseClickCandidate && (
                 <PlayBarPlayPauseButton
                   playerStatus={playerStatus}
                   onClick={handlePlayPauseClickCandidate}
                   disabled={!feed}
                 />
               )}
-              {handlePlayPauseClickFeed && (
+              {type === "feed" && handlePlayPauseClickFeed && (
                 <PlayPauseButton
                   playerStatus={playerStatus}
-                  onClick={handlePlayPauseClickFeed}
+                  onClick={() => {
+                    console.log("clicked PlayPauseButton");
+                    setShowPlayPrompt(false);
+                    handlePlayPauseClickFeed();
+                  }}
                   disabled={!feed}
                 />
               )}
             </Box>
-            <Link
-              href={href}
-              sx={{
-                textDecoration: "none",
-                flex: 1,
-                "&:hover": {
-                  color: "text.primary",
-                },
-              }}
-            >
-              <Stack
-                direction="row"
-                width="100%"
-                spacing={mdDown ? 2 : 3}
-                sx={{ overflow: "hidden" }}
+            {playerState !== "desktopCandidate" && (
+              <Link
+                href={href}
+                sx={{
+                  textDecoration: "none",
+                  flex: 1,
+                  "&:hover": {
+                    color: "text.primary",
+                  },
+                }}
               >
-                <Box
-                  sx={{
-                    backgroundImage: `url(${image})`,
-                    backgroundPosition: "center",
-                    backgroundSize: "cover",
-                    backgroundRepeat: "no-repeat",
-                    minWidth: mdDown ? "40px" : "60px",
-                    width: mdDown ? "40px" : "60px",
-                    height: mdDown ? "40px" : "60px",
-                    borderRadius: "4px",
-                    // hiding the image box for now
-                    display: "none",
-                  }}
-                ></Box>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    width: "100%",
-                    justifyContent: "center",
-                    marginLeft: "0 !important",
-                  }}
+                <Stack
+                  direction="row"
+                  width="100%"
+                  spacing={mdDown ? 2 : 3}
+                  sx={{ overflow: "hidden" }}
                 >
-                  <Typography
-                    component="h2"
+                  <Box
                     sx={{
-                      whiteSpace: "nowrap",
-                      fontSize: mdDown ? "14px" : "1rem",
+                      backgroundImage: `url(${image})`,
+                      backgroundPosition: "center",
+                      backgroundSize: "cover",
+                      backgroundRepeat: "no-repeat",
+                      minWidth: mdDown ? "40px" : "60px",
+                      width: mdDown ? "40px" : "60px",
+                      height: mdDown ? "40px" : "60px",
+                      borderRadius: "4px",
+                      // hiding the image box for now
+                      display: "none",
+                    }}
+                  ></Box>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      width: "100%",
+                      justifyContent: "center",
+                      marginLeft: "0 !important",
                     }}
                   >
-                    <span
-                      style={{
-                        fontWeight: mdDown ? "bold" : 500,
-                        fontSize: mdDown ? "inherit" : "20px",
+                    <Typography
+                      component="h2"
+                      sx={{
+                        whiteSpace: "nowrap",
+                        fontSize: mdDown ? "14px" : "1rem",
                       }}
                     >
-                      {mdDown ? playerTitle : "Listen Live"}
-                    </span>
-                    <br />
-                    {playerSubtitle && playerSubtitle}
-                    {type === "feed" &&
-                      `${listenerCount} listener${listenerCount !== 1 ? "s" : ""}`}
-                    {type === "candidate" && " · " + duration}
-                  </Typography>
-                  {/* {!mdDown && nowPlayingFeed && (
-                      <Typography sx={{ color: "text.secondary" }}>
-                        {
-                          timeRangeSelect.find(
-                            (el) => el.value === filters.timeRange,
-                          )?.label
-                        }
-                        {" – "}
-                        {reportCount[feed.id].shortCountString}
-                      </Typography>
-                    )} */}
-                  {/* {!mdDown && nowPlayingCandidate && slider} */}
-                </Box>
-              </Stack>
-            </Link>
+                      <span
+                        style={{
+                          fontWeight: mdDown ? "bold" : 500,
+                          fontSize: mdDown ? "inherit" : "20px",
+                        }}
+                      >
+                        {mdDown ? playerTitle : "Listen Live"}
+                      </span>
+                      <br />
+                      {playerSubtitle && playerSubtitle}
+                      {type === "feed" &&
+                        `${listenerCount} listener${listenerCount !== 1 ? "s" : ""}`}
+                      {type === "candidate" && " · " + duration}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Link>
+            )}
           </Box>
-          {mdDown && nowPlayingCandidate && slider}
+          {type === "candidate" && slider}
         </Stack>
         {(playerStatus === "playing" || playerStatus === "loading") &&
           feed &&
-          nowPlayingFeed &&
+          type === "feed" &&
           mdDown && (
             <DetectionDialog
               isPlaying={playerStatus === "playing"}
@@ -318,12 +349,15 @@ export function PlayerBase({
             minHeight: "40px",
             backgroundColor: "rgba(255,255,255,.25)",
             borderRadius: "10px",
-            display: "flex",
+            display: playerState === "desktopCandidate" ? "none" : "flex",
             justifyContent: "center",
             alignItems: "center",
           }}
           onClick={() => {
             setPlaybarExpanded(!playbarExpanded);
+            setDrawerSide("right");
+            setDrawerContent(<AudioVisualizer />);
+            setShowPlayPrompt(masterPlayerStatus !== "playing");
           }}
         >
           <ExpandLess

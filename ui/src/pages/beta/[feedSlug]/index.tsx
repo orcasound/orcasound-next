@@ -7,24 +7,24 @@ import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import AudioVisualizer from "@/components/PlayBar/AudioVisualizer";
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
-import { useNowPlaying } from "@/context/NowPlayingContext";
 import { standardizeFeedName } from "@/utils/masterDataHelpers";
 
 function HydrophonePage() {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
-  const { setPlaybarExpanded, setDrawerContent } = useLayout();
+  const { setPlaybarExpanded, setDrawerContent, setDrawerSide } = useLayout();
   const { feeds, setFilters } = useData();
   const router = useRouter();
   const feed = feeds.find((f) => f.slug === router.query.feedSlug);
 
   useEffect(() => {
-    setDrawerContent(<FeedAudioDetail />);
-  }, [setDrawerContent]);
+    setDrawerSide("right");
+    setDrawerContent(<AudioVisualizer />);
+  }, [setDrawerContent, setDrawerSide]);
 
-  useEffect(() => {
-    setPlaybarExpanded(false);
-  }, [setPlaybarExpanded]);
+  // useEffect(() => {
+  //   setPlaybarExpanded(false);
+  // }, [setPlaybarExpanded]);
 
   useEffect(() => {
     if (!feed || mdDown) return;
@@ -38,17 +38,6 @@ function HydrophonePage() {
 
   return <></>;
 }
-
-const FeedAudioDetail = () => {
-  const { nowPlayingFeed } = useNowPlaying();
-
-  return (
-    <>
-      hello
-      <AudioVisualizer key={nowPlayingFeed?.slug} />
-    </>
-  );
-};
 
 HydrophonePage.getLayout = function getLayout(page: ReactNode) {
   return (

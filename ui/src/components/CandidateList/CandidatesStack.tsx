@@ -130,7 +130,8 @@ export const CandidatesStack = ({
               timeRangeSelect.find((el) => el.value === filters.timeRange)
                 ?.label
             }
-            {feed && " · " + feed.name}
+            {" · "}
+            {feed ? feed.name : "All hydrophones"}
           </Typography>
           {countString(detections)}
         </Stack>

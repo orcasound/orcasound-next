@@ -9,6 +9,8 @@ import {
   useState,
 } from "react";
 
+import AudioVisualizer from "@/components/PlayBar/AudioVisualizer";
+
 type LayoutContextType = {
   alertOpen: boolean;
   setAlertOpen: Dispatch<SetStateAction<boolean>>;
@@ -24,6 +26,8 @@ type LayoutContextType = {
   setDrawerContent: Dispatch<SetStateAction<ReactNode | null>>;
   drawerSide: "left" | "right";
   setDrawerSide: Dispatch<SetStateAction<"left" | "right">>;
+  showPlayPrompt: boolean;
+  setShowPlayPrompt: Dispatch<SetStateAction<boolean>>;
 };
 
 const LayoutContext = createContext<LayoutContextType | null>(null);
@@ -47,9 +51,13 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [candidatePreview, setCandidatePreview] = useState(true);
 
-  const [drawerContent, setDrawerContent] = useState<ReactNode | null>(null);
+  const [drawerContent, setDrawerContent] = useState<ReactNode | null>(
+    <AudioVisualizer key="default" />,
+  );
 
   const [drawerSide, setDrawerSide] = useState<"left" | "right">("right");
+
+  const [showPlayPrompt, setShowPlayPrompt] = useState<boolean>(false);
 
   // menuTab is the state of the mobile <MobileBottomNav>
   const [mobileTab, setMobileTab] = useState(0);
@@ -71,6 +79,8 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
         setDrawerContent,
         drawerSide,
         setDrawerSide,
+        showPlayPrompt,
+        setShowPlayPrompt,
       }}
     >
       {children}

@@ -11,12 +11,11 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
-import useConcatenatedAudio from "@/hooks/beta/useConcatenatedAudio";
 import { Candidate, CombinedData } from "@/types/DataTypes";
 import formatDuration from "@/utils/masterDataHelpers";
 import { formatTimestamp } from "@/utils/time";
@@ -68,54 +67,14 @@ export default function CandidateCard(props: { candidate: Candidate }) {
   const startTimeString = startEnd[0];
   const endTimeString = startEnd[startEnd.length - 1];
 
-  const {
-    audioBlob,
-    spectrogramUrl,
-    isProcessing,
-    error,
-    totalDurationMs,
-    droppedSeconds,
-  } = useConcatenatedAudio({
-    feedId,
-    startTime: startTimeString,
-    endTime: endTimeString,
-  });
-
-  const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (!startTimeString || !endTimeString) return;
-
-    let url: string | null = null;
-
-    if (audioBlob) {
-      url = URL.createObjectURL(audioBlob);
-      setAudioUrl(url);
-    } else {
-      setAudioUrl(undefined);
-    }
-
-    return () => {
-      if (url) {
-        URL.revokeObjectURL(url);
-      }
-    };
-  }, [audioBlob, startTimeString, endTimeString]);
-
   const handleDrawerOpen = () => {
+    if (masterPlayerRef && masterPlayerRef.current)
+      masterPlayerRef.current.pause();
+    setNowPlayingFeed(null);
     setPlaybarExpanded(true);
     setDrawerSide("left");
     setDrawerContent(
-      <CandidateDrawer
-        clipId={startTimeString}
-        audioUrl={audioUrl}
-        spectrogramUrl={spectrogramUrl}
-        isProcessing={isProcessing}
-        error={error}
-        totalDurationMs={totalDurationMs}
-        droppedSeconds={droppedSeconds}
-        candidate={candidate}
-      />,
+      <CandidateDrawer key={candidate.id} candidate={candidate} />,
     );
   };
 
@@ -160,7 +119,6 @@ export default function CandidateCard(props: { candidate: Candidate }) {
   const href = feedDetailCandidateHref;
 
   const handlePlay = (candidate: Candidate) => {
-    autoPlayOnReady.current = true;
     setNowPlayingCandidate(candidate);
     setNowPlayingFeed(null);
     if (!mdDown) router.push(href);
@@ -349,7 +307,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                 {duration > 0
                   ? !active
                     ? playIcon
-                    : masterPlayerStatus !== "playing"
+                    : masterPlayerStatus !== "playing" && nowPlayingCandidate
                       ? playIcon
                       : pauseIcon
                   : candidate.hydrophone !== "Out of audible range"

@@ -3,9 +3,10 @@ import { useRouter } from "next/router";
 import React, { ReactElement, useEffect, useRef } from "react";
 
 import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
-import { HydrophonesStack } from "@/components/CandidateList/HydrophonesStack";
 import HeaderNew from "@/components/HeaderNew";
+import LivePlayer from "@/components/PlayBar/LivePlayer";
 import { useLayout } from "@/context/LayoutContext";
+import { useNowPlaying } from "@/context/NowPlayingContext";
 
 import { MasterDataLayout } from "../MasterDataLayout";
 import { DesktopDrawer } from "./DesktopDrawer";
@@ -16,7 +17,7 @@ import MobileDrawer from "./MobileDrawer";
 import { SideList } from "./SideList";
 
 const routes = [
-  { label: "Hydrophones", href: "/beta" },
+  { label: "Listen Live", href: "/beta" },
   { label: "Explore", href: "/beta/explore" },
   { label: "Take Action", href: "/beta/action" },
 ];
@@ -54,8 +55,16 @@ function NavTabs({ mdDown }: { mdDown?: boolean }) {
       display="flex"
       justifyContent={mdDown ? "center" : "start"}
     >
-      {routes.map(({ label, href }) => {
-        const isActive = currentPath === href;
+      {routes.map(({ label, href }, index) => {
+        let isActive;
+        if (currentPath === href) {
+          isActive = true;
+        } else if (currentPath === "/" && index == 0) {
+          isActive = true;
+        } else {
+          isActive = false;
+        }
+
         return (
           <Button
             key={href}
@@ -72,19 +81,13 @@ function NavTabs({ mdDown }: { mdDown?: boolean }) {
 }
 
 type HalfMapLayoutProps = {
-  leftSlot?: React.ReactNode;
-  drawer?: React.ReactNode;
   children?: React.ReactNode;
 };
 
-export function HalfMapLayout({
-  leftSlot,
-  drawer,
-  children,
-}: HalfMapLayoutProps) {
+export function HalfMapLayout({ children }: HalfMapLayoutProps) {
   const router = useRouter();
-  const { setDrawerSide, drawerContent } = useLayout();
-
+  const { setDrawerSide, drawerContent, showPlayPrompt } = useLayout();
+  const { nowPlayingFeed } = useNowPlaying();
   const isHome = router.asPath === routes[0].href;
   const isExplore = router.asPath === routes[1].href;
   const isAction = router.asPath === routes[2].href;
@@ -101,6 +104,29 @@ export function HalfMapLayout({
       setDrawerSide("right");
     }
   }, [setDrawerSide]);
+
+  const playPrompt = (
+    <Box
+      className="play-prompt"
+      sx={{
+        // to make this work I need to set up a new state variable that turns off/on from the playerbase
+        // too much complexity for now...
+        backgroundColor: "rgba(0,0,0,.75)",
+        color: "rgba(255,255,255,.9)",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "16px 24px",
+        borderRadius: "8px",
+      }}
+    >
+      Press play to start visualizer and report sounds
+    </Box>
+  );
 
   return (
     <>
@@ -139,7 +165,15 @@ export function HalfMapLayout({
           {/* // desktop view */}
           {!mdDown && (
             <SideList position="left">
-              {router.query.feedSlug ? <FeedDetail /> : <HydrophonesStack />}
+              {router.query.feedSlug ? (
+                <FeedDetail />
+              ) : (
+                <LivePlayer
+                  showListView={true}
+                  feed={nowPlayingFeed}
+                  key={router.asPath}
+                />
+              )}
             </SideList>
           )}
           <Box
@@ -162,7 +196,12 @@ export function HalfMapLayout({
 
         {mdDown && <MobileDrawer masterPlayerTimeRef={masterPlayerTimeRef} />}
         {mdDown && <MobileBottomNav />}
-        {!mdDown && <DesktopDrawer>{drawerContent}</DesktopDrawer>}
+        {!mdDown && (
+          <DesktopDrawer>
+            {nowPlayingFeed && showPlayPrompt && playPrompt}
+            {drawerContent}
+          </DesktopDrawer>
+        )}
       </Box>
     </>
   );

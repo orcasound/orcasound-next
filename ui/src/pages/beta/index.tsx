@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 
-import { HydrophonesStack } from "@/components/CandidateList/HydrophonesStack";
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import { useData } from "@/context/DataContext";
@@ -27,7 +26,7 @@ function HomePage() {
 HomePage.getLayout = function getLayout(page: React.ReactElement) {
   return (
     <MasterDataLayout>
-      <HalfMapLayout leftSlot={<HydrophonesStack />}>{page}</HalfMapLayout>
+      <HalfMapLayout>{page}</HalfMapLayout>
     </MasterDataLayout>
   );
 };

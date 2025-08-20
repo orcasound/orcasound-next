@@ -1,4 +1,5 @@
 import { Tooltip } from "@mui/material";
+import { useRouter } from "next/router";
 import React, { MutableRefObject, useMemo } from "react";
 
 import { useData } from "@/context/DataContext";
@@ -16,7 +17,7 @@ export default function PlayBar({
   masterPlayerTimeRef?: MutableRefObject<number>;
 }) {
   const { nowPlayingCandidate, nowPlayingFeed } = useNowPlaying();
-
+  const router = useRouter();
   const detections = nowPlayingCandidate?.array;
   const hydrophone = nowPlayingCandidate?.hydrophone;
 
@@ -132,7 +133,9 @@ export default function PlayBar({
           masterPlayerTimeRef={masterPlayerTimeRef}
         />
       )}
-      {nowPlayingFeed && <LivePlayer currentFeed={nowPlayingFeed} />}
+      {nowPlayingFeed && (
+        <LivePlayer feed={nowPlayingFeed} key={`${router.asPath}-playbar`} />
+      )}
       {!nowPlayingCandidate && !nowPlayingFeed && false && (
         <div
           style={{

@@ -29,6 +29,7 @@ import { timeRangeSelect } from "../CandidateList/CandidateListFilters";
 import DetailTabs from "../CandidateList/DetailTabs";
 import { DetectionsList } from "../CandidateList/DetectionsList";
 import { HydrophoneHost } from "../CandidateList/HydrophoneHost";
+import { HydrophonesStack } from "../CandidateList/HydrophonesStack";
 import ReportsBarChart from "../CandidateList/ReportsBarChart";
 import AudioVisualizer from "./AudioVisualizer";
 import { PlayerBase } from "./PlayerBase";
@@ -67,21 +68,11 @@ const hosts = [
 type PlayerStatus = "idle" | "loading" | "playing" | "paused" | "error";
 
 export default function LivePlayer({
-  currentFeed,
+  feed,
+  showListView = false,
 }: {
-  currentFeed: Feed | null;
-
-  // Pick<
-  //   Feed,
-  //   | "id"
-  //   | "slug"
-  //   | "nodeName"
-  //   | "name"
-  //   | "latLng"
-  //   | "imageUrl"
-  //   | "thumbUrl"
-  //   | "bucket"
-  // >;
+  feed: Feed | null;
+  showListView?: boolean;
 }) {
   const {
     masterPlayerRef,
@@ -89,13 +80,18 @@ export default function LivePlayer({
     audioContextRef,
     analyserNodeRef,
     setMasterPlayerStatus,
-    setNowPlayingCandidate,
     setNowPlayingFeed,
+    setNowPlayingCandidate,
   } = useNowPlaying();
   const { autoPlayOnReady, filteredData } = useData();
   const [playerStatus, setPlayerStatus] = useState<PlayerStatus>("idle");
   const playerRef = useRef<VideoJSPlayer | null>(null);
-  const { playbarExpanded, setPlaybarExpanded } = useLayout();
+  const {
+    playbarExpanded,
+    setPlaybarExpanded,
+    setDrawerContent,
+    setDrawerSide,
+  } = useLayout();
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   const { filters } = useData();
@@ -104,16 +100,16 @@ export default function LivePlayer({
   );
 
   const { timestamp, hlsURI } = useTimestampFetcher(
-    currentFeed?.bucket,
-    currentFeed?.nodeName,
+    feed?.bucket,
+    feed?.nodeName,
   );
 
-  const feedPresence = useFeedPresence(currentFeed?.slug);
+  const feedPresence = useFeedPresence(feed?.slug);
   const listenerCount = feedPresence?.metas.length ?? 0;
 
   const playerOptions = useMemo(
     () => ({
-      poster: currentFeed?.imageUrl,
+      poster: feed?.imageUrl,
       // autoplay: true,
       flash: {
         hls: {
@@ -125,29 +121,29 @@ export default function LivePlayer({
           overrideNative: true,
         },
       },
-      sources: currentFeed?.nodeName
+      sources: feed?.nodeName
         ? [
             {
               // If hlsURI isn't set, use a dummy URI to trigger an error
               // The dummy URI doesn't actually exist, it should return 404
               // This is the only way to get videojs to throw an error, otherwise
               // it just won't initialize (if src is undefined/null/empty))
-              src: hlsURI ?? `${currentFeed?.nodeName}/404`,
+              src: hlsURI ?? `${feed?.nodeName}/404`,
               type: "application/x-mpegurl",
             },
           ]
         : [],
     }),
-    [hlsURI, currentFeed?.nodeName, currentFeed?.imageUrl],
+    [hlsURI, feed?.nodeName, feed?.imageUrl],
   );
 
   const updateMediaSession = useCallback(
     (player: VideoJSPlayer) => {
-      if (currentFeed?.nodeName) {
-        setMediaSessionAPI(currentFeed, player);
+      if (feed?.nodeName) {
+        setMediaSessionAPI(feed, player);
       }
     },
-    [currentFeed],
+    [feed],
   );
 
   useEffect(() => {
@@ -195,12 +191,12 @@ export default function LivePlayer({
         autoPlayOnReady.current = true;
         setAudioVisualizerOpen(true);
 
-        if (currentFeed?.slug) analytics.stream.started(currentFeed.slug);
+        if (feed?.slug) analytics.stream.started(feed.slug);
       });
       player.on("pause", () => {
         setPlayerStatus("paused");
         setMasterPlayerStatus("paused");
-        if (currentFeed?.slug) analytics.stream.paused(currentFeed.slug);
+        if (feed?.slug) analytics.stream.paused(feed.slug);
       });
       player.on("waiting", () => {
         setPlayerStatus("loading");
@@ -209,11 +205,11 @@ export default function LivePlayer({
       player.on("error", () => {
         setPlayerStatus("error");
         setMasterPlayerStatus("error");
-        if (currentFeed?.slug) analytics.stream.error(currentFeed.slug);
+        if (feed?.slug) analytics.stream.error(feed.slug);
       });
     },
     [
-      currentFeed?.slug,
+      feed?.slug,
       masterPlayerRef,
       setMasterPlayerStatus,
       autoPlayOnReady,
@@ -224,10 +220,15 @@ export default function LivePlayer({
 
   const handlePlayPauseClick = async () => {
     const player = playerRef.current;
+    masterPlayerRef.current = player;
 
-    setNowPlayingFeed(currentFeed);
-    setNowPlayingCandidate(null);
-    if (playerStatus !== "playing" && !mdDown) setPlaybarExpanded(true);
+    if (playerStatus !== "playing" && !mdDown) {
+      setPlaybarExpanded(true);
+      setNowPlayingCandidate(null);
+      setNowPlayingFeed(feed);
+      setDrawerSide("right");
+      setDrawerContent(<AudioVisualizer />);
+    }
 
     if (playerStatus === "error") {
       setPlayerStatus("idle");
@@ -244,10 +245,10 @@ export default function LivePlayer({
     try {
       if (playerStatus === "loading" || playerStatus === "playing") {
         await player.pause();
-        if (currentFeed?.slug) analytics.stream.userPaused(currentFeed.slug);
+        if (feed?.slug) analytics.stream.userPaused(feed.slug);
       } else {
         await player.play();
-        if (currentFeed?.slug) analytics.stream.userStarted(currentFeed.slug);
+        if (feed?.slug) analytics.stream.userStarted(feed.slug);
       }
     } catch (e) {
       console.error(e);
@@ -268,7 +269,7 @@ export default function LivePlayer({
       setPlayerStatus("idle");
       setMasterPlayerStatus("idle");
     };
-  }, [hlsURI, currentFeed?.nodeName, setMasterPlayerStatus]);
+  }, [hlsURI, feed?.nodeName, setMasterPlayerStatus]);
 
   useEffect(() => {
     console.log("playerStatus: " + playerStatus);
@@ -276,7 +277,7 @@ export default function LivePlayer({
   }, [playerStatus, masterPlayerStatus]);
 
   const descDetections = filteredData
-    .filter((d) => d.hydrophone === currentFeed?.name)
+    .filter((d) => d.hydrophone === feed?.name)
     .sort(
       (a, b) =>
         Date.parse(b.timestamp.toString()) - Date.parse(a.timestamp.toString()),
@@ -294,25 +295,25 @@ export default function LivePlayer({
           showLegend={false}
           showYAxis={false}
           showXAxis={false}
-          feed={currentFeed ?? null}
+          feed={feed ?? null}
         />
         <DetectionsList array={descDetections} />
       </Stack>
     </>
   );
 
-  const aboutContent = currentFeed?.introHtml && (
+  const aboutContent = feed?.introHtml && (
     <>
       <Box
         sx={{
           my: 1,
         }}
       >
-        <HydrophoneHost feedSlug={currentFeed.slug} />
+        <HydrophoneHost feedSlug={feed.slug} />
       </Box>
       <div
         className="intro"
-        dangerouslySetInnerHTML={{ __html: currentFeed?.introHtml }}
+        dangerouslySetInnerHTML={{ __html: feed?.introHtml }}
       />
     </>
   );
@@ -337,7 +338,7 @@ export default function LivePlayer({
         width: 64,
         height: 64,
       }}
-      onClick={() => currentFeed && handlePlayPauseClick()}
+      onClick={() => feed && handlePlayPauseClick()}
     >
       {playerStatus === "error" ? (
         <Tooltip title="Failed to load" placement="right">
@@ -378,28 +379,6 @@ export default function LivePlayer({
         flexDirection: "column",
       }}
     >
-      {/* {mdDown && (
-        <div className="detection-button" style={{ maxWidth: "50%" }}>
-          {(playerStatus === "playing" || playerStatus === "loading") &&
-            currentFeed && (
-              <DetectionDialog
-                isPlaying={playerStatus === "playing"}
-                feed={currentFeed}
-                timestamp={timestamp}
-                getPlayerTime={() => playerRef.current?.currentTime()}
-                listenerCount={listenerCount}
-              >
-                <DetectionButton />
-              </DetectionDialog>
-            )}
-        </div>
-      )} */}
-      {/* {playerStatus !== "playing" && playerStatus !== "loading" && (
-          <DetectionButton disabled={true} />
-        )} */}
-
-      {/* <Button variant="outlined">Share</Button>
-        <Button variant="outlined">notifications</Button> */}
       <Box display="none" id="video-js">
         <VideoJS
           options={playerOptions}
@@ -407,76 +386,87 @@ export default function LivePlayer({
           key={timestamp}
         />
       </Box>
-
-      <div
-        style={{
-          position: mdDown ? "fixed" : "relative",
-          width: "100%",
-          zIndex: 1000,
-        }}
-      >
-        <PlayerBase
-          key={currentFeed?.id}
-          type="feed"
-          playerOptions={playerOptions}
-          handleReady={handleReady}
-          playerStatus={playerStatus}
-          feed={currentFeed ?? null}
-          playerRef={playerRef}
-          handlePlayPauseClickFeed={handlePlayPauseClick}
-          image={currentFeed?.imageUrl?.toString()}
-          timestamp={timestamp}
-          listenerCount={listenerCount}
-          playerTitle={currentFeed?.name}
-          playerSubtitle={""}
-          setAudioVisualizerOpen={setAudioVisualizerOpen}
-        />
-      </div>
-
-      {mdDown && playbarExpanded && audioVisualizerOpen && (
-        <div style={{ marginTop: "calc(68px + 1rem)" }}>
-          <AudioVisualizer />
-        </div>
-      )}
-
-      {mdDown && playbarExpanded && (
-        <Box
-          sx={{
-            mt: audioVisualizerOpen ? "1rem" : "calc(68px + 1rem)", // 68px is the height of PlayerBase which is fixed
-            mb: "70px",
-          }}
-        >
-          <DetailTabs tabs={tabs} />
+      {showListView && (
+        <Box className="player-list">
+          <HydrophonesStack handlePlayPauseClick={handlePlayPauseClick} />
         </Box>
       )}
-
-      {mdDown && playbarExpanded && playerStatus === "playing" && (
-        <Box
-          className="fixed-detection-button-container"
-          sx={{
-            width: "100%",
-            height: "70px",
-            background: "black",
-            position: "fixed",
-            bottom: 0,
-            py: 1.5,
-            px: 2,
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          <Button
-            sx={{
+      {!showListView && (
+        <Box className="individual-player">
+          <div
+            className="player-base-container"
+            style={{
+              position: mdDown ? "fixed" : "relative",
               width: "100%",
-              height: "100%",
-              background: "white",
-              color: "black",
-              borderRadius: "100px",
+              zIndex: 1000,
             }}
           >
-            <GraphicEq sx={{ color: "black", mr: ".5rem" }} />
-            Report sound
-          </Button>
+            <PlayerBase
+              key={feed?.id}
+              type="feed"
+              playerOptions={playerOptions}
+              handleReady={handleReady}
+              playerStatus={playerStatus}
+              feed={feed ?? null}
+              playerRef={playerRef}
+              handlePlayPauseClickFeed={handlePlayPauseClick}
+              image={feed?.imageUrl?.toString()}
+              timestamp={timestamp}
+              listenerCount={listenerCount}
+              playerTitle={feed?.name}
+              playerSubtitle={""}
+              setAudioVisualizerOpen={setAudioVisualizerOpen}
+            />
+          </div>
+
+          {mdDown && playbarExpanded && (
+            <>
+              {audioVisualizerOpen && (
+                <div style={{ marginTop: "calc(68px + 1rem)" }}>
+                  <AudioVisualizer />
+                </div>
+              )}
+
+              <Box
+                sx={{
+                  mt: audioVisualizerOpen ? "1rem" : "calc(68px + 1rem)", // 68px is the height of PlayerBase which is fixed
+                  mb: "70px",
+                }}
+              >
+                <DetailTabs tabs={tabs} />
+              </Box>
+
+              {playerStatus === "playing" && (
+                <Box
+                  className="fixed-detection-button-container"
+                  sx={{
+                    width: "100%",
+                    height: "70px",
+                    background: "black",
+                    position: "fixed",
+                    bottom: 0,
+                    py: 1.5,
+                    px: 2,
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Button
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      background: "white",
+                      color: "black",
+                      borderRadius: "100px",
+                    }}
+                  >
+                    <GraphicEq sx={{ color: "black", mr: ".5rem" }} />
+                    Report sound
+                  </Button>
+                </Box>
+              )}
+            </>
+          )}
         </Box>
       )}
     </Box>
