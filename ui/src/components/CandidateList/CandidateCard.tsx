@@ -68,8 +68,9 @@ export default function CandidateCard(props: { candidate: Candidate }) {
   const endTimeString = startEnd[startEnd.length - 1];
 
   const handleDrawerOpen = () => {
-    if (masterPlayerRef && masterPlayerRef.current)
+    if (masterPlayerRef && masterPlayerRef.current && !mdDown) {
       masterPlayerRef.current.pause();
+    }
     setNowPlayingFeed(null);
     setPlaybarExpanded(true);
     setDrawerSide("left");

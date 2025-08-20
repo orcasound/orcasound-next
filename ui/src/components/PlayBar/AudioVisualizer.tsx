@@ -218,7 +218,7 @@ function AudioVisualizer({
         className="live-spectrogram-controls"
         sx={{
           minHeight: "36px",
-          display: "flex",
+          display: mdDown ? "none" : "flex",
           // hiding this for now
           // display: "none",
           alignItems: "center",

@@ -150,8 +150,8 @@ export function PlayerBase({
   );
 
   const playerState =
-    type === "candidate" && !mdDown
-      ? "desktopCandidate"
+    type === "candidate"
+      ? "candidate"
       : (`${!mdDown ? "desktop" : "mobile"}${mdDown && playbarExpanded ? "Expanded" : ""}` as keyof typeof appBarStyles);
 
   const appBarStyles = {
@@ -162,12 +162,13 @@ export function PlayerBase({
       background: "transparent",
       p: 0,
     },
-    desktopCandidate: {
+    candidate: {
       height: "auto",
       borderRadius: "8px",
       border: "none",
       background: "transparent",
-      px: "1.5rem",
+      px: mdDown ? 0 : "1.5rem",
+      py: mdDown ? 0 : "1rem",
     },
     mobile: {
       height: "100%",
@@ -202,13 +203,13 @@ export function PlayerBase({
         className="toolbar"
         sx={{
           width: "100%",
-          px: mdDown ? "1rem !important" : "0 !important",
+          px: "0 !important",
         }}
       >
         <Stack
           spacing={2}
           sx={{ width: "100%", display: "flex" }}
-          direction={playerState === "desktopCandidate" ? "row" : "column"}
+          direction={playerState === "candidate" ? "row" : "column"}
         >
           <Box
             sx={(theme) => ({
@@ -219,7 +220,7 @@ export function PlayerBase({
               position: "relative",
               // Keep player above the sliding drawer
               zIndex: theme.zIndex.drawer + 1,
-              width: playerState === "desktopCandidate" ? "auto" : "100%",
+              width: playerState === "candidate" ? "auto" : "100%",
               gap: mdDown ? 2 : 3,
               marginRight: mdDown ? 0 : "2rem !important",
             })}
@@ -235,7 +236,7 @@ export function PlayerBase({
               ml={0}
               id="play-pause-button"
               sx={{
-                marginTop: playerState === "desktopCandidate" ? "-1rem" : 0,
+                marginTop: playerState === "candidate" ? "-1rem" : 0,
               }}
             >
               {type === "candidate" && handlePlayPauseClickCandidate && (
@@ -257,7 +258,7 @@ export function PlayerBase({
                 />
               )}
             </Box>
-            {playerState !== "desktopCandidate" && (
+            {playerState !== "candidate" && (
               <Link
                 href={href}
                 sx={{
@@ -349,7 +350,7 @@ export function PlayerBase({
             minHeight: "40px",
             backgroundColor: "rgba(255,255,255,.25)",
             borderRadius: "10px",
-            display: playerState === "desktopCandidate" ? "none" : "flex",
+            display: playerState === "candidate" ? "none" : "flex",
             justifyContent: "center",
             alignItems: "center",
           }}

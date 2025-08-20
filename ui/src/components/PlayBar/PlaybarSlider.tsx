@@ -86,7 +86,7 @@ export function PlaybarSlider({
       <Box
         id="formatted-seconds"
         sx={{
-          display: mdDown ? "none" : "flex",
+          display: "flex",
           justifyContent: "space-between",
         }}
       >

@@ -18,6 +18,8 @@ import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Feed } from "@/graphql/generated";
 import useFeedPresence from "@/hooks/useFeedPresence";
 
+import LivePlayer from "../PlayBar/LivePlayer";
+
 type Props = {
   feed: Feed;
   handlePlayPauseClick?: () => Promise<void>;
@@ -32,7 +34,7 @@ export default function HydrophoneCard({ feed, handlePlayPauseClick }: Props) {
     masterPlayerStatus,
   } = useNowPlaying();
 
-  const { setDrawerContent } = useLayout();
+  const { setDrawerContent, setPlaybarExpanded } = useLayout();
 
   const { autoPlayOnReady } = useData();
 
@@ -166,7 +168,11 @@ export default function HydrophoneCard({ feed, handlePlayPauseClick }: Props) {
               <Link
                 // custom Link component based on NextLink, not MUI Link, is required here to persist layout and avoid page reset
                 href={feedHref}
-                onClick={() => (autoPlayOnReady.current = false)}
+                onClick={(e) => {
+                  if (mdDown) e.preventDefault();
+                  setPlaybarExpanded(true);
+                  setDrawerContent(<LivePlayer feed={feed} />);
+                }}
                 className="feed-href"
                 sx={{
                   color: "inherit",

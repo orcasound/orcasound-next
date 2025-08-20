@@ -20,7 +20,8 @@ function HydrophonePage() {
   useEffect(() => {
     setDrawerSide("right");
     setDrawerContent(<AudioVisualizer />);
-  }, [setDrawerContent, setDrawerSide]);
+    if (mdDown) setPlaybarExpanded(true);
+  }, [setDrawerContent, setDrawerSide, setPlaybarExpanded]);
 
   // useEffect(() => {
   //   setPlaybarExpanded(false);

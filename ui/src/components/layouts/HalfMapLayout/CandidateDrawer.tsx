@@ -1,21 +1,23 @@
-import {
-  ArrowBackIos,
-  GraphicEq,
-  KeyboardArrowDown,
-} from "@mui/icons-material";
+import { GraphicEq, KeyboardArrowDown } from "@mui/icons-material";
 import {
   Box,
   Button,
   CircularProgress,
   Container,
-  Link,
   Stack,
   Theme,
   Typography,
   useMediaQuery,
 } from "@mui/material";
 import { useRouter } from "next/router";
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import {
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import CommunityBar from "@/components/CandidateList/CommunityBar";
 import DetailTabs from "@/components/CandidateList/DetailTabs";
@@ -53,20 +55,24 @@ const DetailColumn = ({
   onClose,
   isProcessing,
   audioUrl,
+  audioBlob,
   clipId,
   error,
   buildRequested,
   setBuildRequested,
+  waveSurferContainer,
 }: {
   candidate: Candidate | null;
   durationString: string | undefined | null;
   onClose: () => void;
   isProcessing: boolean;
   audioUrl: string | undefined;
+  audioBlob: Blob | null;
   clipId: string;
   error: string | null;
   buildRequested: boolean;
   setBuildRequested: Dispatch<SetStateAction<boolean>>;
+  waveSurferContainer: ReactNode;
 }) => {
   const { filters } = useData();
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
@@ -87,141 +93,120 @@ const DetailColumn = ({
       label: "Reports",
       value: "reports",
       content: candidate && (
-        <div style={{ margin: mdDown ? "0 24px" : 0 }}>
+        <>
           <DetectionsList array={ascDetections} />
-        </div>
+        </>
       ),
     },
     { label: "Comments", value: "comments", content: <></> },
   ];
 
   return (
-    <div style={{ minWidth: "33%" }}>
-      <Container
-        sx={{
-          padding: "24px 0px !important",
-        }}
-      >
-        <Box>
-          {mdDown && (
-            <Link
-              href={"/beta/candidates"}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                textDecoration: "none",
-                lineHeight: 1,
-                color: "common.white",
-                zIndex: 1,
-                position: "relative",
-              }}
-            >
-              <ArrowBackIos />
-            </Link>
-          )}
-
-          <Box
+    <Container
+      sx={{
+        padding: "24px 0px !important",
+        width: mdDown ? "100%" : "33%",
+      }}
+    >
+      <Box>
+        <Box
+          sx={{
+            px: 3,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            gap: 1,
+            alignItems: "flex-start",
+          }}
+        >
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<KeyboardArrowDown />}
             sx={{
-              px: 3,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              gap: 1,
-              alignItems: "flex-start",
+              whiteSpace: "nowrap",
+              backgroundColor: "rgba(255,255,255,.2)",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,.25)",
+              },
             }}
+            onClick={onClose}
           >
-            {!mdDown && (
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<KeyboardArrowDown />}
-                sx={{
-                  whiteSpace: "nowrap",
-                  backgroundColor: "rgba(255,255,255,.2)",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "rgba(255,255,255,.25)",
-                  },
-                }}
-                onClick={onClose}
-              >
-                Close player
-              </Button>
-            )}
+            Close player
+          </Button>
 
-            <Box>
-              <Typography variant="h5" sx={{ lineHeight: 1, my: ".5rem" }}>
-                {formatTimestamp(candidate.startTimestamp)}
-              </Typography>
+          <Box>
+            <Typography variant="h5" sx={{ lineHeight: 1, my: ".5rem" }}>
+              {formatTimestamp(candidate.startTimestamp)}
+            </Typography>
 
-              <Typography
-                variant="h6"
-                sx={{ lineHeight: 1.2, opacity: 0.75, mb: "4px" }}
-              >
-                {candidate.hydrophone}
-              </Typography>
+            <Typography
+              variant="h6"
+              sx={{ lineHeight: 1.2, opacity: 0.75, mb: "4px" }}
+            >
+              {candidate.hydrophone}
+            </Typography>
 
-              <Typography
-                variant="body1"
-                sx={{ lineHeight: 1.2, opacity: 0.75 }}
-              >
-                {timeAgoString} ago
-                {" · "}
-                {durationString}
-                {" · "}
-                Reports within {filters?.timeIncrement} min
-              </Typography>
-            </Box>
-          </Box>
-          <Stack
-            gap={4}
-            direction="column"
-            sx={{ my: 3, px: 3, alignItems: "flex-start" }}
-          >
-            <CommunityBar
-              votes={0}
-              downloadReady={!!audioUrl}
-              audioUrl={audioUrl}
-              clipId={clipId}
-            />
-            {!audioUrl && (
-              <Button
-                variant="outlined"
-                sx={{
-                  display: "flex",
-                  gap: ".75rem",
-                  background: "rgba(255,255,255,.15)",
-                }}
-                onClick={() => setBuildRequested(true)}
-              >
-                {!buildRequested ? (
-                  <>
-                    <GraphicEq />
-                    <span>Generate spectrogram view</span>
-                  </>
-                ) : isProcessing ? (
-                  <>
-                    <CircularProgress size={20} />
-                    <span>Building mp3 file...</span>
-                  </>
-                ) : error ? (
-                  <p>Error: {error}</p>
-                ) : (
-                  <>
-                    <CircularProgress size={20} />
-                    <span>Generating audio url...</span>
-                  </>
-                )}
-              </Button>
-            )}
-          </Stack>
-          <Box className="main">
-            <DetailTabs tabs={tabs} />
+            <Typography variant="body1" sx={{ lineHeight: 1.2, opacity: 0.75 }}>
+              {timeAgoString} ago
+              {" · "}
+              {durationString}
+              {" · "}
+              Reports within {filters?.timeIncrement} min
+            </Typography>
           </Box>
         </Box>
-      </Container>
-    </div>
+        <Stack
+          gap={4}
+          direction="column"
+          sx={{ my: 3, px: 3, alignItems: "flex-start" }}
+        >
+          <CommunityBar
+            votes={0}
+            downloadReady={!!audioUrl}
+            audioUrl={audioUrl}
+            clipId={clipId}
+          />
+          {!audioUrl && (
+            <Button
+              variant="outlined"
+              sx={{
+                display: "flex",
+                gap: ".75rem",
+                background: "rgba(255,255,255,.15)",
+              }}
+              onClick={() => setBuildRequested(true)}
+            >
+              {!buildRequested ? (
+                <>
+                  <GraphicEq />
+                  <span>Generate spectrogram view</span>
+                </>
+              ) : isProcessing ? (
+                <>
+                  <CircularProgress size={20} />
+                  <span>Building mp3 file...</span>
+                </>
+              ) : error ? (
+                <p>Error: {error}</p>
+              ) : (
+                <>
+                  <CircularProgress size={20} />
+                  <span>Generating audio url...</span>
+                </>
+              )}
+            </Button>
+          )}
+          {mdDown && waveSurferContainer}
+
+          {mdDown && !audioBlob && <PlayBar key={`mobile-${candidate?.id}`} />}
+        </Stack>
+        <Box className="main">
+          <DetailTabs tabs={tabs} />
+        </Box>
+      </Box>
+    </Container>
   );
 };
 
@@ -230,6 +215,8 @@ export const CandidateDrawer = ({
 }: {
   candidate: Candidate | null;
 }) => {
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
+
   const { setPlaybarExpanded } = useLayout();
   const { durationString } = useComputedPlaybackFields(candidate);
   const router = useRouter();
@@ -288,6 +275,39 @@ export const CandidateDrawer = ({
     setPlaybarExpanded(false);
   };
 
+  const waveSurferContainer = (
+    <Box
+      className="wavesurfer-container"
+      sx={{
+        flex: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "100%",
+      }}
+    >
+      {audioUrl && (
+        <Box
+          sx={{
+            height: "100%",
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: isProcessing ? "center" : "flex-start",
+          }}
+        >
+          <div style={{ width: "100%" }}>
+            <WavesurferPlayer audioUrl={audioUrl} />
+            <div style={{ display: "none" }}>{totalDurationMs} ms</div>
+            {droppedSeconds > 0 && (
+              <div>Dropped {droppedSeconds} seconds from stream reset</div>
+            )}
+          </div>
+        </Box>
+      )}
+    </Box>
+  );
+
   return (
     <Stack
       direction="row"
@@ -302,75 +322,25 @@ export const CandidateDrawer = ({
         onClose={handleClose}
         isProcessing={isProcessing}
         audioUrl={audioUrl}
+        audioBlob={audioBlob}
         clipId={startTimeString}
         error={error}
         buildRequested={buildRequested}
         setBuildRequested={setBuildRequested}
+        waveSurferContainer={waveSurferContainer}
       />
       <Box
+        className="body-column"
         sx={{
           height: "100%",
           width: "100%",
-          display: "flex",
+          display: mdDown ? "none" : "flex",
           flexDirection: "column",
           position: "relative",
           paddingBottom: "2rem",
         }}
       >
-        <Box
-          className="wavesurfer-container"
-          sx={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {false && (
-            <Button
-              variant="outlined"
-              sx={{ mb: "200px", display: "flex", gap: "1rem" }}
-              onClick={() => setBuildRequested(true)}
-            >
-              {!buildRequested ? (
-                <>
-                  <span>Generate spectrogram view</span>
-                </>
-              ) : isProcessing ? (
-                <>
-                  <CircularProgress size={20} />
-                  <span>Building audio file...</span>
-                </>
-              ) : error ? (
-                <p>Error: {error}</p>
-              ) : (
-                <>
-                  <CircularProgress size={20} />
-                  <span>Generating audio url...</span>
-                </>
-              )}
-            </Button>
-          )}
-          {audioUrl && (
-            <Box
-              sx={{
-                height: "100%",
-                width: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: isProcessing ? "center" : "flex-start",
-              }}
-            >
-              <div style={{ width: "100%" }}>
-                <WavesurferPlayer audioUrl={audioUrl} />
-                <div style={{ display: "none" }}>{totalDurationMs} ms</div>
-                {droppedSeconds > 0 && (
-                  <div>Dropped {droppedSeconds} seconds from stream reset</div>
-                )}
-              </div>
-            </Box>
-          )}
-        </Box>
+        {!mdDown && waveSurferContainer}
         {/* <Box
           className="html-audio-container"
           sx={{
@@ -397,7 +367,7 @@ export const CandidateDrawer = ({
         </Box> */}
         {!audioBlob && (
           <Box
-            className="drawer-actions"
+            className="candidate-playbar-container"
             sx={{
               position: "absolute",
               top: "50%",
@@ -407,7 +377,7 @@ export const CandidateDrawer = ({
               mx: "24px",
             }}
           >
-            <PlayBar key={candidate?.id ?? "no candidate"} />
+            {!mdDown && <PlayBar key={`desktop-${candidate?.id}`} />}
           </Box>
         )}
       </Box>

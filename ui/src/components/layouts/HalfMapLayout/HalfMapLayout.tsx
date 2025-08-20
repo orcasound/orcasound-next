@@ -3,15 +3,15 @@ import { useRouter } from "next/router";
 import React, { ReactElement, useEffect, useRef } from "react";
 
 import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
-import DetailTabs from "@/components/CandidateList/DetailTabs";
 import { HydrophonesStack } from "@/components/CandidateList/HydrophonesStack";
+import MobileTabs from "@/components/CandidateList/MobileTabs";
 import HeaderNew from "@/components/HeaderNew";
 import LivePlayer from "@/components/PlayBar/LivePlayer";
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 
 import { MasterDataLayout } from "../MasterDataLayout";
-import { DesktopDrawer } from "./DesktopDrawer";
+import { BottomDrawer } from "./BottomDrawer";
 import { FeedDetail } from "./FeedDetail";
 import { MapWrapper } from "./MapWrapper";
 import MobileDrawer from "./MobileDrawer";
@@ -133,7 +133,11 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
     {
       label: "Listen Live",
       value: "hydrophones",
-      content: <HydrophonesStack />,
+      content: (
+        <>
+          <HydrophonesStack />
+        </>
+      ),
     },
     {
       label: "Last 7 days",
@@ -188,11 +192,9 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
         >
           {/* mobile view */}
           {mdDown && (
-            <DetailTabs
-              spaceBetween={true}
-              stickyTabs={true}
-              tabs={mobileTabs}
-            />
+            <>
+              <MobileTabs tabs={mobileTabs} />
+            </>
           )}
 
           {/* // desktop view */}
@@ -226,14 +228,12 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
             </>
           )}
         </Box>
-
+        {/* Getting rid of mobile bottom nav */}
         {/* {mdDown && <MobileBottomNav />} */}
-        {!mdDown && (
-          <DesktopDrawer>
-            {nowPlayingFeed && showPlayPrompt && playPrompt}
-            {drawerContent}
-          </DesktopDrawer>
-        )}
+        <BottomDrawer>
+          {nowPlayingFeed && showPlayPrompt && playPrompt}
+          {drawerContent}
+        </BottomDrawer>
       </Box>
     </>
   );

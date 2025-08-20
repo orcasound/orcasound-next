@@ -212,7 +212,7 @@ export function CandidatePlayer({
   const [selectedScale, setSelectedScale] = useState<"linear" | "log">("log");
 
   return (
-    <div className="playerbase">
+    <div className="playerbase" style={{ width: "100%" }}>
       <PlayerBase
         key={nowPlayingCandidate?.id}
         type="candidate"

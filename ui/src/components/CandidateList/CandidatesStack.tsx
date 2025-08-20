@@ -125,12 +125,11 @@ export const CandidatesStack = ({
       )}
       {showChart && (
         <Stack className="chart-heading" gap={0.5}>
-          <Typography component="h2" variant="h6" sx={{ mt: "6px" }}>
-            {
+          <Typography component="h2" variant="h6" sx={{ mt: "0px" }}>
+            {!mdDown &&
               timeRangeSelect.find((el) => el.value === filters.timeRange)
-                ?.label
-            }
-            {" · "}
+                ?.label}
+            {!mdDown && " · "}
             {feed ? feed.name : "All hydrophones"}
           </Typography>
           {countString(detections)}

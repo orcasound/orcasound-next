@@ -8,7 +8,6 @@ import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import { useComputedPlaybackFields } from "@/hooks/beta/useComputedPlaybackFields";
-import useConcatenatedAudio from "@/hooks/beta/useConcatenatedAudio";
 
 function CandidatePage() {
   return null;
@@ -86,68 +85,6 @@ const CandidateLayout = ({ children }: { children: React.ReactNode }) => {
     setNowPlayingCandidate(candidate);
     setNowPlayingFeed(null);
   }, [candidate, setNowPlayingCandidate, setNowPlayingFeed]);
-
-  // // Detections lookup
-  // useEffect(() => {
-  //   const arr: CombinedData[] = [];
-  //   filteredData.forEach((d) => {
-  //     const time = new Date(d.timestamp.toString()).getTime();
-  //     if (time >= startTimeMs && time <= endTimeMs && d.feedId === feed?.id) {
-  //       arr.push(d);
-  //     }
-  //   });
-  //   const sortedArr = arr.sort(
-  //     (a, b) =>
-  //       Date.parse(a.timestamp.toString()) - Date.parse(b.timestamp.toString()),
-  //   );
-
-  //   setDetections({
-  //     all: sortedArr,
-  //     human: sortedArr.filter((d) => d.type === "human"),
-  //     ai: sortedArr.filter((d) => d.type === "ai"),
-  //     sightings: sortedArr.filter((d) => d.type === "sightings"),
-  //     hydrophone: sortedArr[0]?.hydrophone,
-  //     startTime: new Date(startTimeString).toLocaleString(),
-  //   });
-  // }, [filteredData, feed?.id, startTimeMs, endTimeMs, startTimeString]);
-
-  const {
-    audioBlob,
-    spectrogramUrl,
-    isProcessing,
-    error,
-    totalDurationMs,
-    droppedSeconds,
-  } = useConcatenatedAudio({
-    feedId,
-    startTime: startTimeString,
-    endTime: endTimeString,
-  });
-
-  const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    setAudioUrl(undefined);
-  }, [router.asPath]);
-
-  useEffect(() => {
-    if (!startTimeString || !endTimeString) return;
-
-    let url: string | null = null;
-
-    if (audioBlob) {
-      url = URL.createObjectURL(audioBlob);
-      setAudioUrl(url);
-    } else {
-      setAudioUrl(undefined);
-    }
-
-    return () => {
-      if (url) {
-        URL.revokeObjectURL(url);
-      }
-    };
-  }, [audioBlob, startTimeString, endTimeString]);
 
   return <HalfMapLayout>{children}</HalfMapLayout>;
 };

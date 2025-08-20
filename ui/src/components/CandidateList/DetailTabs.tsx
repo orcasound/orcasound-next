@@ -52,7 +52,7 @@ const DetailTabs = ({
           position: "sticky",
           top: 0,
           backgroundColor: darkTheme.palette.background.default,
-          zIndex: 10000,
+          zIndex: 1000,
         }),
         ...(spaceBetween && {
           justifyContent: "space-between",

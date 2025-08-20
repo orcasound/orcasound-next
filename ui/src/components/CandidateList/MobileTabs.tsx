@@ -1,132 +1,90 @@
-import { Box } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 import { useRouter } from "next/router";
-import { Dispatch, SetStateAction } from "react";
+import React, { useEffect, useState } from "react";
 
-import { useData } from "@/context/DataContext";
+import { useNowPlaying } from "@/context/NowPlayingContext";
+import darkTheme from "@/styles/darkTheme";
 
-import { timeRangeSelect } from "./CandidateListFilters";
-
-type Props = {
-  tabValue: number;
-  setTabValue: Dispatch<SetStateAction<number>>;
-  // masterPlayerTimeRef: MutableRefObject<number>;
+type Tab = {
+  label: string | undefined;
+  value: string | undefined;
+  content: React.ReactNode;
 };
 
-export function MobileTabs({ tabValue, setTabValue }: Props) {
+const MobileTabs = ({ tabs }: { tabs: Tab[] }) => {
   const router = useRouter();
-  const handleChange = (event: React.MouseEvent<HTMLDivElement>) => {
-    const indexNumber = Number(event.currentTarget.id);
-    setTabValue(indexNumber);
-    router.push(listenLiveTabs[indexNumber].slug);
+  const { feedSlug } = router.query;
+
+  // const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
+
+  const { nowPlayingFeed } = useNowPlaying();
+
+  const [activeTab, setActiveTab] = useState<Tab | undefined>(tabs[0]);
+
+  // needs an extra useEffect to set default
+  useEffect(() => {
+    if (tabs.length && !activeTab) setActiveTab(tabs[0]);
+  }, [setActiveTab, tabs]);
+
+  const handleTabClick = (e: React.MouseEvent<HTMLElement>) => {
+    const newTab = tabs.find((t) => t.value === e.currentTarget.dataset.value);
+    setActiveTab(newTab);
   };
 
-  const { filters } = useData();
-  const timeRange =
-    timeRangeSelect.find((el) => el.value === filters.timeRange)?.label ??
-    "Reports";
+  const tabRow = (tabs: Tab[]) => (
+    <Stack
+      direction="row"
+      gap="40px"
+      sx={{
+        borderBottom: "1px solid rgba(255,255,255,.33)",
+        px: 6,
+        position: "sticky",
+        top: 0,
+        backgroundColor: darkTheme.palette.background.default,
+        zIndex: 1000,
+        justifyContent: "space-between",
+      }}
+    >
+      {tabs.map((tab) => {
+        const active = tab.value === activeTab?.value;
+        return (
+          <Box
+            key={tab.label}
+            data-value={tab.value}
+            onClick={handleTabClick}
+            style={{
+              color: active
+                ? darkTheme.palette.text.primary
+                : darkTheme.palette.text.secondary,
+              textDecoration: "none",
+              height: "100%",
+              padding: "16px 0",
+              borderBottom: active
+                ? "1px solid " + darkTheme.palette.accent3.main
+                : "none",
+            }}
+          >
+            {tab.label}
+          </Box>
+        );
+      })}
+    </Stack>
+  );
 
-  type TabsType = {
-    title: string;
-    slug: string;
-  };
-
-  const listenLiveTabs = [
-    { title: "Listen Live", slug: "/beta/hydrophones" },
-    { title: timeRange, slug: "/beta/candidates" },
-  ];
-
-  const makeTabs = (array: TabsType[]) => {
-    return (
-      <Box
-        className={"mobile-tabs"}
-        sx={{
-          display: "flex",
-          justifyContent: "space-around",
-          alignItems: "center",
-          gap: "1rem",
-          borderBottom: "1px solid rgba(255,255,255,.3)",
-          minHeight: "48px",
-        }}
-      >
-        {array.map((tab: TabsType, index: number) => {
-          return (
-            <Box
-              id={index.toString()}
-              className={"mobile-tab"}
-              key={tab.title}
-              onClick={handleChange}
-              sx={{
-                borderBottom: index === tabValue ? "1.5px solid #fff" : "none",
-                flex: 1,
-                textAlign: "center",
-                py: 1,
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                color:
-                  index === tabValue
-                    ? "rgba(255,255,255,1)"
-                    : "rgba(255,255,255,.8)",
-              }}
-            >
-              {tab.title}
-            </Box>
-          );
-        })}
+  return (
+    <div
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {tabs && tabRow(tabs)}
+      <Box className="tab-content" sx={{ flex: 1, px: 0, pt: 1 }}>
+        {activeTab?.content}
       </Box>
-    );
-  };
+    </div>
+  );
+};
 
-  return makeTabs(listenLiveTabs);
-
-  //   return (
-  //     <>
-  //     <Box
-  //       sx={{
-  //         display: "flex",
-  //         flexDirection: "column",
-  //         flex: 1,
-  //         height: "100%",
-  //         // overflowY: "auto",
-  //       }}
-  //     >
-  //       {menuTab === 0 && (
-  //         <Box
-  //           sx={{
-  //             height: "100%",
-  //             display: "flex",
-  //             flexDirection: "column"
-  //           }}
-  //         >
-  //           {/* {makeTabs(recordingsTabs)} */}
-  //           {tabValue === 0 && (
-  //             <>
-  //             <MapWrapper masterPlayerTimeRef={masterPlayerTimeRef} />
-  //             </>
-  //           )}
-  //           {tabValue === 1 && (
-  //             <MobileContainer>
-  //               <CandidatesStack />
-  //             </MobileContainer>
-  //           )}
-  //           {tabValue === 2 && (
-  //             <MobileContainer>
-  //               <VisualizationsStack />
-  //             </MobileContainer>
-  //           )}
-  //         </Box>
-  //       )}
-  //       {menuTab === 1 && (
-  //         <>
-  //           {/* {makeTabs(listenLiveTabs)} */}
-  //           {tabValue === 0 && (
-  //             <MapWrapper masterPlayerTimeRef={masterPlayerTimeRef} />
-  //           )}
-  //           {tabValue === 1 && <HydrophonesStack />}
-  //         </>
-  //       )}
-  //     </Box>
-  //     </>
-  //   );
-}
+export default MobileTabs;

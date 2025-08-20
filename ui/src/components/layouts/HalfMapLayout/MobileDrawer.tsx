@@ -30,7 +30,7 @@ export default function MobileDrawer({
         transition: "top .33s ease, bottom 0s linear",
         justifyContent: playbarExpanded ? "flex-start" : "flex-end",
         backgroundColor: playbarExpanded ? "rgba(0,0,0)" : "transparent",
-        height: "70px",
+        height: playbarExpanded ? "auto" : "70px",
         // overflowY: "scroll",
         // backdropFilter: "blur(10px)",
         // WebkitBackdropFilter: "blur(10px)",

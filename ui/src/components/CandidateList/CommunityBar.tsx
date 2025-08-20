@@ -3,7 +3,7 @@ import {
   ChatBubbleOutline,
   FileDownloadOutlined,
 } from "@mui/icons-material";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Theme, useMediaQuery } from "@mui/material";
 
 const upvote = (
   <svg
@@ -64,6 +64,8 @@ export default function CommunityBar({
   audioUrl?: string | undefined;
   clipId?: string;
 }) {
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
+
   return (
     <Box
       className="community-bar"
@@ -162,7 +164,7 @@ export default function CommunityBar({
         >
           {shareIcon}
         </div>
-        Share
+        {mdDown ? "" : "Share"}
       </Button>
       {downloadReady && (
         <Button
