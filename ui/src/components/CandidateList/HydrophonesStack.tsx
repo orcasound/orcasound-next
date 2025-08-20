@@ -14,8 +14,10 @@ import HydrophoneCard from "./HydrophoneCard";
 
 export const HydrophonesStack = ({
   handlePlayPauseClick,
+  showHeading,
 }: {
   handlePlayPauseClick?: () => Promise<void>;
+  showHeading?: boolean;
 }) => {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const { feeds } = useData();
@@ -24,22 +26,26 @@ export const HydrophonesStack = ({
     <Container
       maxWidth="xl"
       sx={{
-        px: { xs: 1, sm: 2, md: 3 },
-        pb: "200px",
-        mt: "24px",
+        px: { xs: 2, sm: 2, md: 3 },
+        pb: showHeading ? "200px" : "0px",
+        mt: showHeading ? "24px" : "8px",
       }}
     >
-      <Typography component="h2" variant="h5" sx={{ mb: 1 }}>
-        Listen Live
-      </Typography>
-      <Typography
-        component="p"
-        variant="body1"
-        mb={2}
-        sx={{ color: "rgba(255,255,255,.7)" }}
-      >
-        Alert the community when you hear something.
-      </Typography>
+      {showHeading && (
+        <>
+          <Typography component="h2" variant="h5" sx={{ mb: 1 }}>
+            Listen Live
+          </Typography>
+          <Typography
+            component="p"
+            variant="body1"
+            mb={2}
+            sx={{ color: "rgba(255,255,255,.7)" }}
+          >
+            Alert the community when you hear something.
+          </Typography>
+        </>
+      )}
       <Stack>
         <Box sx={{ overflow: mdDown ? "auto" : "initial" }}>
           <Stack spacing={2}>

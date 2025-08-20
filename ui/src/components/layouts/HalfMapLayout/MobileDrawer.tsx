@@ -16,21 +16,22 @@ export default function MobileDrawer({
   return (
     <Stack
       direction="column"
-      className={"bottom-controls-stack"}
+      className={"playbar-container-stack"}
       sx={{
         position: "absolute",
-        bottom: playbarExpanded ? 0 : `calc(${mobileMenuHeight} + 2px)`,
-        top: playbarExpanded
-          ? "0px"
-          : `calc(100% - 72px - ${mobileMenuHeight})`, // 72px value comes from visual estimate
+        bottom: playbarExpanded ? 0 : "2px",
+        // `calc(${mobileMenuHeight} + 2px)`,
+        top: playbarExpanded ? "0px" : "auto",
+        // : `calc(100% - 72px - ${mobileMenuHeight})`, // 72px value comes from visual estimate
         zIndex: (theme) => theme.zIndex.drawer + 1,
         width: playbarExpanded ? "100%" : "calc(100% - .4rem)",
-        ml: playbarExpanded ? 0 : ".2rem",
+        ml: playbarExpanded ? 0 : 0,
         alignItems: "center",
         transition: "top .33s ease, bottom 0s linear",
         justifyContent: playbarExpanded ? "flex-start" : "flex-end",
         backgroundColor: playbarExpanded ? "rgba(0,0,0)" : "transparent",
-        overflowY: "scroll",
+        height: "70px",
+        // overflowY: "scroll",
         // backdropFilter: "blur(10px)",
         // WebkitBackdropFilter: "blur(10px)",
 

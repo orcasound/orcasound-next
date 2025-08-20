@@ -1,4 +1,4 @@
-import { Close, Tune } from "@mui/icons-material";
+import { Close, Menu } from "@mui/icons-material";
 import {
   Alert,
   AppBar,
@@ -8,11 +8,13 @@ import {
   Drawer,
   IconButton,
   List,
+  Theme,
   Toolbar,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import Image from "next/image";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 import Link from "@/components/Link";
 import { useLayout } from "@/context/LayoutContext";
@@ -30,6 +32,12 @@ export default function HeaderNew({
   tabs?: ReactNode;
 }) {
   const { alertOpen, setAlertOpen } = useLayout();
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
+  useEffect(() => {
+    if (mdDown) {
+      setAlertOpen(false);
+    }
+  }, [mdDown, setAlertOpen]);
 
   return (
     <AppBar
@@ -104,25 +112,26 @@ function Mobile({
       <Box
         sx={{
           flexGrow: 1,
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
+          display: "flex",
           alignItems: "center",
           textAlign: "center",
+          justifyContent: "space-between",
+          height: "48px",
         }}
       >
+        <Brand onClick={onBrandClick} />
         <IconButton
           sx={{
-            marginRight: "auto",
-            backgroundColor: "rgba(255,255,255,.15)",
-            padding: "6px !important",
-            borderRadius: "4px",
+            // backgroundColor: "rgba(255,255,255,.15)",
+            // padding: "6px !important",
+            // borderRadius: "4px",
+            padding: "0px !important",
           }}
           color="inherit"
           onClick={handleMenuToggle}
         >
-          {menuIsOpen ? <Close /> : <Tune />}
+          {menuIsOpen ? <Close /> : <Menu />}
         </IconButton>
-        <Brand onClick={onBrandClick} />
       </Box>
       <nav>
         <Drawer
@@ -230,9 +239,10 @@ function Brand({ onClick }: { onClick?: () => void }) {
         <Image
           src={wordmark.src}
           alt="Orcasound"
-          width={140}
-          height={60}
+          width={120}
+          height={48}
           priority={true}
+          style={{ marginTop: "-2px" }}
         />
       </Link>
     </Typography>

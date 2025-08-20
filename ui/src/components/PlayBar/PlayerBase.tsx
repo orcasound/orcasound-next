@@ -174,7 +174,7 @@ export function PlayerBase({
       borderRadius: "8px",
       border: "1px solid rgba(255,255,255,.5)",
       background: "base.main",
-      pt: "6px",
+      py: "6px",
     },
     mobileExpanded: {
       height: "auto",
@@ -192,7 +192,7 @@ export function PlayerBase({
       color="base"
       sx={{
         top: "auto",
-        padding: "1rem 0",
+        py: "1rem",
         alignItems: "center",
         display: "flex",
         ...appBarStyles[playerState],

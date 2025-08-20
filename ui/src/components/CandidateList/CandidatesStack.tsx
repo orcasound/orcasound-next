@@ -99,9 +99,9 @@ export const CandidatesStack = ({
       maxWidth="xl"
       disableGutters
       sx={{
-        px: 2,
+        px: { xs: 2, sm: 2, md: 3 },
         pb: "200px",
-        mt: showChart ? 2 : 3,
+        mt: showChart ? 1 : 3,
       }}
     >
       {!showChart && !showHeading && (

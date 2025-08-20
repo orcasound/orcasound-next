@@ -14,9 +14,13 @@ type Tab = {
 const DetailTabs = ({
   tabs,
   showTabs = true,
+  stickyTabs = false,
+  spaceBetween = false,
 }: {
   tabs: Tab[];
   showTabs?: boolean;
+  stickyTabs?: boolean;
+  spaceBetween?: boolean;
 }) => {
   const router = useRouter();
   const { feedSlug } = router.query;
@@ -44,6 +48,15 @@ const DetailTabs = ({
       sx={{
         borderBottom: "1px solid rgba(255,255,255,.33)",
         px: 3,
+        ...(stickyTabs && {
+          position: "sticky",
+          top: 0,
+          backgroundColor: darkTheme.palette.background.default,
+          zIndex: 10000,
+        }),
+        ...(spaceBetween && {
+          justifyContent: "space-between",
+        }),
       }}
     >
       {tabs.map((tab) => {
@@ -73,9 +86,15 @@ const DetailTabs = ({
   );
 
   return (
-    <div>
+    <div
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       {showTabs && tabs && tabRow(tabs)}
-      <Box className="tab-content" sx={{ px: 3, py: 1 }}>
+      <Box className="tab-content" sx={{ flex: 1, px: 0, pt: 1 }}>
         {activeTab?.content}
       </Box>
     </div>

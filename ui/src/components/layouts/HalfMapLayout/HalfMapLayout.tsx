@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 import React, { ReactElement, useEffect, useRef } from "react";
 
 import { CandidatesStack } from "@/components/CandidateList/CandidatesStack";
+import DetailTabs from "@/components/CandidateList/DetailTabs";
+import { HydrophonesStack } from "@/components/CandidateList/HydrophonesStack";
 import HeaderNew from "@/components/HeaderNew";
 import LivePlayer from "@/components/PlayBar/LivePlayer";
 import { useLayout } from "@/context/LayoutContext";
@@ -12,7 +14,6 @@ import { MasterDataLayout } from "../MasterDataLayout";
 import { DesktopDrawer } from "./DesktopDrawer";
 import { FeedDetail } from "./FeedDetail";
 import { MapWrapper } from "./MapWrapper";
-import { MobileBottomNav } from "./MobileBottomNav";
 import MobileDrawer from "./MobileDrawer";
 import { SideList } from "./SideList";
 
@@ -128,6 +129,29 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
     </Box>
   );
 
+  const mobileTabs = [
+    {
+      label: "Listen Live",
+      value: "hydrophones",
+      content: <HydrophonesStack />,
+    },
+    {
+      label: "Last 7 days",
+      value: "reports",
+      content: <CandidatesStack showChart={true} />,
+    },
+    {
+      label: "Map view",
+      value: "map",
+      content: (
+        <>
+          <MapWrapper key={`mobile-${router.asPath}`} />
+          <MobileDrawer masterPlayerTimeRef={masterPlayerTimeRef} />
+        </>
+      ),
+    },
+  ];
+
   return (
     <>
       <Box
@@ -162,40 +186,48 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
             overflowY: mdDown ? "scroll" : "hidden",
           }}
         >
+          {/* mobile view */}
+          {mdDown && (
+            <DetailTabs
+              spaceBetween={true}
+              stickyTabs={true}
+              tabs={mobileTabs}
+            />
+          )}
+
           {/* // desktop view */}
           {!mdDown && (
-            <SideList position="left">
-              {router.query.feedSlug ? (
-                <FeedDetail />
-              ) : (
-                <LivePlayer
-                  showListView={true}
-                  feed={nowPlayingFeed}
-                  key={router.asPath}
-                />
-              )}
-            </SideList>
+            <>
+              <SideList position="left">
+                {router.query.feedSlug ? (
+                  <FeedDetail />
+                ) : (
+                  <LivePlayer
+                    showListView={true}
+                    feed={nowPlayingFeed}
+                    key={router.asPath}
+                  />
+                )}
+              </SideList>
+
+              <Box
+                className="center-column"
+                sx={{
+                  display: "flex",
+                  flexGrow: 1,
+                  position: "relative",
+                }}
+              >
+                {isExplore ? <CandidatesStack /> : <MapWrapper />}
+              </Box>
+              <SideList position="right">
+                <CandidatesStack showChart={true} />
+              </SideList>
+            </>
           )}
-          <Box
-            className="center-column"
-            sx={{
-              display: "flex",
-              flexGrow: 1,
-              position: "relative",
-            }}
-          >
-            {isExplore ? <CandidatesStack /> : <MapWrapper />}
-          </Box>
-          {!mdDown && (
-            <SideList position="right">
-              <CandidatesStack showChart={true} />
-            </SideList>
-          )}
-          {/* // mobile view */}
         </Box>
 
-        {mdDown && <MobileDrawer masterPlayerTimeRef={masterPlayerTimeRef} />}
-        {mdDown && <MobileBottomNav />}
+        {/* {mdDown && <MobileBottomNav />} */}
         {!mdDown && (
           <DesktopDrawer>
             {nowPlayingFeed && showPlayPrompt && playPrompt}
