@@ -20,7 +20,7 @@ import useFeedPresence from "@/hooks/useFeedPresence";
 
 type Props = {
   feed: Feed;
-  handlePlayPauseClick: () => Promise<void>;
+  handlePlayPauseClick?: () => Promise<void>;
 };
 
 export default function HydrophoneCard({ feed, handlePlayPauseClick }: Props) {

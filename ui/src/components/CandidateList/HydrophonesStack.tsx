@@ -15,7 +15,7 @@ import HydrophoneCard from "./HydrophoneCard";
 export const HydrophonesStack = ({
   handlePlayPauseClick,
 }: {
-  handlePlayPauseClick: () => Promise<void>;
+  handlePlayPauseClick?: () => Promise<void>;
 }) => {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const { feeds } = useData();
