@@ -388,7 +388,10 @@ export default function LivePlayer({
       </Box>
       {showListView && (
         <Box className="player-list">
-          <HydrophonesStack handlePlayPauseClick={handlePlayPauseClick} />
+          <HydrophonesStack
+            showHeading={true}
+            handlePlayPauseClick={handlePlayPauseClick}
+          />
         </Box>
       )}
       {!showListView && (

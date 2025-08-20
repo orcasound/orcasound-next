@@ -125,7 +125,11 @@ export const CandidatesStack = ({
       )}
       {showChart && (
         <Stack className="chart-heading" gap={0.5}>
-          <Typography component="h2" variant="h6" sx={{ mt: "0px" }}>
+          <Typography
+            component="h2"
+            variant="h6"
+            sx={{ mt: mdDown ? "0px" : "8px" }}
+          >
             {!mdDown &&
               timeRangeSelect.find((el) => el.value === filters.timeRange)
                 ?.label}
