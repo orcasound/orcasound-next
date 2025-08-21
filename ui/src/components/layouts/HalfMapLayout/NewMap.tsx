@@ -319,36 +319,34 @@ export default function Map() {
                 }
                 zIndexOffset={100}
               />
-              {audioReportsThisFeed > 0 && (
-                <ReportCount
-                  center={f.latLng}
-                  count={audioReportsThisFeed + sightingsThisFeed}
-                  onClick={() => {
-                    // if (nowPlayingCandidate) {
-                    //   router.push(`/beta/${f.slug}/candidates`);
-                    // } else if (f.id !== nowPlayingFeed?.id) {
-                    //   autoPlayOnReady.current = false;
-                    //   setNowPlayingFeed(f);
-                    //   setNowPlayingCandidate(null);
-                    //   // setPopupFeed(f);
-                    //   // setPopupDetection(null);
-                    // } else {
-                    if (mdDown && f.id === nowPlayingFeed?.id) {
-                      setPlaybarExpanded(true);
-                    } else if (mdDown) {
-                      autoPlayOnReady.current = false;
-                      setNowPlayingFeed(f);
-                      setNowPlayingCandidate(null);
-                    } else {
-                      router.push(`/beta/${f.slug}`);
-                      autoPlayOnReady.current = false;
-                      setNowPlayingFeed(f);
-                      setNowPlayingCandidate(null);
-                    }
-                    // }
-                  }}
-                />
-              )}
+              <ReportCount
+                center={f.latLng}
+                count={audioReportsThisFeed + sightingsThisFeed}
+                onClick={() => {
+                  // if (nowPlayingCandidate) {
+                  //   router.push(`/beta/${f.slug}/candidates`);
+                  // } else if (f.id !== nowPlayingFeed?.id) {
+                  //   autoPlayOnReady.current = false;
+                  //   setNowPlayingFeed(f);
+                  //   setNowPlayingCandidate(null);
+                  //   // setPopupFeed(f);
+                  //   // setPopupDetection(null);
+                  // } else {
+                  if (mdDown && f.id === nowPlayingFeed?.id) {
+                    setPlaybarExpanded(true);
+                  } else if (mdDown) {
+                    autoPlayOnReady.current = false;
+                    setNowPlayingFeed(f);
+                    setNowPlayingCandidate(null);
+                  } else {
+                    router.push(`/beta/${f.slug}`);
+                    autoPlayOnReady.current = false;
+                    setNowPlayingFeed(f);
+                    setNowPlayingCandidate(null);
+                  }
+                  // }
+                }}
+              />
             </Fragment>
           );
         })}

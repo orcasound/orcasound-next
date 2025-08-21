@@ -6,10 +6,9 @@ import { useLayout } from "@/context/LayoutContext";
 export const BottomDrawer = ({ children }: { children: ReactNode }) => {
   const { playbarExpanded, headerHeight, drawerSide } = useLayout();
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
-
   return (
     <Box
-      className="desktop-drawer"
+      className="bottom-drawer"
       sx={{
         px: 0,
         display: "flex",
@@ -21,17 +20,13 @@ export const BottomDrawer = ({ children }: { children: ReactNode }) => {
         left: 0,
         right: 0,
         // borderRight: "1px solid rgba(255,255,255,.5)",
-        height:
-          mdDown && playbarExpanded
-            ? `calc(100vh)` // height calc gets complex on mobile due to browser bar
-            : playbarExpanded
-              ? `calc(100vh - ${headerHeight})`
-              : 0,
+        height: playbarExpanded ? `calc(100dvh - ${headerHeight})` : 0,
         width: mdDown ? "100%" : "75%",
         marginLeft: mdDown ? 0 : drawerSide === "right" ? "25%" : 0,
         backgroundColor: "background.default",
         zIndex: (theme) => theme.zIndex.drawer + 1,
         transition: "height .33s ease",
+        mb: "0px",
       }}
     >
       {playbarExpanded && children}

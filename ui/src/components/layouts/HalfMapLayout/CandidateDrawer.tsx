@@ -1,4 +1,4 @@
-import { GraphicEq, KeyboardArrowDown } from "@mui/icons-material";
+import { ExpandLess, GraphicEq } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -76,6 +76,7 @@ const DetailColumn = ({
 }) => {
   const { filters } = useData();
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
+  const { playbarExpanded } = useLayout();
   if (!candidate) return null;
 
   const currentTimeSeconds = new Date().getTime() / 1000;
@@ -119,28 +120,38 @@ const DetailColumn = ({
             alignItems: "flex-start",
           }}
         >
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<KeyboardArrowDown />}
-            sx={{
-              whiteSpace: "nowrap",
-              backgroundColor: "rgba(255,255,255,.2)",
-              color: "white",
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,.25)",
-              },
-            }}
-            onClick={onClose}
-          >
-            Close player
-          </Button>
-
           <Box>
-            <Typography variant="h5" sx={{ lineHeight: 1, my: ".5rem" }}>
-              {formatTimestamp(candidate.startTimestamp)}
-            </Typography>
-
+            <Stack
+              direction="row"
+              sx={{
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                width: "100%",
+              }}
+            >
+              <Typography variant="h5" sx={{ lineHeight: 1, my: ".5rem" }}>
+                {formatTimestamp(candidate.startTimestamp)}
+              </Typography>
+              <Box
+                className="playbar-expand-button"
+                sx={{
+                  minWidth: "40px",
+                  minHeight: "40px",
+                  backgroundColor: "rgba(255,255,255,.25)",
+                  borderRadius: "10px",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  display: "flex",
+                }}
+                onClick={onClose}
+              >
+                <ExpandLess
+                  sx={{
+                    transform: playbarExpanded ? "rotate(180deg)" : "none",
+                  }}
+                />
+              </Box>
+            </Stack>
             <Typography
               variant="h6"
               sx={{ lineHeight: 1.2, opacity: 0.75, mb: "4px" }}
@@ -160,7 +171,7 @@ const DetailColumn = ({
         <Stack
           gap={4}
           direction="column"
-          sx={{ my: 3, px: 3, alignItems: "flex-start" }}
+          sx={{ my: 3, px: 3, alignItems: !mdDown ? "flex-start" : "unset" }}
         >
           <CommunityBar
             votes={0}
@@ -273,9 +284,10 @@ export const CandidateDrawer = ({
 
   const handleClose = () => {
     setPlaybarExpanded(false);
+    setNowPlayingCandidate(null);
   };
 
-  const waveSurferContainer = (
+  const waveSurferContainer = audioUrl && (
     <Box
       className="wavesurfer-container"
       sx={{
@@ -286,25 +298,23 @@ export const CandidateDrawer = ({
         width: "100%",
       }}
     >
-      {audioUrl && (
-        <Box
-          sx={{
-            height: "100%",
-            width: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: isProcessing ? "center" : "flex-start",
-          }}
-        >
-          <div style={{ width: "100%" }}>
-            <WavesurferPlayer audioUrl={audioUrl} />
-            <div style={{ display: "none" }}>{totalDurationMs} ms</div>
-            {droppedSeconds > 0 && (
-              <div>Dropped {droppedSeconds} seconds from stream reset</div>
-            )}
-          </div>
-        </Box>
-      )}
+      <Box
+        sx={{
+          height: "100%",
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: isProcessing ? "center" : "flex-start",
+        }}
+      >
+        <div style={{ width: "100%" }}>
+          <WavesurferPlayer audioUrl={audioUrl} />
+          <div style={{ display: "none" }}>{totalDurationMs} ms</div>
+          {droppedSeconds > 0 && (
+            <div>Dropped {droppedSeconds} seconds from stream reset</div>
+          )}
+        </div>
+      </Box>
     </Box>
   );
 
@@ -338,6 +348,7 @@ export const CandidateDrawer = ({
           flexDirection: "column",
           position: "relative",
           paddingBottom: "2rem",
+          backgroundColor: "#1b1f34",
         }}
       >
         {!mdDown && waveSurferContainer}

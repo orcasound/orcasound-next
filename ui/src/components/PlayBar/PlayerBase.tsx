@@ -28,10 +28,8 @@ import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 // import { useData } from "@/context/DataContext";
 import { Feed } from "@/graphql/generated";
+import darkTheme from "@/styles/darkTheme";
 
-// import DetectionButton from "../CandidateList/DetectionButtonBeta";
-// import DetectionDialog from "../CandidateList/DetectionDialogBeta";
-import Link from "../Link";
 import DetectionButton from "../Player/DetectionButton";
 import DetectionDialog from "../Player/DetectionDialog";
 import PlayPauseButton from "../Player/PlayPauseButton";
@@ -169,6 +167,7 @@ export function PlayerBase({
       background: "transparent",
       px: mdDown ? 0 : "1.5rem",
       py: mdDown ? 0 : "1rem",
+      boxShadow: "none",
     },
     mobile: {
       height: "100%",
@@ -176,14 +175,24 @@ export function PlayerBase({
       border: "1px solid rgba(255,255,255,.5)",
       background: "base.main",
       py: "6px",
+      px: "16px",
     },
     mobileExpanded: {
       height: "auto",
       borderRadius: 0,
       border: "none",
-      background: "black",
+      background: darkTheme.palette.background.default,
       pt: "16px",
+      px: "16px",
     },
+  };
+
+  const handlePlaybarOpenClose = () => {
+    setPlaybarExpanded(!playbarExpanded);
+    setDrawerSide("right");
+    setDrawerContent(<AudioVisualizer />);
+    setShowPlayPrompt(masterPlayerStatus !== "playing");
+    if (playbarExpanded && setAudioVisualizerOpen) setAudioVisualizerOpen(true);
   };
 
   return (
@@ -259,70 +268,61 @@ export function PlayerBase({
               )}
             </Box>
             {playerState !== "candidate" && (
-              <Link
-                href={href}
-                sx={{
-                  textDecoration: "none",
-                  flex: 1,
-                  "&:hover": {
-                    color: "text.primary",
-                  },
-                }}
+              <Stack
+                onClick={handlePlaybarOpenClose}
+                direction="row"
+                width="100%"
+                spacing={mdDown ? 2 : 3}
+                sx={{ overflow: "hidden" }}
               >
-                <Stack
-                  direction="row"
-                  width="100%"
-                  spacing={mdDown ? 2 : 3}
-                  sx={{ overflow: "hidden" }}
-                >
-                  <Box
-                    sx={{
-                      backgroundImage: `url(${image})`,
-                      backgroundPosition: "center",
-                      backgroundSize: "cover",
-                      backgroundRepeat: "no-repeat",
-                      minWidth: mdDown ? "40px" : "60px",
-                      width: mdDown ? "40px" : "60px",
-                      height: mdDown ? "40px" : "60px",
-                      borderRadius: "4px",
-                      // hiding the image box for now
-                      display: "none",
-                    }}
-                  ></Box>
+                <Box
+                  className="player-image"
+                  sx={{
+                    backgroundImage: `url(${image})`,
+                    backgroundPosition: "center",
+                    backgroundSize: "cover",
+                    backgroundRepeat: "no-repeat",
+                    minWidth: mdDown ? "40px" : "60px",
+                    width: mdDown ? "40px" : "60px",
+                    height: mdDown ? "40px" : "60px",
+                    borderRadius: "4px",
+                    // hiding the image box for now
+                    display: "none",
+                  }}
+                ></Box>
 
-                  <Box
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    width: "100%",
+                    justifyContent: "center",
+                    marginLeft: "0 !important",
+                  }}
+                >
+                  <Typography
+                    component="h2"
                     sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      width: "100%",
-                      justifyContent: "center",
-                      marginLeft: "0 !important",
+                      whiteSpace: "nowrap",
+                      fontSize: mdDown ? "14px" : "1rem",
                     }}
                   >
-                    <Typography
-                      component="h2"
-                      sx={{
-                        whiteSpace: "nowrap",
-                        fontSize: mdDown ? "14px" : "1rem",
+                    <span
+                      style={{
+                        fontWeight: mdDown ? "bold" : 500,
+                        fontSize: mdDown ? "inherit" : "20px",
                       }}
                     >
-                      <span
-                        style={{
-                          fontWeight: mdDown ? "bold" : 500,
-                          fontSize: mdDown ? "inherit" : "20px",
-                        }}
-                      >
-                        {mdDown ? playerTitle : "Listen Live"}
-                      </span>
-                      <br />
-                      {playerSubtitle && playerSubtitle}
-                      {type === "feed" &&
-                        `${listenerCount} listener${listenerCount !== 1 ? "s" : ""}`}
-                      {type === "candidate" && " · " + duration}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Link>
+                      {mdDown ? playerTitle : "Listen live"}
+                    </span>
+                    <br />
+                    {playerSubtitle && playerSubtitle}
+                    {type === "feed" &&
+                      `${listenerCount} listener${listenerCount !== 1 ? "s" : ""}`}
+                    {type === "candidate" && " · " + duration}
+                  </Typography>
+                </Box>
+              </Stack>
             )}
           </Box>
           {type === "candidate" && slider}
@@ -330,7 +330,8 @@ export function PlayerBase({
         {(playerStatus === "playing" || playerStatus === "loading") &&
           feed &&
           type === "feed" &&
-          mdDown && (
+          mdDown &&
+          !playbarExpanded && (
             <DetectionDialog
               isPlaying={playerStatus === "playing"}
               feed={feed}
@@ -345,6 +346,7 @@ export function PlayerBase({
             playerStatus !== "loading" &&
             nowPlayingFeed && <DetectionButton disabled={true} />} */}
         <Box
+          className="playbar-expand-button"
           sx={{
             minWidth: "40px",
             minHeight: "40px",
@@ -354,19 +356,10 @@ export function PlayerBase({
             justifyContent: "center",
             alignItems: "center",
           }}
-          onClick={() => {
-            setPlaybarExpanded(!playbarExpanded);
-            setDrawerSide("right");
-            setDrawerContent(<AudioVisualizer />);
-            setShowPlayPrompt(masterPlayerStatus !== "playing");
-          }}
+          onClick={handlePlaybarOpenClose}
         >
           <ExpandLess
             sx={{ transform: playbarExpanded ? "rotate(180deg)" : "none" }}
-            onClick={() => {
-              if (playbarExpanded && setAudioVisualizerOpen)
-                setAudioVisualizerOpen(true);
-            }}
           />
         </Box>
       </Toolbar>

@@ -18,7 +18,7 @@ import MobileDrawer from "./MobileDrawer";
 import { SideList } from "./SideList";
 
 const routes = [
-  { label: "Listen Live", href: "/beta" },
+  { label: "Hydrophones", href: "/beta" },
   { label: "Explore", href: "/beta/explore" },
   { label: "Take Action", href: "/beta/action" },
 ];
@@ -60,7 +60,10 @@ function NavTabs({ mdDown }: { mdDown?: boolean }) {
         let isActive;
         if (currentPath === href) {
           isActive = true;
-        } else if (currentPath === "/" && index == 0) {
+        } else if (
+          (currentPath === "/" || !!router.query.feedSlug) &&
+          index == 0
+        ) {
           isActive = true;
         } else {
           isActive = false;
@@ -87,7 +90,8 @@ type HalfMapLayoutProps = {
 
 export function HalfMapLayout({ children }: HalfMapLayoutProps) {
   const router = useRouter();
-  const { setDrawerSide, drawerContent, showPlayPrompt } = useLayout();
+  const { setDrawerSide, drawerContent, showPlayPrompt, activeMobileTab } =
+    useLayout();
   const { nowPlayingFeed } = useNowPlaying();
   const isHome = router.asPath === routes[0].href;
   const isExplore = router.asPath === routes[1].href;
@@ -131,7 +135,7 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
 
   const mobileTabs = [
     {
-      label: "Listen Live",
+      label: "Listen live",
       value: "hydrophones",
       content: (
         <>
@@ -230,10 +234,14 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
         </Box>
         {/* Getting rid of mobile bottom nav */}
         {/* {mdDown && <MobileBottomNav />} */}
-        <BottomDrawer>
-          {nowPlayingFeed && showPlayPrompt && playPrompt}
-          {drawerContent}
-        </BottomDrawer>
+
+        {/* hiding the bottom drawer on the mobile map view because the LivePlayer itself expands instead */}
+        {(!mdDown || activeMobileTab?.value !== "map") && (
+          <BottomDrawer>
+            {!mdDown && nowPlayingFeed && showPlayPrompt && playPrompt}
+            {drawerContent}
+          </BottomDrawer>
+        )}
       </Box>
     </>
   );

@@ -25,7 +25,7 @@ import { analytics } from "@/utils/analytics";
 
 import DetectionCategoryButton from "./DetectionCategoryButtonBeta";
 
-export default function DetectionDialog({
+export default function DetectionDialogBeta({
   children,
   feed: { id: feedId, slug },
   timestamp,

@@ -11,6 +11,12 @@ import {
 
 import AudioVisualizer from "@/components/PlayBar/AudioVisualizer";
 
+type MobileTab = {
+  label: string | undefined;
+  value: string | undefined;
+  content: React.ReactNode;
+};
+
 type LayoutContextType = {
   alertOpen: boolean;
   setAlertOpen: Dispatch<SetStateAction<boolean>>;
@@ -18,8 +24,8 @@ type LayoutContextType = {
   mobileMenuHeight: string;
   playbarExpanded: boolean;
   setPlaybarExpanded: Dispatch<SetStateAction<boolean>>;
-  mobileTab: number;
-  setMobileTab: Dispatch<SetStateAction<number>>;
+  activeMobileTab: MobileTab | null;
+  setActiveMobileTab: Dispatch<SetStateAction<MobileTab | null>>;
   candidatePreview: boolean;
   setCandidatePreview: Dispatch<SetStateAction<boolean>>;
   drawerContent: ReactNode | null;
@@ -49,6 +55,10 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [playbarExpanded, setPlaybarExpanded] = useState(false);
 
+  const [activeMobileTab, setActiveMobileTab] = useState<MobileTab | null>(
+    null,
+  );
+
   const [candidatePreview, setCandidatePreview] = useState(true);
 
   const [drawerContent, setDrawerContent] = useState<ReactNode | null>(
@@ -59,9 +69,6 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [showPlayPrompt, setShowPlayPrompt] = useState<boolean>(false);
 
-  // menuTab is the state of the mobile <MobileBottomNav>
-  const [mobileTab, setMobileTab] = useState(0);
-
   return (
     <LayoutContext.Provider
       value={{
@@ -71,8 +78,8 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
         mobileMenuHeight,
         playbarExpanded,
         setPlaybarExpanded,
-        mobileTab,
-        setMobileTab,
+        activeMobileTab,
+        setActiveMobileTab,
         candidatePreview,
         setCandidatePreview,
         drawerContent,

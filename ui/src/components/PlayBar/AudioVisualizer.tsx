@@ -9,8 +9,8 @@ import useFeedPresence from "@/hooks/useFeedPresence";
 import { useTimestampFetcher } from "@/hooks/useTimestampFetcher";
 import { colormapOptions, generateColorScale } from "@/utils/colorMaps";
 
-import DetectionButton from "../CandidateList/DetectionButtonBeta";
-import DetectionDialog from "../CandidateList/DetectionDialogBeta";
+import DetectionButtonBeta from "../CandidateList/DetectionButtonBeta";
+import DetectionDialogBeta from "../CandidateList/DetectionDialogBeta";
 import SpectrogramCanvas from "./SpectrogramCanvas";
 import WaveformCanvas from "./WaveformCanvas";
 
@@ -320,15 +320,15 @@ function AudioVisualizer({
             {(masterPlayerStatus === "playing" ||
               masterPlayerStatus === "loading") &&
               currentFeed && (
-                <DetectionDialog
+                <DetectionDialogBeta
                   isPlaying={masterPlayerStatus === "playing"}
                   feed={currentFeed}
                   timestamp={timestamp}
                   getPlayerTime={() => masterPlayerRef.current?.currentTime()}
                   listenerCount={listenerCount}
                 >
-                  <DetectionButton />
-                </DetectionDialog>
+                  <DetectionButtonBeta />
+                </DetectionDialogBeta>
               )}
           </div>
         </div>

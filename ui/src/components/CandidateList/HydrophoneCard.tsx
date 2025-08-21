@@ -10,6 +10,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 import Link from "@/components/Link";
 import { useData } from "@/context/DataContext";
@@ -38,7 +39,12 @@ export default function HydrophoneCard({ feed, handlePlayPauseClick }: Props) {
 
   const { autoPlayOnReady } = useData();
 
-  const active = feed.id === nowPlayingFeed?.id;
+  const [active, setActive] = useState<boolean>(feed.id === nowPlayingFeed?.id);
+
+  useEffect(() => {
+    setActive(feed.id === nowPlayingFeed?.id);
+  }, [nowPlayingFeed, feed, setActive]);
+
   // const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
@@ -59,8 +65,8 @@ export default function HydrophoneCard({ feed, handlePlayPauseClick }: Props) {
   const playIcon = (
     <PlayArrow
       onClick={() => {
-        setNowPlayingCandidate(null);
-        setNowPlayingFeed(feed);
+        // setNowPlayingCandidate(null);
+        // setNowPlayingFeed(feed);
         // handlePlayPauseClick();
         router.push(feedHref);
       }}
@@ -169,9 +175,13 @@ export default function HydrophoneCard({ feed, handlePlayPauseClick }: Props) {
                 // custom Link component based on NextLink, not MUI Link, is required here to persist layout and avoid page reset
                 href={feedHref}
                 onClick={(e) => {
-                  if (mdDown) e.preventDefault();
-                  setPlaybarExpanded(true);
-                  setDrawerContent(<LivePlayer feed={feed} />);
+                  if (router.asPath === feedHref) {
+                    e.preventDefault();
+                    setPlaybarExpanded(true);
+                    setNowPlayingFeed(feed);
+                    setNowPlayingCandidate(null);
+                    setDrawerContent(<LivePlayer feed={feed} />);
+                  }
                 }}
                 className="feed-href"
                 sx={{

@@ -1,10 +1,12 @@
 import { GraphicEq } from "@mui/icons-material";
 import { Box, Fab, Theme, useMediaQuery } from "@mui/material";
 
-export default function DetectionButton({
+export default function DetectionButtonBeta({
   disabled = false,
+  hideLabel = false,
 }: {
   disabled?: boolean;
+  hideLabel?: boolean;
 }) {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
@@ -39,6 +41,7 @@ export default function DetectionButton({
           justifyContent: "center",
           alignItems: "center",
           width: "100%",
+          gap: 2,
         }}
       >
         <GraphicEq
@@ -47,7 +50,7 @@ export default function DetectionButton({
             color: disabled ? "rgba(255,255,255,.5)" : "base.main",
           }}
         />
-        {!mdDown && "Report sound"}
+        {!hideLabel && "Report sound"}
       </Box>
     </Fab>
   );

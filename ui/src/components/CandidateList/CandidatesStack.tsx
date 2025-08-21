@@ -1,5 +1,7 @@
+import { Close } from "@mui/icons-material";
 import {
   Box,
+  Button,
   Container,
   Stack,
   Theme,
@@ -10,13 +12,13 @@ import { useRouter } from "next/router";
 import React, { useState } from "react";
 
 import { useData } from "@/context/DataContext";
+import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Feed } from "@/graphql/generated";
 import { countCategories } from "@/hooks/beta/useSortedCandidates";
 import { CombinedData } from "@/types/DataTypes";
-import { standardizeFeedName } from "@/utils/masterDataHelpers";
 
 import Link from "../Link";
-import CandidateListFilters, { timeRangeSelect } from "./CandidateListFilters";
+import { timeRangeSelect } from "./CandidateListFilters";
 import CandidatesList from "./CandidatesList";
 import { CandidatesResults } from "./CandidatesResults";
 import ReportsBarChart from "./ReportsBarChart";
@@ -33,20 +35,19 @@ export const CandidatesStack = ({
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const { feeds, filters, sortedCandidates, filteredData } = useData();
   const router = useRouter();
+  const { nowPlayingFeed, setNowPlayingFeed } = useNowPlaying();
   if (!feed && router.query.feedSlug) {
     const routerFeed = feeds.find((f) => f.slug === router.query.feedSlug);
     feed = routerFeed;
+  } else if (!feed && nowPlayingFeed) {
+    feed = nowPlayingFeed;
   }
   const candidates = feed
-    ? sortedCandidates.filter(
-        (c) => c.hydrophone === standardizeFeedName(feed?.name),
-      )
+    ? sortedCandidates.filter((c) => c.feedId === feed?.id)
     : sortedCandidates;
 
   const detections = feed
-    ? filteredData.filter(
-        (c) => c.hydrophone === standardizeFeedName(feed?.name),
-      )
+    ? filteredData.filter((c) => c.feedId === feed?.id)
     : filteredData;
 
   function countString(detectionArray: CombinedData[]) {
@@ -94,6 +95,35 @@ export const CandidatesStack = ({
 
   const [showFilters, setShowFilters] = useState(false);
 
+  const mobileAllButton = (
+    <Button
+      variant="contained"
+      size="small"
+      startIcon={<Close />}
+      sx={{
+        whiteSpace: "nowrap",
+        backgroundColor: "rgba(255,255,255,.2)",
+        color: "white",
+        mb: 1,
+        "&:hover": {
+          backgroundColor: "rgba(255,255,255,.25)",
+        },
+      }}
+      onClick={() => {
+        if (router.query.feedSlug) {
+          feed = undefined;
+          setNowPlayingFeed(null);
+          router.push("/");
+        } else if (nowPlayingFeed) {
+          feed = undefined;
+          setNowPlayingFeed(null);
+        }
+      }}
+    >
+      Clear filter
+    </Button>
+  );
+
   return (
     <Container
       maxWidth="xl"
@@ -104,27 +134,13 @@ export const CandidatesStack = ({
         mt: showChart ? 1 : 3,
       }}
     >
-      {!showChart && !showHeading && (
-        <Box mb={2}>
-          <Typography component="h2" variant="h5" mb={1}>
-            Recordings
-          </Typography>
-          <Typography
-            component="p"
-            variant="body1"
-            mb={2}
-            sx={{ color: "rgba(255,255,255,.7)" }}
-          >
-            Explore recent events and vote for the most interesting.
-          </Typography>
-          <CandidateListFilters
-            showFilters={showFilters}
-            setShowFilters={setShowFilters}
-          />
-        </Box>
-      )}
       {showChart && (
-        <Stack className="chart-heading" gap={0.5}>
+        <Stack
+          className="chart-heading"
+          gap={0.5}
+          sx={{ alignItems: "flex-start" }}
+        >
+          {mdDown && feed && mobileAllButton}
           <Typography
             component="h2"
             variant="h6"

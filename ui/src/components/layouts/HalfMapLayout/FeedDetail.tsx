@@ -39,10 +39,19 @@ export const FeedDetail = () => {
       label: "About",
       value: "about",
       content: feed?.introHtml ? (
-        <div
-          className="intro"
-          dangerouslySetInnerHTML={{ __html: feed?.introHtml }}
-        />
+        <Box sx={{ px: 3, pt: 1 }}>
+          <Box
+            sx={{
+              mx: -1,
+            }}
+          >
+            <HydrophoneHost feedSlug={feedSlug?.toString()} />
+          </Box>
+          <div
+            className="intro"
+            dangerouslySetInnerHTML={{ __html: feed?.introHtml }}
+          />
+        </Box>
       ) : (
         JSON.stringify(feed, null, 2)
       ),
@@ -147,13 +156,6 @@ export const FeedDetail = () => {
         }}
       >
         <LivePlayer feed={feed} key={router.asPath} />
-      </Box>
-      <Box
-        sx={{
-          mx: 2,
-        }}
-      >
-        <HydrophoneHost feedSlug={feedSlug?.toString()} />
       </Box>
       <DetailTabs tabs={tabs} />
     </>

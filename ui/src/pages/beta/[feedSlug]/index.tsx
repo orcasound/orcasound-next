@@ -1,41 +1,43 @@
 import { Theme, useMediaQuery } from "@mui/material";
 import { useRouter } from "next/router";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useMemo } from "react";
 
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import AudioVisualizer from "@/components/PlayBar/AudioVisualizer";
+import LivePlayer from "@/components/PlayBar/LivePlayer";
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
-import { standardizeFeedName } from "@/utils/masterDataHelpers";
+import { useNowPlaying } from "@/context/NowPlayingContext";
 
 function HydrophonePage() {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
+  const { setNowPlayingCandidate, setNowPlayingFeed } = useNowPlaying();
   const { setPlaybarExpanded, setDrawerContent, setDrawerSide } = useLayout();
   const { feeds, setFilters } = useData();
   const router = useRouter();
-  const feed = feeds.find((f) => f.slug === router.query.feedSlug);
+  const feed = useMemo(() => {
+    return feeds.find((f) => f.slug === router.query.feedSlug);
+  }, [feeds, router.query.feedSlug]);
+
+  useEffect(() => {
+    if (!feed) return;
+    setNowPlayingFeed(feed);
+    setNowPlayingCandidate(null);
+  }, [feed, setNowPlayingCandidate, setNowPlayingFeed]);
 
   useEffect(() => {
     setDrawerSide("right");
-    setDrawerContent(<AudioVisualizer />);
+    setDrawerContent(
+      mdDown ? <LivePlayer feed={feed ?? null} /> : <AudioVisualizer />,
+    );
     if (mdDown) setPlaybarExpanded(true);
-  }, [setDrawerContent, setDrawerSide, setPlaybarExpanded]);
+  }, [feed, setDrawerContent, setDrawerSide, setPlaybarExpanded]);
 
   // useEffect(() => {
   //   setPlaybarExpanded(false);
   // }, [setPlaybarExpanded]);
-
-  useEffect(() => {
-    if (!feed || mdDown) return;
-    const name = standardizeFeedName(feed.name);
-    console.log("feed.name", feed.name);
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      hydrophone: name,
-    }));
-  }, [mdDown, feed, setFilters]);
 
   return <></>;
 }

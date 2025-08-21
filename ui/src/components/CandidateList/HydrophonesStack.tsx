@@ -34,7 +34,7 @@ export const HydrophonesStack = ({
       {showHeading && (
         <>
           <Typography component="h2" variant="h5" sx={{ mb: 1 }}>
-            Listen Live
+            Listen live
           </Typography>
           <Typography
             component="p"

@@ -1,12 +1,6 @@
-import {
-  ErrorOutline,
-  GraphicEq,
-  PauseCircle,
-  PlayCircle,
-} from "@mui/icons-material";
+import { ErrorOutline, PauseCircle, PlayCircle } from "@mui/icons-material";
 import {
   Box,
-  Button,
   CircularProgress,
   Stack,
   Theme,
@@ -23,14 +17,16 @@ import type { Feed } from "@/graphql/generated";
 import useFeedPresence from "@/hooks/useFeedPresence";
 import { useTimestampFetcher } from "@/hooks/useTimestampFetcher";
 import fin512 from "@/public/photos/fin-512x512.png";
+import darkTheme from "@/styles/darkTheme";
 import { analytics } from "@/utils/analytics";
 
 import { timeRangeSelect } from "../CandidateList/CandidateListFilters";
 import DetailTabs from "../CandidateList/DetailTabs";
+import DetectionButtonBeta from "../CandidateList/DetectionButtonBeta";
+import DetectionDialogBeta from "../CandidateList/DetectionDialogBeta";
 import { DetectionsList } from "../CandidateList/DetectionsList";
 import { HydrophoneHost } from "../CandidateList/HydrophoneHost";
 import { HydrophonesStack } from "../CandidateList/HydrophonesStack";
-import ReportsBarChart from "../CandidateList/ReportsBarChart";
 import AudioVisualizer from "./AudioVisualizer";
 import { PlayerBase } from "./PlayerBase";
 
@@ -291,45 +287,40 @@ export default function LivePlayer({
           alignItems: "center",
         }}
       >
-        <ReportsBarChart
-          showLegend={false}
-          showYAxis={false}
-          showXAxis={false}
-          feed={feed ?? null}
-        />
         <DetectionsList array={descDetections} />
       </Stack>
     </>
   );
 
   const aboutContent = feed?.introHtml && (
-    <>
-      <Box
-        sx={{
-          my: 1,
-        }}
-      >
+    <Box
+      sx={{
+        my: 1,
+        px: 3,
+      }}
+    >
+      <div style={{ margin: "0 -8px" }}>
         <HydrophoneHost feedSlug={feed.slug} />
-      </Box>
+      </div>
       <div
         className="intro"
         dangerouslySetInnerHTML={{ __html: feed?.introHtml }}
       />
-    </>
+    </Box>
   );
 
   const tabs = [
-    {
-      label: selectedTimeRange?.label,
-      value: "reports",
-      content: reportsContent,
-    },
     {
       label: "About",
       value: "about",
       content: aboutContent,
     },
-    { label: "Images", value: "images", content: <></> },
+    {
+      label: "Reports",
+      value: "reports",
+      content: reportsContent,
+    },
+    { label: "Status", value: "status", content: <></> },
   ];
 
   const playPause = (
@@ -377,6 +368,7 @@ export default function LivePlayer({
         display: "flex",
         flex: 1,
         flexDirection: "column",
+        backgroundColor: darkTheme.palette.background.default,
       }}
     >
       <Box display="none" id="video-js">
@@ -454,18 +446,17 @@ export default function LivePlayer({
                     justifyContent: "center",
                   }}
                 >
-                  <Button
-                    sx={{
-                      width: "100%",
-                      height: "100%",
-                      background: "white",
-                      color: "black",
-                      borderRadius: "100px",
-                    }}
-                  >
-                    <GraphicEq sx={{ color: "black", mr: ".5rem" }} />
-                    Report sound
-                  </Button>
+                  {feed && (
+                    <DetectionDialogBeta
+                      isPlaying={playerStatus === "playing"}
+                      feed={feed}
+                      timestamp={timestamp}
+                      getPlayerTime={() => playerRef.current?.currentTime()}
+                      listenerCount={listenerCount}
+                    >
+                      <DetectionButtonBeta />
+                    </DetectionDialogBeta>
+                  )}
                 </Box>
               )}
             </>
