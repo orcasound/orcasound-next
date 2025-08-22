@@ -217,12 +217,16 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
               <SideList position="left">
                 {router.query.feedSlug ? (
                   <FeedDetail />
-                ) : (
+                ) : isHome ? (
                   <LivePlayer
                     showListView={true}
                     feed={nowPlayingFeed}
                     key={router.asPath}
                   />
+                ) : isExplore ? (
+                  <></>
+                ) : (
+                  <></>
                 )}
               </SideList>
 
@@ -232,12 +236,25 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
                   display: "flex",
                   flexGrow: 1,
                   position: "relative",
+                  width: "50%",
                 }}
               >
-                {isExplore ? <CandidatesStack /> : <MapWrapper />}
+                {isExplore ? (
+                  <div style={{ overflow: "auto" }}>
+                    <CandidatesStack />
+                  </div>
+                ) : (
+                  <MapWrapper />
+                )}
               </Box>
               <SideList position="right">
-                <CandidatesStack showChart={true} />
+                {isHome ? (
+                  <CandidatesStack showChart={true} />
+                ) : isExplore ? (
+                  <></>
+                ) : (
+                  <></>
+                )}
               </SideList>
             </>
           )}

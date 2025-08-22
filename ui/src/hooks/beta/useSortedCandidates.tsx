@@ -29,45 +29,67 @@ const subtractSeconds = (dateString: string, secondsToAdd: number) => {
   return originalDate?.toISOString();
 };
 
+// --- NEW: map per-detection category to a 3-way bucket
+type BucketType = "whale" | "vessel" | "other";
+const WHALE_BUCKET = new Set(["whale", "whale (ai)", "sighting"]);
+const toBucket = (cat: string): BucketType => {
+  const c = cat.toLowerCase();
+  if (WHALE_BUCKET.has(c)) return "whale";
+  if (c === "vessel") return "vessel";
+  // treat anything else as "other" by design
+  return "other";
+};
+
 const createCandidates = (
   dataset: CombinedData[],
   interval: number,
 ): Candidate[] => {
+  // Each candidate is an array of CombinedData that share hydrophone, bucket, and time window
   const candidates: Array<Array<CombinedData>> = [];
-  // sorting reports in ascending order from earliest to latest
+
+  // sort ascending by time
   const sort = [...dataset].sort(
     (a, b) => Date.parse(a.timestampString) - Date.parse(b.timestampString),
   );
+
   sort.forEach((el: CombinedData) => {
+    const hydrophone = el.hydrophone;
+    const bucket = toBucket(el.newCategory);
+
     if (!candidates.length) {
-      const firstArray = [];
-      firstArray.push(el);
-      candidates.push(firstArray);
-    } else {
-      const hydrophone = el.hydrophone;
-      const findLastMatchingArray = () => {
-        for (let i = candidates.length - 1; i >= 0; i--) {
-          if (candidates[i][0].hydrophone === hydrophone) {
-            return candidates[i];
-          }
+      candidates.push([el]);
+      return;
+    }
+
+    // Find the most recent candidate with the same hydrophone AND same bucket
+    const findLastMatchingArray = () => {
+      for (let i = candidates.length - 1; i >= 0; i--) {
+        const arr = candidates[i];
+        if (!arr.length) continue;
+        const sameHydrophone = arr[0].hydrophone === hydrophone;
+        const arrBucket = toBucket(arr[0].newCategory);
+        if (sameHydrophone && arrBucket === bucket) {
+          return arr;
         }
-      };
-      const lastMatchingArray = findLastMatchingArray();
-      const lastTimestamp =
-        lastMatchingArray &&
-        lastMatchingArray[lastMatchingArray.length - 1].timestampString;
-      if (
-        lastTimestamp &&
-        Math.abs(Date.parse(lastTimestamp) - Date.parse(el.timestampString)) /
-          (1000 * 60) <=
-          interval
-      ) {
-        lastMatchingArray.push(el);
-      } else {
-        const newArray = [];
-        newArray.push(el);
-        candidates.push(newArray);
       }
+      return undefined;
+    };
+
+    const lastMatchingArray = findLastMatchingArray();
+    const lastTimestamp =
+      lastMatchingArray &&
+      lastMatchingArray[lastMatchingArray.length - 1].timestampString;
+
+    // Within the time window? If yes, add to that candidate; else start a new one.
+    if (
+      lastTimestamp &&
+      Math.abs(Date.parse(lastTimestamp) - Date.parse(el.timestampString)) /
+        (1000 * 60) <=
+        interval
+    ) {
+      lastMatchingArray!.push(el);
+    } else {
+      candidates.push([el]);
     }
   });
 
@@ -92,18 +114,21 @@ const createCandidates = (
       .filter((c) => c)
       .join(" • ");
 
+    // include the 3-way bucket in the id to avoid id collisions between types
+    const bucket = toBucket(candidate[0].newCategory);
+
     return {
-      id: `${startTimestamp}_${endTimestamp}`,
+      id: `${startTimestamp}_${endTimestamp}_${bucket}`,
       array: candidate,
-      startTimestamp: startTimestamp,
-      endTimestamp: endTimestamp,
+      startTimestamp,
+      endTimestamp,
       whale: countCategories(candidate, "whale"),
       vessel: countCategories(candidate, "vessel"),
       other: countCategories(candidate, "other"),
       "whale (AI)": countCategories(candidate, "whale (ai)"),
       sightings: countCategories(candidate, "sighting"),
-      hydrophone: hydrophone,
-      feedId: feedId,
+      hydrophone,
+      feedId,
       clipCount: countString,
       descriptions: candidate
         .map((el: CombinedData) => cleanSightingsDescription(el.comments))
@@ -112,8 +137,8 @@ const createCandidates = (
             typeof el === "string" && el.length > 0,
         )
         .join(" • ")
-        .replace(/•\s?$/, "") // removes any trailing bullets from empty space comments
-        .replace(/^\s?•\s?/, ""), // removes any forward bullets from empty space comments
+        .replace(/•\s?$/, "")
+        .replace(/^\s?•\s?/, ""),
     };
   });
 
@@ -178,11 +203,7 @@ export function useSortedCandidates(
 ): Candidate[] {
   return useMemo(() => {
     const inRange = rawData.filter((d) => d.hydrophone !== "out of range");
-    console.log("rawData.length", rawData.length);
-    console.log("inRange.length", inRange.length);
     const created = createCandidates(inRange, timeIncrement);
-    console.log("created", JSON.stringify(created, null, 2));
-
     const sorted = sortCandidates(created, sortOrder);
     const filtered = filterGreaterThan(sorted, detectionsGreaterThan);
     return filtered;
