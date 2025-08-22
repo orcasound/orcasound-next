@@ -158,18 +158,6 @@ function ReportCount({
   return null;
 }
 
-// function MapClickHandler({ onClick }: { onClick: () => void }) {
-//   const map = useMap();
-//   useEffect(() => {
-//     map.on("click", onClick);
-//     return () => {
-//       map.off("click", onClick);
-//     };
-//   }, [map, onClick]);
-
-//   return null;
-// }
-
 export default function Map() {
   const {
     nowPlayingCandidate,
@@ -177,55 +165,20 @@ export default function Map() {
     setNowPlayingFeed,
     setNowPlayingCandidate,
   } = useNowPlaying();
-  const { feeds, filteredData, autoPlayOnReady } = useData();
+  const { feeds, filteredData } = useData();
   const { setPlaybarExpanded } = useLayout();
 
-  // const [popupFeed, setPopupFeed] = useState<Feed | null>(null);
-  // const [popupDetection, setPopupDetection] = useState<Sighting | null>(null);
-
-  // close the popup when the feedSlug changes
   const router = useRouter();
-  // const previousFeedSlugRef = useRef<string | string[] | undefined>();
 
-  // useEffect(() => {
-  //   const currentFeedSlug = router.query.feedSlug;
-
-  //   // Run effect only if feedSlug changed
-  //   if (previousFeedSlugRef.current !== currentFeedSlug) {
-  //     previousFeedSlugRef.current = currentFeedSlug;
-
-  //     setPopupDetection(null);
-  //     setPopupFeed(null);
-  //   }
-  // }, [router.query.feedSlug]);
-
-  const reports = useMemo(() => {
-    // show all reports in filter range for live player view
-    if (nowPlayingFeed) {
-      return filteredData;
-    } else if (nowPlayingCandidate) {
-      // show all reports in candidate range for live player view
-      const startDate = new Date(nowPlayingCandidate.startTimestamp);
-      const endDate = new Date(nowPlayingCandidate.endTimestamp);
-      return filteredData?.filter((d) => {
-        return (
-          startDate <= new Date(d.timestampString) &&
-          endDate >= new Date(d.timestampString)
-        );
-      });
-    } else {
-      return filteredData;
-    }
-  }, [filteredData, nowPlayingCandidate, nowPlayingFeed]);
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   const audioReports = useMemo(() => {
-    return reports?.filter((d) => d.newCategory !== "SIGHTING");
-  }, [reports]);
+    return filteredData?.filter((d) => d.newCategory !== "SIGHTING");
+  }, [filteredData]);
 
   const sightings = useMemo(() => {
-    return reports?.filter((d) => d.newCategory === "SIGHTING");
-  }, [reports]);
+    return filteredData?.filter((d) => d.newCategory === "SIGHTING");
+  }, [filteredData]);
 
   const feed = useMemo(() => {
     if (nowPlayingCandidate) {
@@ -255,12 +208,9 @@ export default function Map() {
     if (feed) {
       setLatLng(feed.latLng);
       setZoom(mdDown ? 11 : 12);
-      // map?.setZoom(12);
-      // map?.panTo(feed.latLng);
     } else {
       setLatLng([48.1, -122.75]);
       setZoom(mdDown ? 8 : 9);
-      // map?.setZoom(8);
     }
   }, [map, feed, setLatLng, setZoom, mdDown]);
 
@@ -289,13 +239,6 @@ export default function Map() {
         />
         <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}" />
         <MapUpdater center={latLng} zoom={zoom} />
-        {/* <MapClickHandler
-          onClick={() => {
-            // close popup when clicking on the map
-            setPopupFeed(null);
-            setPopupDetection(null);
-          }}
-        /> */}
         {feeds?.map((f) => {
           const audioReportsThisFeed = audioReports.filter(
             (d) => d.feedId === f?.id,
@@ -323,24 +266,10 @@ export default function Map() {
                 center={f.latLng}
                 count={audioReportsThisFeed + sightingsThisFeed}
                 onClick={() => {
-                  // if (nowPlayingCandidate) {
-                  //   router.push(`/beta/${f.slug}/candidates`);
-                  // } else if (f.id !== nowPlayingFeed?.id) {
-                  //   autoPlayOnReady.current = false;
-                  //   setNowPlayingFeed(f);
-                  //   setNowPlayingCandidate(null);
-                  //   // setPopupFeed(f);
-                  //   // setPopupDetection(null);
-                  // } else {
                   if (mdDown && f.id === nowPlayingFeed?.id) {
                     setPlaybarExpanded(true);
-                  } else if (mdDown) {
-                    autoPlayOnReady.current = false;
-                    setNowPlayingFeed(f);
-                    setNowPlayingCandidate(null);
                   } else {
                     router.push(`/beta/${f.slug}`);
-                    autoPlayOnReady.current = false;
                     setNowPlayingFeed(f);
                     setNowPlayingCandidate(null);
                   }
@@ -369,14 +298,6 @@ export default function Map() {
               zIndexOffset={0}
               position={[sighting.latitude, sighting.longitude]}
               opacity={inRange ? 1 : 0.33}
-              // eventHandlers={{
-              //   click: () => {
-              //     if (mdDown) {
-              //       setPopupDetection(sighting);
-              //       setPopupFeed(null);
-              //     }
-              //   },
-              // }}
             >
               <Tooltip
                 className="custom-tooltip"
@@ -401,17 +322,6 @@ export default function Map() {
           );
         })}
       </MapContainer>
-
-      {/* {(popupFeed || popupDetection) && (
-        <MapPopup
-          sighting={popupDetection}
-          feed={popupFeed}
-          onClick={() => {
-            setPopupDetection(null);
-            setPopupFeed(null);
-          }}
-        />
-      )} */}
     </>
   );
 }

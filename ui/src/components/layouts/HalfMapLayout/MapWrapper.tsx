@@ -1,9 +1,8 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { Box, IconButton, Stack, Theme, useMediaQuery } from "@mui/material";
+import { Box, IconButton, Theme, useMediaQuery } from "@mui/material";
 import dynamic from "next/dynamic";
 import React, { useMemo } from "react";
 
-import { timeRangeSelect } from "@/components/CandidateList/CandidateListFilters";
 import { useData } from "@/context/DataContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import { useComputedPlaybackFields } from "@/hooks/beta/useComputedPlaybackFields";
@@ -16,9 +15,7 @@ const MapWithNoSSR = dynamic(
   },
 );
 
-export function MapWrapper({
-  masterPlayerTimeRef,
-}: {
+export function MapWrapper({}: {
   masterPlayerTimeRef?: React.MutableRefObject<number>;
 }) {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
@@ -51,47 +48,6 @@ export function MapWrapper({
     }
   }, [feeds, nowPlayingCandidate, nowPlayingFeed]);
 
-  const mapTitle = (
-    <Box
-      className="map-title"
-      sx={{
-        position: "absolute",
-        top: 16,
-        left: 16,
-        // width: mdDown ? "250px" : "300px",
-        zIndex: (theme) => theme.zIndex.fab,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        gap: "4px",
-      }}
-    >
-      <Stack direction="row" gap=".5rem">
-        <Box
-          sx={{
-            width: "auto",
-            backgroundColor: "background.default",
-            marginBottom: "6px",
-            padding: "6px 12px",
-            borderRadius: "4px",
-            color: "primary.main",
-          }}
-        >
-          {nowPlayingCandidate
-            ? timeAgoString + " ago"
-            : timeRangeSelect.find((el) => el.value === filters.timeRange)
-                ?.label}
-        </Box>
-      </Stack>
-      {/* {nowPlayingCandidate && (
-          <PlayerTimeDisplay
-            masterPlayerTimeRef={masterPlayerTimeRef}
-            startOffset={startOffset} // needs to be passed in, don't recalculate the startOffset hook on every change
-          />
-        )} */}
-    </Box>
-  );
-
   return (
     <Box
       className={"map-wrapper"}
@@ -121,9 +77,7 @@ export function MapWrapper({
           <CloseIcon />
         </IconButton>
       )}
-      <MapWithNoSSR
-      // key={router.pathname}
-      />
+      <MapWithNoSSR />
     </Box>
   );
 }

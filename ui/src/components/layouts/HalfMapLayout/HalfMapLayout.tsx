@@ -108,7 +108,11 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
     } else {
       setDrawerSide("right");
     }
-  }, [setDrawerSide]);
+  }, [setDrawerSide, router]);
+
+  const isSafari =
+    typeof window !== "undefined" &&
+    /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
   const playPrompt = (
     <Box
@@ -129,7 +133,13 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
         borderRadius: "8px",
       }}
     >
-      Press play to start visualizer and report sounds
+      {isSafari ? (
+        <div style={{ textAlign: "center" }}>
+          Visualizer not supported in this browser, please try Chrome.
+        </div>
+      ) : (
+        "Press play to start visualizer and report sounds"
+      )}
     </Box>
   );
 

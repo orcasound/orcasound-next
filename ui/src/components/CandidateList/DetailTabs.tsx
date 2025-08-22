@@ -1,8 +1,6 @@
-import { Box, Stack } from "@mui/material";
-import { useRouter } from "next/router";
+import { Box, Stack, Theme, useMediaQuery } from "@mui/material";
 import React, { useEffect, useState } from "react";
 
-import { useNowPlaying } from "@/context/NowPlayingContext";
 import darkTheme from "@/styles/darkTheme";
 
 type Tab = {
@@ -22,12 +20,7 @@ const DetailTabs = ({
   stickyTabs?: boolean;
   spaceBetween?: boolean;
 }) => {
-  const router = useRouter();
-  const { feedSlug } = router.query;
-
-  // const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
-
-  const { nowPlayingFeed } = useNowPlaying();
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   const [activeTab, setActiveTab] = useState<Tab | undefined>(tabs[0]);
 
@@ -91,10 +84,14 @@ const DetailTabs = ({
         flex: 1,
         display: "flex",
         flexDirection: "column",
+        overflow: !mdDown ? "hidden" : "unset",
       }}
     >
       {showTabs && tabs && tabRow(tabs)}
-      <Box className="tab-content" sx={{ flex: 1, px: 0, pt: 1 }}>
+      <Box
+        className="tab-content"
+        sx={{ flex: 1, px: 0, pt: 1, overflow: !mdDown ? "auto" : "unset" }}
+      >
         {activeTab?.content}
       </Box>
     </div>

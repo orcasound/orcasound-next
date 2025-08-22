@@ -82,7 +82,9 @@ export function CandidatesResults({
       {layout !== "grid" && (
         <Typography sx={{ fontSize: "14px" }}>
           Showing {candidates.length}{" "}
-          {!isSuccessOrcahello ? "results, checking Orcahello..." : "results"}
+          {!isSuccessOrcahello
+            ? "candidates, checking Orcahello..."
+            : "candidates"}
         </Typography>
       )}
 

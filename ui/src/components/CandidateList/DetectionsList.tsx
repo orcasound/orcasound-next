@@ -9,6 +9,8 @@ import {
 } from "@mui/material";
 
 import { CombinedData } from "@/types/DataTypes";
+import { cleanSightingsDescription } from "@/utils/masterDataHelpers";
+import { formatTimestamp } from "@/utils/time";
 
 export const DetectionsList = ({ array }: { array: CombinedData[] }) => {
   const userName = "Orcasound Listener";
@@ -40,7 +42,6 @@ export const DetectionsList = ({ array }: { array: CombinedData[] }) => {
                   mb: ".25em",
                 }}
               >
-                {/* <AccountCircle style={{ fontSize: "1.5em", opacity: 0.9 }} /> */}
                 {el.newCategory === "WHALE (AI)"
                   ? aiName
                   : el.newCategory === "SIGHTING"
@@ -51,12 +52,15 @@ export const DetectionsList = ({ array }: { array: CombinedData[] }) => {
             secondary={
               <>
                 <span style={{ color: "#fff" }}>
-                  {new Date(el.timestampString).toLocaleTimeString()}
+                  {formatTimestamp(el.timestampString)}
                 </span>
                 {` · ${el.newCategory}`}
                 {el.comments && (
                   <>
-                    <br /> {el.comments}
+                    <br />{" "}
+                    {el.newCategory === "SIGHTING"
+                      ? cleanSightingsDescription(el.comments)
+                      : el.comments}
                   </>
                 )}
               </>

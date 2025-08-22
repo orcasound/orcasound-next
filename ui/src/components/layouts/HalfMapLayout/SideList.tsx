@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Theme, useMediaQuery } from "@mui/material";
 import { useRouter } from "next/router";
 import { useEffect, useRef } from "react";
 
@@ -10,6 +10,7 @@ type SideListProps = {
 export const SideList = ({ children, position = "left" }: SideListProps) => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+  const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -46,8 +47,10 @@ export const SideList = ({ children, position = "left" }: SideListProps) => {
         width: "25%",
         // minWidth: "367px",
         // maxWidth: "550px",
-        overflow: "auto",
+        overflow: position === "left" && !mdDown ? "visible" : "auto",
         position: "relative",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       {children}

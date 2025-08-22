@@ -13,7 +13,6 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import Link from "@/components/Link";
-import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Feed } from "@/graphql/generated";
@@ -37,20 +36,15 @@ export default function HydrophoneCard({ feed, handlePlayPauseClick }: Props) {
 
   const { setDrawerContent, setPlaybarExpanded } = useLayout();
 
-  const { autoPlayOnReady } = useData();
-
   const [active, setActive] = useState<boolean>(feed.id === nowPlayingFeed?.id);
 
   useEffect(() => {
     setActive(feed.id === nowPlayingFeed?.id);
   }, [nowPlayingFeed, feed, setActive]);
 
-  // const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
-  // use these to set href on cards
   const router = useRouter();
-  // const basePath = router.pathname.replace(/\[.*?\]/g, "").replace(/\/$/, ""); // remove the query in [], then remove any trailing slash
   const feedHref = `/beta/${feed.slug}`;
 
   const handlePause = () => {
@@ -65,9 +59,6 @@ export default function HydrophoneCard({ feed, handlePlayPauseClick }: Props) {
   const playIcon = (
     <PlayArrow
       onClick={() => {
-        // setNowPlayingCandidate(null);
-        // setNowPlayingFeed(feed);
-        // handlePlayPauseClick();
         router.push(feedHref);
       }}
       sx={{
@@ -208,24 +199,10 @@ export default function HydrophoneCard({ feed, handlePlayPauseClick }: Props) {
                     {feed.name}
                   </Typography>
                   <Typography variant="body1" sx={{ fontSize: "inherit" }}>
-                    {`${feed.online && "Live: "}${listenerCount} listener${listenerCount !== 1 ? "s" : ""}`}
+                    {`${feed.online ? "Live: " : "Buffering: "}${listenerCount} listener${listenerCount !== 1 ? "s" : ""}`}
                   </Typography>
                 </Stack>
               </Link>
-              {/* <Link
-                href={feedHref}
-                style={{
-                  color: "inherit",
-                  textDecoration: "inherit",
-                  display: "flex",
-                  alignItems: "center",
-                  background: "rgba(0,0,0,.5)",
-                  borderRadius: "100%",
-                  padding: "4px",
-                }}
-              >
-                <NavigateNext />
-              </Link> */}
             </Box>
           </Box>
         </CardContent>

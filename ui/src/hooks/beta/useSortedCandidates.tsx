@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import { Candidate, CombinedData } from "@/types/DataTypes";
+import { cleanSightingsDescription } from "@/utils/masterDataHelpers";
 
 export const countCategories = (
   arr: { newCategory: string }[],
@@ -8,17 +9,6 @@ export const countCategories = (
 ) => {
   return arr.filter((d) => d.newCategory.toLowerCase() === cat.toLowerCase())
     .length;
-};
-const cleanSightingsDescription = (description: string | null | undefined) => {
-  if (!description) return;
-  const removeBracket = description.replace(/^\[[^\]]*\]\s*/, "");
-  const removeBreak = removeBracket.replace(/<br>[^•]*/g, "");
-  const removeLinks = removeBreak
-    .replace(/https?:\/\/\S+/g, "")
-    .replace(/\s+•/g, " •")
-    .trim();
-
-  return removeLinks.trim();
 };
 
 const offsetPadding = 15;
@@ -111,7 +101,7 @@ const createCandidates = (
       vessel: countCategories(candidate, "vessel"),
       other: countCategories(candidate, "other"),
       "whale (AI)": countCategories(candidate, "whale (ai)"),
-      sightings: countCategories(candidate, "sightings"),
+      sightings: countCategories(candidate, "sighting"),
       hydrophone: hydrophone,
       feedId: feedId,
       clipCount: countString,
@@ -187,11 +177,12 @@ export function useSortedCandidates(
   detectionsGreaterThan: number,
 ): Candidate[] {
   return useMemo(() => {
-    // disabling for now, add to filters
-    const inRange = rawData.filter(
-      (d) => d.hydrophone !== "Out of audible range",
-    );
+    const inRange = rawData.filter((d) => d.hydrophone !== "out of range");
+    console.log("rawData.length", rawData.length);
+    console.log("inRange.length", inRange.length);
     const created = createCandidates(inRange, timeIncrement);
+    console.log("created", JSON.stringify(created, null, 2));
+
     const sorted = sortCandidates(created, sortOrder);
     const filtered = filterGreaterThan(sorted, detectionsGreaterThan);
     return filtered;

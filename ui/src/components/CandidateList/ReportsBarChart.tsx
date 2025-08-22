@@ -55,9 +55,13 @@ export default function ReportsBarChart({
   const { filteredData, filters } = useData();
   const timeRange = filters.timeRange;
 
-  const detections = feed
+  const rawDetections = feed
     ? filteredData.filter((d) => d.feedId === feed.id)
     : [...filteredData];
+
+  const detections = rawDetections.filter(
+    (d) => d.hydrophone !== "out of range",
+  );
 
   const timeInterval = timeRange <= oneDay ? "hours" : "days";
 

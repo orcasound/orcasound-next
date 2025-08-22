@@ -313,12 +313,16 @@ export function PlayerBase({
                         fontSize: mdDown ? "inherit" : "20px",
                       }}
                     >
-                      {mdDown ? playerTitle : "Listen live"}
+                      {mdDown
+                        ? playerTitle
+                        : feed?.online
+                          ? "Listen live"
+                          : "Buffering..."}
                     </span>
                     <br />
                     {playerSubtitle && playerSubtitle}
                     {type === "feed" &&
-                      `${listenerCount} listener${listenerCount !== 1 ? "s" : ""}`}
+                      `${!mdDown ? "" : feed?.online ? "Live: " : "Buffering: "}${listenerCount} listener${listenerCount !== 1 ? "s" : ""}`}
                     {type === "candidate" && " · " + duration}
                   </Typography>
                 </Box>

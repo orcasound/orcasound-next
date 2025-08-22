@@ -20,19 +20,19 @@ export const FeedDetail = () => {
   const { filteredData } = useData();
   const { setPlaybarExpanded } = useLayout();
 
-  const { setNowPlayingCandidate, setNowPlayingFeed, nowPlayingFeed } =
-    useNowPlaying();
+  const { setNowPlayingCandidate, setNowPlayingFeed } = useNowPlaying();
 
-  const { feeds, autoPlayOnReady } = useData();
+  const { feeds } = useData();
   const feed = feeds.find((feed) => feed.slug === feedSlug) ?? null;
+  const detectionsThisFeed = filteredData.filter((d) => d.feedId === feed?.id);
+
   // load the feed into nowPlaying on page load
   useEffect(() => {
     if (feed) {
       setNowPlayingFeed(feed);
       setNowPlayingCandidate(null);
-      autoPlayOnReady.current = false;
     }
-  }, [feed, setNowPlayingCandidate, setNowPlayingFeed, autoPlayOnReady]);
+  }, [feed, setNowPlayingCandidate, setNowPlayingFeed]);
 
   const tabs = [
     {
@@ -59,7 +59,7 @@ export const FeedDetail = () => {
     {
       label: "Reports",
       value: "reports",
-      content: <DetectionsList array={filteredData} />,
+      content: <DetectionsList array={detectionsThisFeed} />,
     },
 
     { label: "Status", value: "status", content: <></> },
@@ -70,7 +70,6 @@ export const FeedDetail = () => {
       <Box
         sx={{
           position: "relative",
-          // marginTop: 5,
           marginBottom: "2px",
           display: "flex",
           flexDirection: "column",

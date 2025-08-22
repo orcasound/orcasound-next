@@ -33,6 +33,20 @@ export default function formatDuration(startOffset: number, endOffset: number) {
   }
 }
 
+export const cleanSightingsDescription = (
+  description: string | null | undefined,
+) => {
+  if (!description) return;
+  const removeBracket = description.replace(/^\[[^\]]*\]\s*/, "");
+  const removeBreak = removeBracket.replace(/<br>[^•]*/g, "");
+  const removeLinks = removeBreak
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/\s+•/g, " •")
+    .trim();
+
+  return removeLinks.trim();
+};
+
 export const standardizeFeedName = (name: string) => {
   switch (name) {
     case "Beach Camp at Sunset Bay":
@@ -41,8 +55,8 @@ export const standardizeFeedName = (name: string) => {
       return "North San Juan Channel";
     case "Haro Strait":
       return "Orcasound Lab";
-    case "out of range":
-      return "Out of audible range";
+    // case "out of range":
+    //   return "Out of audible range";
     default:
       return name;
   }

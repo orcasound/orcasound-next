@@ -30,34 +30,6 @@ import { HydrophonesStack } from "../CandidateList/HydrophonesStack";
 import AudioVisualizer from "./AudioVisualizer";
 import { PlayerBase } from "./PlayerBase";
 
-const hosts = [
-  {
-    hydrophone: "orcasound-lab",
-    name: "Beam Reach",
-    link: "http://www.beamreach.blue/",
-  },
-  {
-    hydrophone: "north-sjc",
-    name: "Orca Behavior Institute",
-    link: "https://www.orcabehaviorinstitute.org/",
-  },
-  {
-    hydrophone: "sunset-bay",
-    name: "Beach Camp at Sunset Bay",
-    link: "https://www.sunsetbaywharf.com/",
-  },
-  {
-    hydrophone: "port-townsend",
-    name: "Port Townsend Marine Science Center",
-    link: "http://www.ptmsc.org/",
-  },
-  {
-    hydrophone: "bush-point",
-    name: "Orca Network",
-    link: "https://orcanetwork.org/",
-  },
-];
-
 // // dynamically import VideoJS to speed up initial page load
 // const VideoJS = dynamic(() => import("@/components/Player/VideoJS"));
 
@@ -79,7 +51,7 @@ export default function LivePlayer({
     setNowPlayingFeed,
     setNowPlayingCandidate,
   } = useNowPlaying();
-  const { autoPlayOnReady, filteredData } = useData();
+  const { filteredData } = useData();
   const [playerStatus, setPlayerStatus] = useState<PlayerStatus>("idle");
   const playerRef = useRef<VideoJSPlayer | null>(null);
   const {
@@ -177,14 +149,9 @@ export default function LivePlayer({
       audioContextRef.current = audioCtx;
       analyserNodeRef.current = analyser;
 
-      if (autoPlayOnReady.current) {
-        player.play();
-      }
-
       player.on("playing", () => {
         setPlayerStatus("playing");
         setMasterPlayerStatus("playing");
-        autoPlayOnReady.current = true;
         setAudioVisualizerOpen(true);
 
         if (feed?.slug) analytics.stream.started(feed.slug);
@@ -208,7 +175,6 @@ export default function LivePlayer({
       feed?.slug,
       masterPlayerRef,
       setMasterPlayerStatus,
-      autoPlayOnReady,
       analyserNodeRef,
       audioContextRef,
     ],
@@ -361,6 +327,20 @@ export default function LivePlayer({
 
   const [audioVisualizerOpen, setAudioVisualizerOpen] = useState(false);
 
+  const detectionButton = feed ? (
+    <DetectionDialogBeta
+      isPlaying={playerStatus === "playing"}
+      feed={feed}
+      timestamp={timestamp}
+      getPlayerTime={() => playerRef.current?.currentTime()}
+      listenerCount={listenerCount}
+    >
+      <DetectionButtonBeta />
+    </DetectionDialogBeta>
+  ) : (
+    <></>
+  );
+
   return (
     <Box
       className="live-player"
@@ -413,7 +393,11 @@ export default function LivePlayer({
               setAudioVisualizerOpen={setAudioVisualizerOpen}
             />
           </div>
-
+          {playerStatus === "playing" && !mdDown && (
+            <div style={{ margin: "1.5rem -.5rem 0", height: "2.5rem" }}>
+              {detectionButton}
+            </div>
+          )}
           {mdDown && playbarExpanded && (
             <>
               {audioVisualizerOpen && (
@@ -446,17 +430,7 @@ export default function LivePlayer({
                     justifyContent: "center",
                   }}
                 >
-                  {feed && (
-                    <DetectionDialogBeta
-                      isPlaying={playerStatus === "playing"}
-                      feed={feed}
-                      timestamp={timestamp}
-                      getPlayerTime={() => playerRef.current?.currentTime()}
-                      listenerCount={listenerCount}
-                    >
-                      <DetectionButtonBeta />
-                    </DetectionDialogBeta>
-                  )}
+                  {detectionButton}
                 </Box>
               )}
             </>

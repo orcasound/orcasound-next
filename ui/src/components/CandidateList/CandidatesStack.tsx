@@ -50,6 +50,13 @@ export const CandidatesStack = ({
     ? filteredData.filter((c) => c.feedId === feed?.id)
     : filteredData;
 
+  const detectionsAudible = detections.filter(
+    (d) => d.hydrophone !== "out of range",
+  );
+
+  console.log("detections.length", detections.length);
+  console.log("detectionsAudible.length", detectionsAudible.length);
+
   function countString(detectionArray: CombinedData[]) {
     const categories = ["whale", "whale (AI)", "vessel", "other", "sighting"];
 
@@ -61,7 +68,9 @@ export const CandidatesStack = ({
 
         let label = category;
         if (category === "sighting" && count !== 1) {
-          label += "s";
+          label += "s in audible range";
+        } else if (category === "sighting") {
+          label += " in audible range";
         }
 
         return (
@@ -95,7 +104,7 @@ export const CandidatesStack = ({
 
   const [showFilters, setShowFilters] = useState(false);
 
-  const mobileAllButton = (
+  const clearFilterButton = (
     <Button
       variant="contained"
       size="small"
@@ -140,7 +149,7 @@ export const CandidatesStack = ({
           gap={0.5}
           sx={{ alignItems: "flex-start" }}
         >
-          {mdDown && feed && mobileAllButton}
+          {mdDown && feed && clearFilterButton}
           <Typography
             component="h2"
             variant="h6"
@@ -152,7 +161,7 @@ export const CandidatesStack = ({
             {!mdDown && " · "}
             {feed ? feed.name : "All hydrophones"}
           </Typography>
-          {countString(detections)}
+          {countString(detectionsAudible)}
         </Stack>
       )}
       <Stack

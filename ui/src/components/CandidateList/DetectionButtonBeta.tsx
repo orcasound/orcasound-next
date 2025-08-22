@@ -41,7 +41,7 @@ export default function DetectionButtonBeta({
           justifyContent: "center",
           alignItems: "center",
           width: "100%",
-          gap: 2,
+          gap: 1,
         }}
       >
         <GraphicEq

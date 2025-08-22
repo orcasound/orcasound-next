@@ -14,8 +14,13 @@ function HydrophonePage() {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   const { setNowPlayingCandidate, setNowPlayingFeed } = useNowPlaying();
-  const { setPlaybarExpanded, setDrawerContent, setDrawerSide } = useLayout();
-  const { feeds, setFilters } = useData();
+  const {
+    setPlaybarExpanded,
+    setDrawerContent,
+    setDrawerSide,
+    activeMobileTab,
+  } = useLayout();
+  const { feeds } = useData();
   const router = useRouter();
   const feed = useMemo(() => {
     return feeds.find((f) => f.slug === router.query.feedSlug);
@@ -32,8 +37,8 @@ function HydrophonePage() {
     setDrawerContent(
       mdDown ? <LivePlayer feed={feed ?? null} /> : <AudioVisualizer />,
     );
-    if (mdDown) setPlaybarExpanded(true);
-  }, [feed, setDrawerContent, setDrawerSide, setPlaybarExpanded]);
+    if (mdDown && activeMobileTab?.value !== "map") setPlaybarExpanded(true);
+  }, [feed, setDrawerContent, setDrawerSide, setPlaybarExpanded, mdDown]);
 
   // useEffect(() => {
   //   setPlaybarExpanded(false);

@@ -29,6 +29,7 @@ import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import { useComputedPlaybackFields } from "@/hooks/beta/useComputedPlaybackFields";
 import useConcatenatedAudio from "@/hooks/beta/useConcatenatedAudio";
+import darkTheme from "@/styles/darkTheme";
 import {
   AIData,
   Candidate,
@@ -107,6 +108,10 @@ const DetailColumn = ({
       sx={{
         padding: "24px 0px !important",
         width: mdDown ? "100%" : "33%",
+        maxWidth: mdDown ? "100%" : "33%",
+        minWidth: mdDown ? "100%" : "33%",
+
+        background: darkTheme.palette.background.default,
       }}
     >
       <Box>
@@ -120,7 +125,7 @@ const DetailColumn = ({
             alignItems: "flex-start",
           }}
         >
-          <Box>
+          <Box sx={{ width: "100%" }}>
             <Stack
               direction="row"
               sx={{
@@ -232,6 +237,8 @@ export const CandidateDrawer = ({
   const { durationString } = useComputedPlaybackFields(candidate);
   const router = useRouter();
   const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
+  const { feeds } = useData();
+  const feed = feeds.find((f) => f.id === candidate?.feedId);
   const feedId = candidate?.feedId ?? "";
   const startEnd = useMemo(() => {
     return typeof candidate?.id === "string" ? candidate?.id?.split("_") : [];
@@ -284,7 +291,12 @@ export const CandidateDrawer = ({
 
   const handleClose = () => {
     setPlaybarExpanded(false);
-    setNowPlayingCandidate(null);
+    if (mdDown || !router.query.feedSlug) {
+      setNowPlayingCandidate(null);
+    }
+    if (mdDown && router.query.feedSlug && feed) {
+      setNowPlayingFeed(feed);
+    }
   };
 
   const waveSurferContainer = audioUrl && (
@@ -348,34 +360,11 @@ export const CandidateDrawer = ({
           flexDirection: "column",
           position: "relative",
           paddingBottom: "2rem",
-          backgroundColor: "#1b1f34",
+          backgroundColor: "accent1.main",
         }}
       >
         {!mdDown && waveSurferContainer}
-        {/* <Box
-          className="html-audio-container"
-          sx={{
-            minHeight: "100px",
-          }}
-        >
-          <Box>
-            {isProcessing ? (
-              <p>Processing HTML player...</p>
-            ) : error ? (
-              <p>Error: {error}</p>
-            ) : audioUrl ? (
-              <div>
-                <audio controls src={audioUrl} key={startTimeString}></audio>
-                <div>{totalDurationMs} ms</div>
-                {droppedSeconds > 0 && (
-                  <div>Dropped {droppedSeconds} seconds from stream reset</div>
-                )}
-              </div>
-            ) : (
-              <p>No audio available.</p>
-            )}
-          </Box>
-        </Box> */}
+
         {!audioBlob && (
           <Box
             className="candidate-playbar-container"

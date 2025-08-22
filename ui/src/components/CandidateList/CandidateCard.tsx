@@ -1,4 +1,4 @@
-import { PauseCircle, PlayCircle } from "@mui/icons-material";
+import { Pause, PlayArrow, PlayCircle } from "@mui/icons-material";
 import {
   Box,
   Card,
@@ -10,8 +10,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { useRouter } from "next/router";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
@@ -48,29 +47,22 @@ export default function CandidateCard(props: { candidate: Candidate }) {
     masterPlayerRef,
     masterPlayerStatus,
   } = useNowPlaying();
-  const router = useRouter();
 
   const { setPlaybarExpanded, setDrawerContent, setDrawerSide } = useLayout();
 
   const candidate = props.candidate;
   const active = candidate.id === nowPlayingCandidate?.id;
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
-  const { feeds, autoPlayOnReady } = useData();
+  const { feeds } = useData();
   const feed = feeds.find(
     (feed) => feed.id === props.candidate.array[0].feedId,
   );
-  const feedId = feed?.id ?? "";
-
-  const startEnd = useMemo(() => {
-    return typeof candidate.id === "string" ? candidate.id?.split("_") : [];
-  }, [candidate.id]);
-  const startTimeString = startEnd[0];
-  const endTimeString = startEnd[startEnd.length - 1];
 
   const handleDrawerOpen = () => {
     if (!mdDown && masterPlayerStatus === "playing")
       masterPlayerRef?.current?.pause?.();
     setNowPlayingFeed(null);
+    setNowPlayingCandidate(candidate);
     setPlaybarExpanded(true);
     setDrawerSide("left");
     setDrawerContent(
@@ -107,28 +99,6 @@ export default function CandidateCard(props: { candidate: Candidate }) {
 
   const candidateTitle = formatTimestamp(candidate.startTimestamp);
 
-  // if the card is rendered on feed detail, show candidateFeedHref
-  // const feedDetailHref = `/beta/${feed?.slug}/candidates`;
-  const feedDetailCandidateHref = `/beta/${feed?.slug}/${candidate.id}`;
-
-  // if the card is rendered on browse all candidates, show candidateBrowseHref
-  // const allCandidatesHref = `/beta/candidates`;
-  // 6/5/25 -- abandoning the idea of a candidate detail next to all candidates browse, always goes to feed detail
-  // const allCandidatesDetailHref = `/beta/candidates/${feed?.slug}/${candidate.id}`;
-
-  const href = feedDetailCandidateHref;
-
-  const handlePlay = (candidate: Candidate) => {
-    setNowPlayingCandidate(candidate);
-    setNowPlayingFeed(null);
-    if (!mdDown) router.push(href);
-
-    const player = masterPlayerRef?.current;
-    if (player && player !== null && typeof player.play === "function") {
-      player.play();
-    }
-  };
-
   const handlePause = () => {
     const player = masterPlayerRef?.current;
     if (player && typeof player.pause === "function") {
@@ -136,16 +106,14 @@ export default function CandidateCard(props: { candidate: Candidate }) {
     }
   };
 
-  const iconSize = "40px";
+  const iconSize = "28px";
 
   const playIcon = (
-    <PlayCircle
-      onClick={() => handlePlay(candidate)}
+    <PlayArrow
       sx={{
         height: iconSize,
         width: iconSize,
         cursor: "pointer",
-        // marginRight: mdDown ? "-8px" : "-4px",
       }}
     />
   );
@@ -156,13 +124,12 @@ export default function CandidateCard(props: { candidate: Candidate }) {
         opacity: 0.25,
         height: iconSize,
         width: iconSize,
-        // marginRight: mdDown ? "-8px" : "-4px",
       }}
     />
   );
 
   const pauseIcon = (
-    <PauseCircle
+    <Pause
       onClick={() => handlePause()}
       sx={{
         height: iconSize,
@@ -202,11 +169,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
         width: "100%",
         maxWidth: "100%",
         overflow: "hidden",
-        // backgroundColor: active ? "rgba(255,255,255,.1)" : "default",
-        // border: active ? "1px solid rgba(255,255,255,.25)" : "none",
-        backgroundColor: active
-          ? (theme) => "rgba(255,255,255,.125)"
-          : "default",
+        backgroundColor: active ? "rgba(255,255,255,.125)" : "default",
         border: active
           ? "1px solid rgba(255,255,255,.25)"
           : "1px solid transparent",
@@ -222,6 +185,11 @@ export default function CandidateCard(props: { candidate: Candidate }) {
               fontSize: mdDown ? "14px" : "1rem",
               padding: 0,
             }}
+            onClick={() => {
+              handleDrawerOpen();
+              sessionStorage.setItem("scrollBox", String(scrollBox?.scrollTop));
+              sessionStorage.setItem("sideList", String(sideList?.scrollTop));
+            }}
           >
             <Box
               sx={{
@@ -233,20 +201,7 @@ export default function CandidateCard(props: { candidate: Candidate }) {
             >
               <Box
                 // custom Link component based on NextLink, not MUI Link, is required here to persist layout and avoid page reset
-                onClick={() => {
-                  // autoPlayOnReady.current = false;
-                  handleDrawerOpen();
-                  // setNowPlayingCandidate(candidate);
-                  // setNowPlayingFeed(null);
-                  sessionStorage.setItem(
-                    "scrollBox",
-                    String(scrollBox?.scrollTop),
-                  );
-                  sessionStorage.setItem(
-                    "sideList",
-                    String(sideList?.scrollTop),
-                  );
-                }}
+
                 style={{
                   width: "100%",
                   color: "inherit",
@@ -262,18 +217,45 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                     alignItems: "center",
                   }}
                 >
-                  {candidate.hydrophone !== "Out of audible range" && (
+                  {candidate.hydrophone !== "out of range" && (
                     <Box
                       sx={{
                         backgroundImage: `url(${image})`,
                         backgroundPosition: "center",
                         backgroundSize: "cover",
                         backgroundRepeat: "no-repeat",
-                        minWidth: mdDown ? "40px" : "60px",
-                        minHeight: mdDown ? "40px" : "60px",
+                        minWidth: "60px",
+                        minHeight: "60px",
                         borderRadius: "4px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
-                    ></Box>
+                    >
+                      <div
+                        className="hydrophone-play-pause"
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 100,
+                          backgroundColor: "rgba(0,0,0,.66)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {duration > 0
+                          ? !active
+                            ? playIcon
+                            : masterPlayerStatus !== "playing" &&
+                                nowPlayingCandidate
+                              ? playIcon
+                              : pauseIcon
+                          : candidate.hydrophone !== "out of range"
+                            ? playIconDisabled
+                            : null}
+                      </div>
+                    </Box>
                   )}
 
                   <Stack>
@@ -298,28 +280,9 @@ export default function CandidateCard(props: { candidate: Candidate }) {
                   </Stack>
                 </Box>
               </Box>
-              <Box
-                style={{
-                  paddingTop: mdDown ? "8px" : "12px",
-                  paddingRight: mdDown ? "8px" : "12px",
-                }}
-              >
-                {duration > 0
-                  ? !active
-                    ? playIcon
-                    : masterPlayerStatus !== "playing" && nowPlayingCandidate
-                      ? playIcon
-                      : pauseIcon
-                  : candidate.hydrophone !== "Out of audible range"
-                    ? playIconDisabled
-                    : null}
-              </Box>
             </Box>
             <Box
               // custom Link component based on NextLink, not MUI Link, is required here to persist layout and avoid page reset
-              onClick={() => {
-                handleDrawerOpen();
-              }}
               style={{
                 width: "100%",
                 color: "inherit",

@@ -23,7 +23,7 @@ export const BottomDrawer = ({ children }: { children: ReactNode }) => {
         height: playbarExpanded ? `calc(100dvh - ${headerHeight})` : 0,
         width: mdDown ? "100%" : "75%",
         marginLeft: mdDown ? 0 : drawerSide === "right" ? "25%" : 0,
-        backgroundColor: "background.default",
+        backgroundColor: mdDown ? "background.default" : "accent1.main",
         zIndex: (theme) => theme.zIndex.drawer + 1,
         transition: "height .33s ease",
         mb: "0px",

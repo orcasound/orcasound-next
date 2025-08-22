@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { CandidateDrawer } from "@/components/layouts/HalfMapLayout/CandidateDrawer";
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
@@ -7,7 +7,6 @@ import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
-import { useComputedPlaybackFields } from "@/hooks/beta/useComputedPlaybackFields";
 
 function CandidatePage() {
   return null;
@@ -15,39 +14,17 @@ function CandidatePage() {
 
 const CandidateLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
-  const { feeds, sortedCandidates, filteredData, autoPlayOnReady } = useData();
+  const { sortedCandidates } = useData();
   const { setPlaybarExpanded, setDrawerContent } = useLayout();
   const { setNowPlayingCandidate, setNowPlayingFeed } = useNowPlaying();
 
+  const { candidateId } = router.query;
+
+  const candidate = sortedCandidates.find((c) => c.id === candidateId) ?? null;
+
   useEffect(() => {
     setDrawerContent(<CandidateDrawer candidate={candidate} />);
-  }, [setDrawerContent]);
-
-  const { candidateId, feedSlug } = router.query;
-
-  const feed = feeds.find((f) => f.slug === feedSlug) ?? undefined;
-  const feedId = useMemo(() => {
-    return feeds.find((f) => f.slug === feedSlug)?.id ?? "";
-  }, [feeds, feedSlug]);
-  const candidate = sortedCandidates.find((c) => c.id === candidateId) ?? null;
-  const startEnd = useMemo(() => {
-    return typeof candidateId === "string" ? candidateId?.split("_") : [];
-  }, [candidateId]);
-  const startTimeString = startEnd[0];
-  const endTimeString = startEnd[startEnd.length - 1];
-  const startTimeMs = new Date(startEnd[0]).getTime();
-  const endTimeMs = new Date(startEnd[startEnd.length - 1]).getTime();
-
-  const { durationString } = useComputedPlaybackFields(candidate);
-
-  // const [detections, setDetections] = useState<DetectionsProps>({
-  //   all: [],
-  //   human: [],
-  //   ai: [],
-  //   sightings: [],
-  //   hydrophone: "",
-  //   startTime: "",
-  // });
+  }, [setDrawerContent, candidate]);
 
   const [candidateIdState, setCandidateIdState] = useState<
     string | string[] | undefined
