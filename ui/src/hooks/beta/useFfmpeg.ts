@@ -1,10 +1,21 @@
 import type { FFmpeg as FFmpegType } from "@ffmpeg/ffmpeg";
+import type { FileData } from "@ffmpeg/ffmpeg";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type FileEntry = {
   name: string;
   data: File | Blob | string;
 };
+
+function fileDataToArrayBuffer(fd: FileData): ArrayBuffer {
+  if (typeof fd === "string") {
+    // If ffmpeg ever returns string (some builds/utilities), encode it
+    return new TextEncoder().encode(fd).buffer;
+  }
+  // fd is a Uint8Array (typed over ArrayBufferLike). Clone it to force a true ArrayBuffer.
+  const u8 = fd as Uint8Array;
+  return u8.slice().buffer; // slice() creates a new ArrayBuffer-backed copy
+}
 
 export function useFfmpeg() {
   const ffmpegRef = useRef<InstanceType<typeof FFmpegType> | null>(null);
@@ -69,8 +80,8 @@ export function useFfmpeg() {
       ]);
       await ffmpeg.exec(["-i", "temp.ts", "-b:a", "192k", "output.mp3"]);
 
-      const data = await ffmpeg.readFile("output.mp3");
-      return new Blob([data], { type: "audio/mpeg" });
+      const data = (await ffmpeg.readFile("output.mp3")) as FileData;
+      return new Blob([fileDataToArrayBuffer(data)], { type: "audio/mpeg" });
     },
     [clearFiles],
   );
@@ -119,8 +130,12 @@ export function useFfmpeg() {
       const spectrogramData = await ffmpeg.readFile("spectrogram.png");
 
       return {
-        audio: new Blob([audioData], { type: "audio/mpeg" }),
-        spectrogram: new Blob([spectrogramData], { type: "image/png" }),
+        audio: new Blob([fileDataToArrayBuffer(audioData)], {
+          type: "audio/mpeg",
+        }),
+        spectrogram: new Blob([fileDataToArrayBuffer(spectrogramData)], {
+          type: "image/png",
+        }),
       };
     },
     [clearFiles],

@@ -15,7 +15,6 @@ import {
   ReactNode,
   SetStateAction,
   useEffect,
-  useMemo,
   useState,
 } from "react";
 
@@ -30,24 +29,9 @@ import { useNowPlaying } from "@/context/NowPlayingContext";
 import { useComputedPlaybackFields } from "@/hooks/beta/useComputedPlaybackFields";
 import useConcatenatedAudio from "@/hooks/beta/useConcatenatedAudio";
 import darkTheme from "@/styles/darkTheme";
-import {
-  AIData,
-  Candidate,
-  CombinedData,
-  HumanData,
-  Sighting,
-} from "@/types/DataTypes";
+import { Candidate } from "@/types/DataTypes";
 import formatDuration from "@/utils/masterDataHelpers";
 import { formatTimestamp } from "@/utils/time";
-
-export type DetectionsProps = {
-  all: CombinedData[];
-  human: HumanData[];
-  ai: AIData[];
-  sightings: Sighting[];
-  hydrophone: string;
-  startTime: string;
-};
 
 const DetailColumn = ({
   candidate,
@@ -240,17 +224,18 @@ export const CandidateDrawer = ({
   const { feeds } = useData();
   const feed = feeds.find((f) => f.id === candidate?.feedId);
   const feedId = candidate?.feedId ?? "";
-  const startEnd = useMemo(() => {
-    return typeof candidate?.id === "string" ? candidate?.id?.split("_") : [];
-  }, [candidate?.id]);
-  const startTimeString = startEnd[0];
-  const endTimeString = startEnd[startEnd.length - 1];
+  const startTimeString = candidate?.startTimestamp || "";
+  const endTimeString = candidate?.endTimestamp || "";
+
+  console.log("startTimeString", startTimeString);
+  console.log("endTimeString", endTimeString);
+
   const { setNowPlayingCandidate, setNowPlayingFeed } = useNowPlaying();
 
   useEffect(() => {
     setNowPlayingCandidate(candidate);
     setNowPlayingFeed(null);
-  }, [setNowPlayingCandidate, setNowPlayingFeed]);
+  }, [setNowPlayingCandidate, setNowPlayingFeed, candidate]);
 
   const [buildRequested, setBuildRequested] = useState<boolean>(false);
 
@@ -265,7 +250,7 @@ export const CandidateDrawer = ({
     feedId,
     startTime: startTimeString,
     endTime: endTimeString,
-    enabled: buildRequested,
+    enabled: buildRequested && !!startTimeString && !!endTimeString,
   });
 
   useEffect(() => {

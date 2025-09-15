@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { useFeedStreams } from "@/hooks/beta/useFeedStreams";
-import { useFfmpeg } from "@/hooks/beta/useFfmpeg";
 
 import { useFeedSegments } from "./useFeedSegments";
+import { useFfmpeg } from "./useFfmpeg";
 
 type Props = {
   feedId: string;

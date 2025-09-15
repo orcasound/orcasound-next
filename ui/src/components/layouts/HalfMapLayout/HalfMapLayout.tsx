@@ -17,7 +17,7 @@ import { MapWrapper } from "./MapWrapper";
 import MobileDrawer from "./MobileDrawer";
 import { SideList } from "./SideList";
 
-const routes = [
+const mainTabs = [
   { label: "Hydrophones", href: "/beta" },
   { label: "Explore", href: "/beta/explore" },
   { label: "Take Action", href: "/beta/action" },
@@ -56,7 +56,7 @@ function NavTabs({ mdDown }: { mdDown?: boolean }) {
       display="flex"
       justifyContent={mdDown ? "center" : "start"}
     >
-      {routes.map(({ label, href }, index) => {
+      {mainTabs.map(({ label, href }, index) => {
         let isActive;
         if (currentPath === href) {
           isActive = true;
@@ -93,9 +93,15 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
   const { setDrawerSide, drawerContent, showPlayPrompt, activeMobileTab } =
     useLayout();
   const { nowPlayingFeed } = useNowPlaying();
-  const isHome = router.asPath === routes[0].href;
-  const isExplore = router.asPath === routes[1].href;
-  const isAction = router.asPath === routes[2].href;
+  const isHome = router.asPath === mainTabs[0].href || router.asPath === "/";
+  const isNode = router.query.feedSlug;
+  if (isNode) {
+    console.log(isNode);
+  } else {
+    console.log("no node");
+  }
+  const isExplore = router.asPath === mainTabs[1].href;
+  const isAction = router.asPath === mainTabs[2].href;
 
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
@@ -217,7 +223,7 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
               <SideList position="left">
                 {router.query.feedSlug ? (
                   <FeedDetail />
-                ) : isHome ? (
+                ) : isHome || isNode ? (
                   <LivePlayer
                     showListView={true}
                     feed={nowPlayingFeed}
@@ -248,7 +254,7 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
                 )}
               </Box>
               <SideList position="right">
-                {isHome ? (
+                {isHome || isNode ? (
                   <CandidatesStack showChart={true} />
                 ) : isExplore ? (
                   <></>

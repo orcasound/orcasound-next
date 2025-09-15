@@ -101,15 +101,6 @@ export const DataProvider = ({
   const lastWhaleReportFeed =
     feeds.find((f) => f.id === lastWhaleReport()?.feedId) ?? null;
 
-  // if there is no feed or candidate selected, auto-select the feed with the most recent whale report in the time range, or the first feed in the list if nothing else
-  // useEffect(() => {
-  //   if (lastWhaleReportFeed && !nowPlayingCandidate && !nowPlayingFeed) {
-  //     setNowPlayingFeed(lastWhaleReportFeed);
-  //   } else if (!lastWhaleReportFeed) {
-  //     setNowPlayingFeed(feeds[0]);
-  //   }
-  // });
-
   const sortedCandidates = useSortedCandidates(
     filteredData,
     filters.timeIncrement,
