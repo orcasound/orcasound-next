@@ -2,6 +2,7 @@ import { PauseCircle, PlayCircle } from "@mui/icons-material";
 import { Theme, useMediaQuery } from "@mui/material";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
+import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.js";
 import Spectrogram from "wavesurfer.js/dist/plugins/spectrogram.js";
 import Timeline from "wavesurfer.js/dist/plugins/timeline.js";
 
@@ -9,39 +10,63 @@ type WaveformPlayerProps = {
   audioUrl: string;
 };
 
+// local, lib-agnostic types for runtime narrowing (no shims)
+type RegionOptions = {
+  id?: string;
+  start: number;
+  end: number;
+  color?: string;
+  drag?: boolean;
+  resize?: boolean;
+  content?: string; // inline label if supported
+};
+type Region = RegionOptions & { remove(): void };
+type RegionsAPI = {
+  addRegion(opts: RegionOptions): Region;
+  getRegions(): Region[];
+  clearRegions(): void;
+  enableDragSelection(opts?: { slop?: number; color?: string } | boolean): void;
+  on(evt: "region-clicked", cb: (region: Region, e: MouseEvent) => void): void;
+  on(
+    evt: "region-created" | "region-updated" | "region-removed",
+    cb: (region: Region) => void,
+  ): void;
+  destroy?: () => void;
+  name?: string;
+};
+function assertRegions(api: unknown): asserts api is RegionsAPI {
+  const o = api as Record<string, unknown> | null;
+  if (
+    !o ||
+    typeof o.addRegion !== "function" ||
+    typeof o.getRegions !== "function" ||
+    typeof o.clearRegions !== "function" ||
+    typeof o.enableDragSelection !== "function" ||
+    typeof o.on !== "function"
+  ) {
+    throw new Error("Regions plugin API not detected");
+  }
+}
+
 export default function WavesurferPlayer({ audioUrl }: WaveformPlayerProps) {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   const waveformRef = useRef<HTMLDivElement | null>(null);
-  const waveSurferRef = useRef<WaveSurfer | null>(null);
-  // containerRef seems unused, consider removing if not needed
-  // const containerRef = useRef<HTMLDivElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-
-  const [zoomLevel, setZoomLevel] = useState<number>(0); // pixels per second
-
-  // These should probably be derived from duration and container width,
-  // not separately stateful unless you have specific reasons.
-  // const [baseZoom, setBaseZoom] = useState<number>(0); // fully zoomed out
-  // const [maxZoom, setMaxZoom] = useState<number>(0); // fully zoomed in
-  const [containerWidth, setContainerWidth] = useState<number | null>(null); // To calculate dynamic zoom limits
-
-  const lastSecondsInWindowRef = useRef<number | null>(null);
-
   const spectrogramRef = useRef<HTMLDivElement | null>(null);
   const timelineRef = useRef<HTMLDivElement | null>(null);
 
-  // Effect for initializing WaveSurfer and plugins
+  const waveSurferRef = useRef<WaveSurfer | null>(null);
+  const regionsRef = useRef<RegionsAPI | null>(null);
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState<number>(0);
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
+
   useEffect(() => {
-    if (
-      !waveformRef.current ||
-      !spectrogramRef.current ||
-      !timelineRef.current
-    ) {
-      console.log("Missing refs for Wavesurfer initialization. Skipping.");
+    if (typeof window === "undefined") return;
+    if (!waveformRef.current || !spectrogramRef.current || !timelineRef.current)
       return;
-    }
 
     if (!waveSurferRef.current) {
       const ws = WaveSurfer.create({
@@ -53,7 +78,7 @@ export default function WavesurferPlayer({ audioUrl }: WaveformPlayerProps) {
         barWidth: 2,
         barGap: 2,
         barRadius: 2,
-        url: audioUrl,
+        url: audioUrl, // initial load only
         plugins: [
           Spectrogram.create({
             container: spectrogramRef.current,
@@ -62,158 +87,151 @@ export default function WavesurferPlayer({ audioUrl }: WaveformPlayerProps) {
             scale: "linear",
             fftSamples: 1024,
           }),
-          Timeline.create({
-            container: timelineRef.current,
-          }),
+          Timeline.create({ container: timelineRef.current }),
         ],
       });
+
+      // IMPORTANT: create() with NO args (matches their typings)
+      const pluginInstanceUnknown = ws.registerPlugin(RegionsPlugin.create());
+      assertRegions(pluginInstanceUnknown);
+      const regions = (regionsRef.current = pluginInstanceUnknown);
+
+      // Enable drag-to-create here (typed on our side, runtime supports object or boolean)
+      regions.enableDragSelection({ slop: 5 });
+
+      regions.on("region-clicked", (region, e) => {
+        e.stopPropagation();
+        ws.setTime(region.start);
+      });
+
+      ws.on("ready", () => {
+        setIsReady(true);
+        // demo region (NO `data:` key)
+        const dur = ws.getDuration();
+        if (dur > 0) {
+          regions.addRegion({
+            start: Math.max(0, dur * 0.25 - 2),
+            end: Math.max(0.01, dur * 0.25 + 2),
+            color: "rgba(46, 204, 113, 0.25)",
+            content: "", // optional inline label if CSS supports it
+          });
+        }
+      });
+      ws.on("play", () => setIsPlaying(true));
+      ws.on("pause", () => setIsPlaying(false));
+      ws.on("error", (err) => console.error("Wavesurfer error:", err));
+
       waveSurferRef.current = ws;
 
-      ws.on("error", (err) => {
-        console.error("Wavesurfer error:", err);
-      });
-
-      // Crucial: Set isReady only when Wavesurfer confirms it's ready.
-      ws.on("ready", (duration) => {
-        setIsReady(true);
-        // Optionally, if `deferInit` was used for Spectrogram, initialize it here
-        // ws.initPlugin('spectrogram');
-      });
-
-      ws.load(audioUrl).catch((error) => {
-        console.error("Error loading audio in Wavesurfer:", error);
-      });
-
-      // Cleanup function
       return () => {
-        console.log("Destroying WaveSurfer instance...");
-        ws.destroy();
+        try {
+          regionsRef.current?.destroy?.();
+          ws.destroy();
+        } catch {
+          // ignore
+        }
         waveSurferRef.current = null;
+        regionsRef.current = null;
         setIsReady(false);
       };
-    } else {
-      // If instance exists, and audioUrl changes, load new audio
-      console.log("WaveSurfer instance exists, loading new audio:", audioUrl);
-      setIsReady(false); // Reset ready state when loading new audio
-      waveSurferRef.current.load(audioUrl).catch((error) => {
-        console.error("Error loading new audio:", error);
-      });
     }
-  }, [audioUrl]); // Re-run effect if audioUrl changes
 
-  // Callback to calculate zoom limits (memoized)
+    // load new url
+    setIsReady(false);
+    waveSurferRef.current
+      ?.load(audioUrl)
+      .catch((e) => console.error("Error loading new audio:", e));
+  }, [audioUrl, mdDown]);
+
   const calculateZoomLimits = useCallback(() => {
-    if (!waveSurferRef.current) return { minZoom: 0, maxZoom: 0 };
-
-    const duration = waveSurferRef.current.getDuration();
-    if (duration > 0 && waveformRef.current) {
-      const containerPx = waveformRef.current.offsetWidth;
-      // Define your zoom levels: e.g., base is 'whole audio fits container', max is '1 second per X pixels'
-      const minZoom = containerPx / duration; // Pixels per second for fully zoomed out
-      const maxZoom = 200; // Example: 200 pixels per second as max zoom in
-      // You can adjust these based on your UX needs.
+    const ws = waveSurferRef.current;
+    const el = waveformRef.current;
+    if (!ws || !el) return { minZoom: 0, maxZoom: 0 };
+    const duration = ws.getDuration();
+    const containerPx = el.offsetWidth;
+    if (duration > 0 && containerPx > 0) {
+      const minZoom = containerPx / duration;
+      const maxZoom = 200;
       return { minZoom, maxZoom };
     }
     return { minZoom: 0, maxZoom: 0 };
-  }, [isReady, containerWidth]); // Recalculate if containerWidth or ready state changes
+  }, []);
 
-  // Effect to set initial zoom level and calculate limits
   useEffect(() => {
     if (isReady && waveSurferRef.current && containerWidth !== null) {
-      // Ensure duration is available before calculating limits
-      const duration = waveSurferRef.current.getDuration();
-      if (duration > 0) {
-        const { minZoom, maxZoom } = calculateZoomLimits();
-        // Set initial zoom to fully zoomed out or a sensible default
-        setZoomLevel(minZoom);
-        console.log(`Initial zoom set to minZoom: ${minZoom}`);
-      }
+      const { minZoom } = calculateZoomLimits();
+      if (minZoom > 0) setZoomLevel(minZoom);
     }
-  }, [isReady, calculateZoomLimits, containerWidth]); // Depend on isReady and calculated limits
+  }, [isReady, calculateZoomLimits, containerWidth]);
 
-  // Effect for applying zoom level changes
   useEffect(() => {
-    // Only apply zoom if Wavesurfer is ready and zoomLevel is valid
     if (waveSurferRef.current && isReady && zoomLevel > 0) {
-      console.log(`Applying zoom: ${zoomLevel}`);
-      // Use requestAnimationFrame for smoother updates if zoomLevel changes frequently
-      requestAnimationFrame(() => {
-        waveSurferRef.current?.zoom(zoomLevel);
-      });
+      requestAnimationFrame(() => waveSurferRef.current?.zoom(zoomLevel));
     }
-  }, [zoomLevel, isReady]); // Depend on zoomLevel and isReady
+  }, [zoomLevel, isReady]);
 
-  // Effect to get container width for responsive scaling (optional)
   useEffect(() => {
     const handleResize = () => {
-      if (waveformRef.current) {
+      if (waveformRef.current)
         setContainerWidth(waveformRef.current.offsetWidth);
-      }
     };
-    if (waveformRef.current) {
-      setContainerWidth(waveformRef.current.offsetWidth);
-      window.addEventListener("resize", handleResize);
-    }
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handlePlayPause = () => {
-    if (waveSurferRef.current) {
-      waveSurferRef.current.playPause();
-      setIsPlaying(waveSurferRef.current.isPlaying());
-    }
+    const ws = waveSurferRef.current;
+    if (!ws) return;
+    ws.playPause();
+    setIsPlaying(ws.isPlaying());
   };
 
   const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newZoom = parseFloat(e.target.value);
-    setZoomLevel(newZoom);
+    setZoomLevel(parseFloat(e.target.value));
   };
 
-  const playIcon = (
-    <PlayCircle
-      sx={{ height: 64, width: 64, zIndex: 1, position: "relative" }}
-      onClick={handlePlayPause}
-    />
-  );
-
-  const pauseIcon = (
-    <PauseCircle
-      sx={{ height: 64, width: 64, zIndex: 1, position: "relative" }}
-      onClick={handlePlayPause}
-    />
-  );
+  const { minZoom, maxZoom } = calculateZoomLimits();
 
   return (
     <div>
-      <div ref={timelineRef} id="timeline-container"></div>
-      <div ref={waveformRef} id="waveform-container"></div>
-      <div ref={spectrogramRef} id="spectrogram-container"></div>
+      <div ref={timelineRef} id="timeline-container" />
+      <div ref={waveformRef} id="waveform-container" />
+      <div ref={spectrogramRef} id="spectrogram-container" />
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           width: "100%",
           padding: "16px",
+          alignItems: "center",
         }}
       >
-        {" "}
-        {isPlaying ? pauseIcon : playIcon}
-        <div style={{ width: "240px" }}>
+        {isPlaying ? (
+          <PauseCircle
+            sx={{ height: 64, width: 64, zIndex: 1, position: "relative" }}
+            onClick={handlePlayPause}
+          />
+        ) : (
+          <PlayCircle
+            sx={{ height: 64, width: 64, zIndex: 1, position: "relative" }}
+            onClick={handlePlayPause}
+          />
+        )}
+        <div style={{ width: 280 }}>
           <input
             type="range"
-            min={calculateZoomLimits().minZoom || 0} // Ensure min value is available
-            max={calculateZoomLimits().maxZoom || 100} // Ensure max value is available
-            value={zoomLevel}
+            min={minZoom || 0}
+            max={maxZoom || 100}
+            step={0.5}
+            value={zoomLevel || 0}
             onChange={handleZoomChange}
             disabled={!isReady}
+            style={{ width: "100%" }}
           />
-          <div>Zoom Level: {zoomLevel.toFixed(2)} px/sec</div>
+          <div>Zoom: {zoomLevel.toFixed(2)} px/sec</div>
           {containerWidth && zoomLevel > 0 && (
-            <div>
-              Seconds in window: {(containerWidth / zoomLevel).toFixed(2)} sec
-            </div>
+            <div>Window: {(containerWidth / zoomLevel).toFixed(2)} sec</div>
           )}
         </div>
       </div>
