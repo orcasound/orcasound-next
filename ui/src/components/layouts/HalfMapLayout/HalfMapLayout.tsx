@@ -95,11 +95,7 @@ export function HalfMapLayout({ children }: HalfMapLayoutProps) {
   const { nowPlayingFeed } = useNowPlaying();
   const isHome = router.asPath === mainTabs[0].href || router.asPath === "/";
   const isNode = router.query.feedSlug;
-  if (isNode) {
-    console.log(isNode);
-  } else {
-    console.log("no node");
-  }
+
   const isExplore = router.asPath === mainTabs[1].href;
   const isAction = router.asPath === mainTabs[2].href;
 

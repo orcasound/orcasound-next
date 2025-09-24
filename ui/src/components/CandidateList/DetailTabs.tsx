@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 
 import darkTheme from "@/styles/darkTheme";
 
-type Tab = {
+export type Tab = {
   label: string | undefined;
   value: string | undefined;
   content: React.ReactNode;
@@ -15,22 +15,22 @@ const DetailTabs = ({
   stickyTabs = false,
   spaceBetween = false,
 }: {
-  tabs: Tab[];
+  tabs: Tab[] | undefined;
   showTabs?: boolean;
   stickyTabs?: boolean;
   spaceBetween?: boolean;
 }) => {
   const mdDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
-  const [activeTab, setActiveTab] = useState<Tab | undefined>(tabs[0]);
+  const [activeTab, setActiveTab] = useState<Tab | undefined>(tabs?.[0]);
 
   // needs an extra useEffect to set default
   useEffect(() => {
-    if (tabs.length) setActiveTab(tabs[0]);
+    if (tabs?.length) setActiveTab(tabs[0]);
   }, [setActiveTab, tabs]);
 
   const handleTabClick = (e: React.MouseEvent<HTMLElement>) => {
-    const newTab = tabs.find((t) => t.value === e.currentTarget.dataset.value);
+    const newTab = tabs?.find((t) => t.value === e.currentTarget.dataset.value);
     setActiveTab(newTab);
   };
 

@@ -54,9 +54,6 @@ export const CandidatesStack = ({
     (d) => d.hydrophone !== "out of range",
   );
 
-  console.log("detections.length", detections.length);
-  console.log("detectionsAudible.length", detectionsAudible.length);
-
   function countString(detectionArray: CombinedData[]) {
     const categories = ["whale", "whale (AI)", "vessel", "other", "sighting"];
 
@@ -153,7 +150,7 @@ export const CandidatesStack = ({
           <Typography
             component="h2"
             variant="h6"
-            sx={{ mt: mdDown ? "0px" : "8px" }}
+            sx={{ lineHeight: 1.4, mt: mdDown ? "0px" : "8px" }}
           >
             {!mdDown &&
               timeRangeSelect.find((el) => el.value === filters.timeRange)

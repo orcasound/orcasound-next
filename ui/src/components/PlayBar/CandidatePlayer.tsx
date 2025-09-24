@@ -203,9 +203,6 @@ export function CandidatePlayer({
 
   const { analyser } = useAudioAnalyser(videoEl);
 
-  const [selectedMap, setSelectedMap] = useState("magma");
-  const [selectedScale, setSelectedScale] = useState<"linear" | "log">("log");
-
   return (
     <div className="playerbase" style={{ width: "100%" }}>
       <PlayerBase
