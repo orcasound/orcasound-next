@@ -1,8 +1,8 @@
 ## Orcasound Listening Experience
 
-React prototype: [https://orcasound-dashboard.vercel.app/beta](https://orcasound-dashboard.vercel.app/beta)
+React prototype: [https://next.orcasound.net/beta](https://next.orcasound.net/beta)
 
-UX case study: [https://www.adriandesigner.com/orcasound-listening-experience](https://www.adriandesigner.com/orcasound-listening-experience)
+UX case study: [https://www.adriandesigns.webflow.io/orcasound-listening-experience](https://www.adriandesigns.webflow.io/orcasound-listening-experience)
 
 ___
 
