@@ -3,7 +3,7 @@ import { gql, request } from "graphql-request";
 
 import { FeedSegment } from "@/graphql/generated";
 
-const endpoint = "https://live.orcasound.net/graphiql/";
+const endpoint = "https://live.orcasound.net/graphql/";
 
 type FeedSegmentsResponse = {
   feedSegments: {

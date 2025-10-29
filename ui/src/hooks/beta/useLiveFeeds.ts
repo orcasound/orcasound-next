@@ -4,7 +4,7 @@ import request, { gql } from "graphql-request";
 import { Feed } from "@/graphql/generated";
 
 // get data on human detections using endpoint directly (gives live data in dev)
-const orcasoundEndpoint = "https://live.orcasound.net/graphiql/";
+const orcasoundEndpoint = "https://live.orcasound.net/graphql/";
 
 const FEEDS_QUERY = gql`
   {

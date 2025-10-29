@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 import { FeedStream } from "@/graphql/generated";
 
-const endpoint = "https://live.orcasound.net/graphiql/";
+const endpoint = "https://live.orcasound.net/graphql/";
 
 type FeedStreamResponse = {
   feedStreams: {

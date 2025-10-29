@@ -3,7 +3,7 @@ import request, { gql } from "graphql-request";
 
 import { Detection } from "@/graphql/generated";
 
-const orcasoundEndpoint = "https://live.orcasound.net/graphiql/";
+const orcasoundEndpoint = "https://live.orcasound.net/graphql/";
 
 const DETECTIONS_QUERY = gql`
   query GetDetections($limit: Int!, $offset: Int!) {
