@@ -79,6 +79,13 @@ export const DataProvider = ({
 
   const filteredData = useFilteredData(data.combined, filters);
 
+  // console.log("DataContext human data", data.combined.length, "combined items");
+  // console.log("DataContext sample combined data:", data.combined.slice(0, 3));
+  // console.log("DataContext human data", data.human.length, "human items");
+  // console.log("DataContext sample human data:", data.human.slice(0, 3));
+  // console.log("DataContext filteredData", filteredData.length, "items");
+  // console.log("DataContext sample filteredData:", filteredData.slice(0, 3));
+
   const lastWhaleReport = (feed?: Feed | null) => {
     const reports = feed
       ? filteredData.filter((d) => d.feedId === feed?.id)
@@ -202,6 +209,8 @@ export const DataProvider = ({
 
   // controls if player starts when it is loaded -- initial page load sets to false
   const autoPlayOnReady = useRef(true);
+
+  // console.log("filteredData from DataContext rendered", filteredData.length, "items");
 
   return (
     <DataContext.Provider

@@ -7,7 +7,11 @@ const orcasoundEndpoint = "https://live.orcasound.net/graphql/";
 
 const DETECTIONS_QUERY = gql`
   query GetDetections($limit: Int!, $offset: Int!) {
-    detections(limit: $limit, offset: $offset) {
+    detections(
+      limit: $limit
+      offset: $offset
+      sort: { field: TIMESTAMP, order: DESC }
+    ) {
       results {
         id
         feedId

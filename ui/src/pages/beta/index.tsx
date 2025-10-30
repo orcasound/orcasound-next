@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 
-import { defaultRange } from "@/components/CandidateList/CandidateListFilters";
 import { HalfMapLayout } from "@/components/layouts/HalfMapLayout/HalfMapLayout";
 import { MasterDataLayout } from "@/components/layouts/MasterDataLayout";
 import { useData } from "@/context/DataContext";
@@ -13,14 +12,6 @@ function HomePage() {
   useEffect(() => {
     setPlaybarExpanded(false);
   }, [setPlaybarExpanded]);
-
-  useEffect(() => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      hydrophone: "All hydrophones",
-      timeRange: defaultRange,
-    }));
-  }, [setFilters]);
 
   return <></>;
 }
