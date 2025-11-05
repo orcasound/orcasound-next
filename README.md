@@ -1,8 +1,14 @@
-## Orcasound Listening Experience
+## Orcasound Next
 
+<<<<<<< HEAD
 React prototype: [https://next.orcasound.net/beta](https://next.orcasound.net/beta)
 
 UX case study: [https://www.adriandesigns.webflow.io/orcasound-listening-experience](https://www.adriandesigns.webflow.io/orcasound-listening-experience)
+=======
+React prototype: [https://next.orcasound.net](https://next.orcasound.net)
+
+UX case study: [https://adriandesigns.webflow.io/orcasound-listening-experience](https://adriandesigns.webflow.io/orcasound-listening-experience)
+>>>>>>> upstream/main
 
 ___
 
