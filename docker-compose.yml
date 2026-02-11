@@ -8,9 +8,10 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       - REDIS_HOST=cache
       - REDIS_PORT=6379
+      - SERVER_PORT=4001
     ports:
-      - "3000:3000"
-      - "4000:4000"
+      - "3001:3000"
+      - "4001:4000"
     depends_on:
       db:
         condition: service_healthy

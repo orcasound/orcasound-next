@@ -43,3 +43,11 @@ This prototype was built in React using:
 
 This is an experimental prototype used for testing ideas and generating feedback. The design is open source and still evolving. Contributions and collaborations welcome!
 
+### Local Devcontainer Ports
+
+This prototype intentionally uses different host ports than `orcasite` so both repos can run side by side.
+
+- UI: `http://localhost:3001` (container `3000`)
+- Server/API: `http://localhost:4001` (container `4000`)
+
+The defaults are configured in `docker-compose.yml` for this repo's devcontainer workflow.
