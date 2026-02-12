@@ -49,5 +49,8 @@ This prototype intentionally uses different host ports than `orcasite` so both r
 
 - UI: `http://localhost:3001` (container `3000`)
 - Server/API: `http://localhost:4001` (container `4000`)
+- Postgres: `localhost:5434` (container `5432`)
+- Redis: `localhost:6380` (container `6379`)
 
 The defaults are configured in `docker-compose.yml` for this repo's devcontainer workflow.
+You can override them with environment variables: `WEB_HOST_PORT`, `SERVER_HOST_PORT`, `DB_HOST_PORT`, and `CACHE_HOST_PORT`.
