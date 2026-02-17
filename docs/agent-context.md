@@ -396,3 +396,10 @@
 - Next step: Reload VS Code window once so ESLint server restarts with the new working directory setting.
 - Blockers/risks: `orcasite/.vscode/settings.json` is intentionally git-ignored, so teammates must apply equivalent local setting or use the provided `.vscode/settings.example.json`.
 - Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `6b512f7acbe518f59eeaa6331032b4c1c9209ac2` (short: `6b512f7`).
+
+## Milestone Update (2026-02-14, /existing build failure root-cause)
+- Current objective: Explain why `npm run build` fails with `Failed to collect page data for /existing`.
+- What changed: Traced import chain and confirmed build-time env guard in `ui/src/hooks/useTimestampFetcher.ts` throws when `NEXT_PUBLIC_S3_BUCKET` is unset. `/existing` uses `getMapLayout`, which imports `Player`, which imports `useTimestampFetcher`, so the module-level throw can fail page-data collection.
+- Next step: Provide either build env var in production build context (`.env.production`/`.env.local`) or move env guard from module scope into runtime-safe path.
+- Blockers/risks: Similar module-scope env guards exist (`NEXT_PUBLIC_GQL_ENDPOINT`, `NEXT_PUBLIC_SOCKET_ENDPOINT`) and can cause additional page-data collection failures if unset during build.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `6b512f7acbe518f59eeaa6331032b4c1c9209ac2` (short: `6b512f7`).
