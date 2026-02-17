@@ -23,3 +23,22 @@ services:
 
     # Overrides default command so things don't shut down after the process ends.
     command: /bin/sh -c "while sleep 1000; do :; done"
+    volumes:
+      - codex-home:/root/.codex
+
+volumes:
+  codex-home:
+    driver: local
+
+# Changes to persist the Codex auth/config directory across container restarts:
+# 1. Added named volume mount: codex-home:/root/.codex
+# 2. Added top-level named volume declaration.
+
+
+# What “persist the auth/config directory” means:
+
+# Normally, when you rebuild, the container filesystem is recreated.
+# Files under /root/.codex (tokens, settings, cached auth/session data) are lost unless mounted.
+# By mounting a named Docker volume to /root/.codex, that directory survives container rebuilds.
+# So next rebuild can reuse prior Codex config/login state from that volume.
+# Important caveat: This persists local credentials/config files, but if your account token/session is expired/revoked server-side, re-login can still be required.

@@ -8,9 +8,10 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       - REDIS_HOST=cache
       - REDIS_PORT=6379
+      - ORCASOUND_NEXT_UI_PORT=3001
       - SERVER_PORT=4001
     ports:
-      - "${WEB_HOST_PORT:-3001}:3000"
+      - "${WEB_HOST_PORT:-3001}:3001"
       - "${SERVER_HOST_PORT:-4001}:4000"
     depends_on:
       db:

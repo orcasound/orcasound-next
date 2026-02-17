@@ -8,4 +8,8 @@ services:
     depends_on:
       - db
     volumes:
-      - .:/app
+      - .:/workspaces/orcasound-next
+      - ../orcasite:/workspaces/orcasite
+      - ../../postoccupancy/esp32_ui:/workspaces/esp32_ui
+      - ../../postoccupancy/esp32_api:/workspaces/esp32_api
+
