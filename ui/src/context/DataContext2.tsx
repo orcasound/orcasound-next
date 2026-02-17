@@ -3,6 +3,7 @@ import React, {
   createContext,
   MutableRefObject,
   useContext,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -16,7 +17,11 @@ import { Candidate, CombinedData } from "@/types/DataTypes";
 
 import { useNowPlaying } from "./NowPlayingContext";
 
-// filters
+// This file is a bridge design for "DataContext + store split":
+// - useMasterData stays here (React Query composition remains in React hook land)
+// - UI-owned state is isolated in a separate provider shape (later replaceable with Zustand)
+// - DataContext outward API remains the same as DataContext.tsx
+
 export interface CandidateFilters {
   timeRange: number;
   timeIncrement: number;
@@ -39,7 +44,16 @@ type FeedCountData = {
 type FeedCounts = {
   [feedId: string]: FeedCountData;
 };
-interface DataContextType {
+
+interface DataUiState {
+  useLiveData: boolean;
+  setUseLiveData: React.Dispatch<React.SetStateAction<boolean>>;
+  filters: CandidateFilters;
+  setFilters: React.Dispatch<React.SetStateAction<CandidateFilters>>;
+  autoPlayOnReady: MutableRefObject<boolean>;
+}
+
+interface DataContext2Type {
   feeds: Feed[];
   filteredData: CombinedData[];
   reportCount: FeedCounts;
@@ -55,23 +69,11 @@ interface DataContextType {
   data: MasterData | null;
 }
 
-const DataContext = createContext<DataContextType | undefined>(undefined);
+const DataUiStateContext = createContext<DataUiState | undefined>(undefined);
+const DataContext2 = createContext<DataContext2Type | undefined>(undefined);
 
-export const DataProvider = ({
-  children,
-  // data,
-}: {
-  children: React.ReactNode;
-  // data: Dataset;
-}) => {
-  // use toggle switch in dev mode between live API data vs seed data
+function DataUiStateProvider({ children }: { children: React.ReactNode }) {
   const [useLiveData, setUseLiveData] = useState(true);
-  const data = useMasterData(useLiveData);
-
-  const feeds = data.feeds;
-  const isSuccessOrcahello = data.isSuccessOrcahello;
-  const { nowPlayingCandidate } = useNowPlaying();
-
   const [filters, setFilters] = useState<CandidateFilters>({
     timeRange: defaultRange,
     timeIncrement: 15,
@@ -84,6 +86,43 @@ export const DataProvider = ({
     chartLegend: "category",
     detectionsGreaterThan: 1,
   });
+  const autoPlayOnReady = useRef(true);
+
+  const value = useMemo(
+    () => ({
+      useLiveData,
+      setUseLiveData,
+      filters,
+      setFilters,
+      autoPlayOnReady,
+    }),
+    [useLiveData, filters],
+  );
+
+  return (
+    <DataUiStateContext.Provider value={value}>
+      {children}
+    </DataUiStateContext.Provider>
+  );
+}
+
+function useDataUiState(): DataUiState {
+  const context = useContext(DataUiStateContext);
+  if (!context) {
+    throw new Error("useDataUiState must be used within DataUiStateProvider");
+  }
+  return context;
+}
+
+function DataProviderInner({ children }: { children: React.ReactNode }) {
+  const { nowPlayingCandidate } = useNowPlaying();
+  const { useLiveData, setUseLiveData, filters, setFilters, autoPlayOnReady } =
+    useDataUiState();
+
+  // React Query composition stays in a React hook/provider boundary.
+  const data = useMasterData(useLiveData);
+  const feeds = data.feeds;
+  const isSuccessOrcahello = data.isSuccessOrcahello;
 
   const filteredData = useFilteredData(data.combined, filters);
 
@@ -100,10 +139,9 @@ export const DataProvider = ({
     const lastReportTime = Math.max(
       ...whaleReports.map((r) => new Date(r.timestampString).getTime()),
     );
-    const lastReport = whaleReports.find(
+    return whaleReports.find(
       (r) => new Date(r.timestampString).getTime() === lastReportTime,
     );
-    return lastReport;
   };
 
   const lastWhaleReportFeed =
@@ -121,7 +159,6 @@ export const DataProvider = ({
     endTimestamp?: string | null,
   ) => {
     const categories = [...new Set(filteredData.map((el) => el.newCategory))];
-
     const obj: FeedCounts = {
       all: { counts: {}, countString: "", shortCountString: "" },
     };
@@ -133,12 +170,12 @@ export const DataProvider = ({
     });
 
     for (const feedId in obj) {
-      categories.forEach((c) => {
-        obj[feedId]["counts"][c] = 0;
+      categories.forEach((category) => {
+        obj[feedId].counts[category] = 0;
       });
     }
 
-    const data =
+    const scopedData =
       !startTimestamp || !endTimestamp
         ? filteredData
         : filteredData.filter((d) => {
@@ -148,54 +185,51 @@ export const DataProvider = ({
             );
           });
 
-    data.forEach((d) => {
+    scopedData.forEach((d) => {
       if (
         d.feedId &&
         d.newCategory &&
         obj[d.feedId] &&
-        obj[d.feedId]["counts"][d.newCategory] != null
+        obj[d.feedId].counts[d.newCategory] != null
       ) {
-        obj.all["counts"][d.newCategory] += 1;
-        obj[d.feedId]["counts"][d.newCategory] += 1;
+        obj.all.counts[d.newCategory] += 1;
+        obj[d.feedId].counts[d.newCategory] += 1;
       }
     });
 
-    const countString = (obj: Record<string, number>) => {
-      const stringParts = [];
-      for (const key of Object.keys(obj)) {
-        if (typeof obj[key] === "number" && obj[key] > 0) {
-          stringParts.push(
-            `${obj[key]} ${key.toLowerCase()}${key === "SIGHTING" ? "s" : ""}`,
+    const countString = (counts: Record<string, number>) => {
+      const parts: string[] = [];
+      for (const key of Object.keys(counts)) {
+        if (counts[key] > 0) {
+          parts.push(
+            `${counts[key]} ${key.toLowerCase()}${key === "SIGHTING" ? "s" : ""}`,
           );
         }
       }
-      return stringParts.join(" · ");
+      return parts.join(" · ");
     };
 
-    const shortCountString = (obj: Record<string, number>) => {
-      const stringParts: string[] = [];
-      const shortCount = {
-        whale: 0,
-        vessel: 0,
-        other: 0,
-      };
-      for (const key of Object.keys(obj)) {
+    const shortCountString = (counts: Record<string, number>) => {
+      const parts: string[] = [];
+      const shortCounts = { whale: 0, vessel: 0, other: 0 };
+      for (const key of Object.keys(counts)) {
         if (key === "WHALE" || key === "WHALE (AI)" || key === "SIGHTING") {
-          shortCount.whale += obj[key];
+          shortCounts.whale += counts[key];
         } else if (key === "VESSEL") {
-          shortCount.vessel += obj[key];
+          shortCounts.vessel += counts[key];
         } else if (key === "OTHER") {
-          shortCount.other += obj[key];
+          shortCounts.other += counts[key];
         }
       }
-      Object.entries(shortCount).forEach(([key, count]) => {
-        stringParts.push(`${count} ${key}`);
+      Object.entries(shortCounts).forEach(([key, count]) => {
+        parts.push(`${count} ${key}`);
       });
-      return stringParts.join(" · ");
+      return parts.join(" · ");
     };
+
     for (const feed in obj) {
-      obj[feed].countString = countString(obj[feed]["counts"]);
-      obj[feed].shortCountString = shortCountString(obj[feed]["counts"]);
+      obj[feed].countString = countString(obj[feed].counts);
+      obj[feed].shortCountString = shortCountString(obj[feed].counts);
     }
 
     return obj;
@@ -208,13 +242,8 @@ export const DataProvider = ({
       )
     : reportCounter();
 
-  // controls if player starts when it is loaded -- initial page load sets to false
-  const autoPlayOnReady = useRef(true);
-
-  // console.log("filteredData from DataContext rendered", filteredData.length, "items");
-
   return (
-    <DataContext.Provider
+    <DataContext2.Provider
       value={{
         feeds,
         reportCount,
@@ -232,14 +261,22 @@ export const DataProvider = ({
       }}
     >
       {children}
-    </DataContext.Provider>
+    </DataContext2.Provider>
+  );
+}
+
+export const DataProvider2 = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <DataUiStateProvider>
+      <DataProviderInner>{children}</DataProviderInner>
+    </DataUiStateProvider>
   );
 };
 
-export const useData = (): DataContextType => {
-  const context = useContext(DataContext);
+export const useData2 = (): DataContext2Type => {
+  const context = useContext(DataContext2);
   if (!context) {
-    throw new Error("useData must be used within a DataContextProvider");
+    throw new Error("useData2 must be used within a DataProvider2");
   }
   return context;
 };

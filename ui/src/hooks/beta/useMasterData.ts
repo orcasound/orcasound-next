@@ -18,7 +18,7 @@ import { useLiveDetections1000 } from "./useLiveDetections1000";
 import { useLiveFeeds } from "./useLiveFeeds";
 import { useSightings } from "./useSightings";
 
-type MasterData = {
+export type MasterData = {
   human: HumanData[];
   ai: AIData[];
   sightings: Sighting[];

@@ -1,18 +1,18 @@
 import { Box, CssBaseline } from "@mui/material";
 import { ThemeProvider } from "@mui/material";
 import * as React from "react";
-import { useState } from "react";
 
 import { DataProvider } from "@/context/DataContext";
 import { LayoutProvider } from "@/context/LayoutContext";
 import { NowPlayingProvider } from "@/context/NowPlayingContext";
-import { useMasterData } from "@/hooks/beta/useMasterData";
 import darkTheme from "@/styles/darkTheme";
 
 export function MasterDataLayout({ children }: { children: React.ReactNode }) {
+  // const { useLiveData, setUseLiveData } = useData();
+  // const dataset = useMasterData(useLiveData);
+
   // use toggle switch in dev mode between live API data vs seed data
-  const [useLiveData, setUseLiveData] = useState(true);
-  const dataset = useMasterData(useLiveData);
+  // const [useLiveData, setUseLiveData] = useState(true);
 
   //// RENDER
 
@@ -32,7 +32,7 @@ export function MasterDataLayout({ children }: { children: React.ReactNode }) {
     >
       {process.env.NODE_ENV === "development" && (
         <button
-          onClick={() => setUseLiveData((prev) => !prev)}
+          // onClick={() => setUseLiveData((prev) => !prev)}
           style={{
             position: "fixed",
             zIndex: 10000,
@@ -41,13 +41,13 @@ export function MasterDataLayout({ children }: { children: React.ReactNode }) {
             background: "yellow",
           }}
         >
-          {useLiveData ? "Using LIVE data" : "Using SEED data"}
+          {/* {useLiveData ? "Using LIVE data" : "Using SEED data"} */}
         </button>
       )}
       <NowPlayingProvider>
         <ThemeProvider theme={darkTheme}>
           <CssBaseline />
-          <DataProvider data={dataset}>
+          <DataProvider>
             <LayoutProvider>{children}</LayoutProvider>
           </DataProvider>
         </ThemeProvider>
