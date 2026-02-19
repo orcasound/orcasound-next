@@ -34,13 +34,26 @@ import { formatTimestamp } from "@/utils/time";
 import CircularProgressWithLabel from "./CircularProgressWithLabel";
 import { DetectionsPlayer } from "./Player/DetectionsPlayer";
 
+type TableDetection = Pick<
+  Detection,
+  | "id"
+  | "playerOffset"
+  | "playlistTimestamp"
+  | "timestamp"
+  | "listenerCount"
+  | "category"
+  | "description"
+  | "visible"
+  | "sourceIp"
+>;
+
 export default function DetectionsTable({
   detections,
   feed,
   candidate,
   onDetectionUpdate,
 }: {
-  detections: Detection[];
+  detections: TableDetection[];
   feed: Pick<Feed, "slug" | "nodeName" | "bucket">;
   candidate: Pick<Candidate, "id" | "visible">;
   onDetectionUpdate: () => void;

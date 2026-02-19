@@ -25,7 +25,7 @@ export default function useFilteredData(
 
       return (
         // uncomment this to block Orcahello data
-        // el.type === "human" &&
+        // el.type === "audio" &&
         (filters.hydrophone === "All hydrophones" ||
           el.hydrophone === filters.hydrophone) &&
         (filters.category === "All categories" ||
