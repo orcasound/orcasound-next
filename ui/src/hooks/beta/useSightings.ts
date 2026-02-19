@@ -21,7 +21,7 @@ type SightingsDataResponse = {
 const fetchCascadiaData = async (): Promise<SightingsDataResponse> => {
   const response = await fetch(constructUrl(endpointCascadia, paramsCascadia));
   if (!response.ok) {
-    throw new Error("Network response from Orcahello was not ok");
+    throw new Error("Network response from URL was not ok");
   }
   return response.json();
 };

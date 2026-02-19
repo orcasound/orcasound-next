@@ -16,7 +16,7 @@ export function CandidatesResults({
   // feed?: Feed;
   candidates: Candidate[];
 }) {
-  const { setFilters, filters, isSuccessOrcahello } = useData();
+  const { setFilters, filters } = useData();
 
   const chartSelect = (
     <ChartSelect
@@ -82,9 +82,6 @@ export function CandidatesResults({
       {layout !== "grid" && (
         <Typography sx={{ fontSize: "14px" }}>
           Showing {candidates.length}{" "}
-          {!isSuccessOrcahello
-            ? "candidates, checking Orcahello..."
-            : "candidates"}
         </Typography>
       )}
 
