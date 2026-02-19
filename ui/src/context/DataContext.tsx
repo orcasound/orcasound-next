@@ -46,7 +46,6 @@ interface DataContextType {
   sortedCandidates: Candidate[];
   filters: CandidateFilters;
   setFilters: React.Dispatch<React.SetStateAction<CandidateFilters>>;
-  isSuccessOrcahello: boolean;
   autoPlayOnReady: MutableRefObject<boolean>;
   lastWhaleReport: (feed?: Feed | null) => CombinedData | undefined;
   lastWhaleReportFeed: Feed | null;
@@ -69,7 +68,6 @@ export const DataProvider = ({
   const data = useMasterData(useLiveData);
 
   const feeds = data.feeds;
-  const isSuccessOrcahello = data.isSuccessOrcahello;
   const { nowPlayingCandidate } = useNowPlaying();
 
   const [filters, setFilters] = useState<CandidateFilters>({
@@ -222,7 +220,6 @@ export const DataProvider = ({
         sortedCandidates,
         filters,
         setFilters,
-        isSuccessOrcahello,
         autoPlayOnReady,
         lastWhaleReport,
         lastWhaleReportFeed,

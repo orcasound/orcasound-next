@@ -1,46 +1,40 @@
 import { Detection, Feed } from "@/graphql/generated";
-import {
-  AIData,
-  AIDetection,
-  CascadiaSighting,
-  HumanData,
-  Sighting,
-} from "@/types/DataTypes";
+import { AudioDetection, CascadiaSighting, Sighting } from "@/types/DataTypes";
 import {
   lookupFeedId,
   lookupFeedName,
   standardizeFeedName,
 } from "@/utils/masterDataHelpers";
 
+const toAudioCategory = (
+  detection: Detection,
+): AudioDetection["newCategory"] => {
+  if (detection.source === "MACHINE") return "WHALE (AI)";
+
+  switch (detection.category) {
+    case "WHALE":
+    case "VESSEL":
+    case "OTHER":
+      return detection.category;
+    default:
+      return "uncategorized";
+  }
+};
+
 export function transformHuman(
-  humanDetections: Detection[],
+  detections: Detection[],
   feeds: Feed[],
-): HumanData[] {
+): AudioDetection[] {
   if (!feeds.length) return [];
-  return humanDetections.map((el) => ({
+
+  return detections.map((el) => ({
     ...el,
-    type: "human",
+    type: "audio",
     hydrophone: lookupFeedName(el.feedId!, feeds),
     comments: el.description,
-    newCategory: el.category!,
+    newCategory: toAudioCategory(el),
     timestampString: el.timestamp.toString(),
   }));
-}
-
-export function transformAI(
-  aiDetections: AIDetection[],
-  feeds: Feed[],
-): AIData[] {
-  return (
-    aiDetections?.map((el) => ({
-      ...el,
-      type: "ai",
-      hydrophone: standardizeFeedName(el.location.name),
-      feedId: lookupFeedId(standardizeFeedName(el.location.name), feeds ?? []),
-      newCategory: "WHALE (AI)",
-      timestampString: el.timestamp.toString(),
-    })) ?? []
-  );
 }
 
 export function transformSightings(

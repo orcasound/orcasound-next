@@ -6,25 +6,21 @@ import {
   useDetectionsQuery,
   useFeedsQuery,
 } from "@/graphql/generated";
-import { AIData, CombinedData, HumanData, Sighting } from "@/types/DataTypes";
+import { AudioDetection, CombinedData, Sighting } from "@/types/DataTypes";
 
 import {
-  transformAI,
   transformHuman,
   transformSightings,
 } from "../../utils/masterDataTransforms";
-import { useAIDetections } from "./useAIDetections";
 import { useLiveDetections1000 } from "./useLiveDetections1000";
 import { useLiveFeeds } from "./useLiveFeeds";
 import { useSightings } from "./useSightings";
 
 export type MasterData = {
-  human: HumanData[];
-  ai: AIData[];
+  audio: AudioDetection[];
   sightings: Sighting[];
   combined: CombinedData[];
   feeds: Feed[];
-  isSuccessOrcahello: boolean;
 };
 
 export function useMasterData(useLiveData: boolean): MasterData {
@@ -34,7 +30,7 @@ export function useMasterData(useLiveData: boolean): MasterData {
   // const liveDetections = useLiveDetections().data?.detections?.results ?? [];
   const liveDetections = useLiveDetections1000().data ?? [];
 
-  const humanDetections = useLiveData
+  const audioDetections = useLiveData
     ? liveDetections
     : (seedDetections as Detection[]);
 
@@ -43,22 +39,12 @@ export function useMasterData(useLiveData: boolean): MasterData {
   const feeds = useLiveData ? liveFeeds : (seedFeeds as Feed[]);
 
   // standardize data
-  const datasetHuman = useMemo(
-    () => transformHuman(humanDetections, feeds),
-    [humanDetections, feeds],
+  const datasetAudio = useMemo(
+    () => transformHuman(audioDetections, feeds),
+    [audioDetections, feeds],
   );
 
-  //// ORCAHELLO
-  // get detections
-  const { data: aiDetections = [], isSuccess: aiSuccess } = useAIDetections();
-
-  // standardize data
-  const datasetAI = useMemo(
-    () => transformAI(aiDetections, feeds),
-    [aiDetections, feeds],
-  );
-
-  //// CASCADIA.IO
+  //// ACARTIA sightings
   // get detections
   const { data: sightingsData, isSuccess: isSuccessSightings } = useSightings();
   const dataSightings = useMemo(
@@ -72,27 +58,17 @@ export function useMasterData(useLiveData: boolean): MasterData {
   );
 
   const combined: CombinedData[] = useMemo(() => {
-    return [...datasetHuman, ...datasetAI, ...datasetSightings];
-  }, [datasetHuman, datasetAI, datasetSightings]);
+    return [...datasetAudio, ...datasetSightings];
+  }, [datasetAudio, datasetSightings]);
 
   const dataset = useMemo(() => {
     return {
-      human: datasetHuman,
-      ai: datasetAI,
+      audio: datasetAudio,
       sightings: datasetSightings,
       combined: combined,
       feeds: feeds,
-      isSuccessOrcahello: aiSuccess,
       isSuccessSightings: isSuccessSightings,
     };
-  }, [
-    datasetHuman,
-    datasetAI,
-    datasetSightings,
-    combined,
-    feeds,
-    aiSuccess,
-    isSuccessSightings,
-  ]);
+  }, [datasetAudio, datasetSightings, combined, feeds, isSuccessSightings]);
   return dataset;
 }

@@ -4,11 +4,12 @@ import { Candidate, CombinedData } from "@/types/DataTypes";
 import { cleanSightingsDescription } from "@/utils/masterDataHelpers";
 
 export const countCategories = (
-  arr: { newCategory: string }[],
+  arr: { newCategory?: string | null }[],
   cat: string,
 ) => {
-  return arr.filter((d) => d.newCategory.toLowerCase() === cat.toLowerCase())
-    .length;
+  return arr.filter(
+    (d) => (d.newCategory ?? "").toLowerCase() === cat.toLowerCase(),
+  ).length;
 };
 
 const offsetPadding = 15;
@@ -32,8 +33,8 @@ const subtractSeconds = (dateString: string, secondsToAdd: number) => {
 // --- NEW: map per-detection category to a 3-way bucket
 type BucketType = "whale" | "vessel" | "other";
 const WHALE_BUCKET = new Set(["whale", "whale (ai)", "sighting"]);
-const toBucket = (cat: string): BucketType => {
-  const c = cat.toLowerCase();
+const toBucket = (cat?: string | null): BucketType => {
+  const c = (cat ?? "").toLowerCase();
   if (WHALE_BUCKET.has(c)) return "whale";
   if (c === "vessel") return "vessel";
   // treat anything else as "other" by design

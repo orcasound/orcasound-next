@@ -1,35 +1,12 @@
 import { Dispatch, SetStateAction } from "react";
 
-import { Detection, Feed, Scalars } from "@/graphql/generated";
+import { Detection, Feed } from "@/graphql/generated";
 
-export interface HumanData extends Omit<Detection, "candidate"> {
-  type: "human";
+export interface AudioDetection extends Omit<Detection, "candidate"> {
+  type: "audio";
   hydrophone: string;
   comments: string | null | undefined;
-  newCategory: "WHALE" | "VESSEL" | "OTHER";
-  timestampString: string;
-}
-
-export interface AIDetection {
-  id: string;
-  audioUri: string;
-  spectrogramUri: string;
-  location: Location;
-  timestamp: Scalars["DateTime"]["output"];
-  annotations: Annotation[];
-  reviewed: boolean;
-  found: string;
-  comments: string | null | undefined;
-  confidence: number;
-  moderator: string;
-  moderated: string | number; // string for Orcahello, number for Cascadia
-  tags: string;
-}
-export interface AIData extends AIDetection {
-  type: "ai";
-  hydrophone: string;
-  feedId: string;
-  newCategory: "WHALE (AI)";
+  newCategory: "WHALE" | "VESSEL" | "OTHER" | "WHALE (AI)" | string;
   timestampString: string;
 }
 
@@ -65,15 +42,13 @@ export interface Sighting extends CascadiaSighting {
   timestampString: string;
 }
 
-export type CombinedData = HumanData | AIData | Sighting;
+export type CombinedData = AudioDetection | Sighting;
 
 export interface Dataset {
-  human: HumanData[];
-  ai: AIData[];
+  audio: AudioDetection[];
   sightings: Sighting[];
   combined: CombinedData[];
   feeds: Feed[];
-  isSuccessOrcahello: boolean;
   setNowPlaying?: Dispatch<SetStateAction<Candidate>>;
 }
 
