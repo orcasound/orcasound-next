@@ -13,6 +13,7 @@ const toAudioCategory = (
 
   switch (detection.category) {
     case "WHALE":
+      return "WHALE (HUMAN)";
     case "VESSEL":
     case "OTHER":
       return detection.category;

@@ -31,7 +31,7 @@ export default function useFilteredData(
         (filters.category === "All categories" ||
           category === filters.category ||
           (filters.category === "whale + whale (ai) + sightings" &&
-            ["whale", "whale (ai)", "sighting"].includes(category))) &&
+            ["whale (human)", "whale (ai)", "sighting"].includes(category))) &&
         (filters.timeRange === allTime ||
           filters.timeRange === customRange ||
           Date.parse(el.timestampString) >= min) &&

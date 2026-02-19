@@ -55,7 +55,13 @@ export const CandidatesStack = ({
   );
 
   function countString(detectionArray: CombinedData[]) {
-    const categories = ["whale", "whale (AI)", "vessel", "other", "sighting"];
+    const categories = [
+      "whale (human)",
+      "whale (AI)",
+      "vessel",
+      "other",
+      "sighting",
+    ];
 
     const items = categories
       .map((category) => {

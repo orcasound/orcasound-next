@@ -149,7 +149,7 @@ export default function ReportsBarChart({
           const category = detections[i].newCategory.toLowerCase();
 
           switch (category) {
-            case "whale":
+            case "whale (human)":
               chartItem.whale += 1;
               break;
             case "vessel":

@@ -91,7 +91,7 @@ export const DataProvider = ({
       : filteredData;
     const whaleReports = reports.filter(
       (d) =>
-        d.newCategory === "WHALE" ||
+        d.newCategory === "WHALE (HUMAN)" ||
         d.newCategory === "WHALE (AI)" ||
         d.newCategory === "SIGHTING",
     );
@@ -178,7 +178,11 @@ export const DataProvider = ({
         other: 0,
       };
       for (const key of Object.keys(obj)) {
-        if (key === "WHALE" || key === "WHALE (AI)" || key === "SIGHTING") {
+        if (
+          key === "WHALE (HUMAN)" ||
+          key === "WHALE (AI)" ||
+          key === "SIGHTING"
+        ) {
           shortCount.whale += obj[key];
         } else if (key === "VESSEL") {
           shortCount.vessel += obj[key];

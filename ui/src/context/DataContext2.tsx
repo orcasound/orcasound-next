@@ -60,7 +60,6 @@ interface DataContext2Type {
   sortedCandidates: Candidate[];
   filters: CandidateFilters;
   setFilters: React.Dispatch<React.SetStateAction<CandidateFilters>>;
-  isSuccessOrcahello: boolean;
   autoPlayOnReady: MutableRefObject<boolean>;
   lastWhaleReport: (feed?: Feed | null) => CombinedData | undefined;
   lastWhaleReportFeed: Feed | null;
@@ -122,7 +121,6 @@ function DataProviderInner({ children }: { children: React.ReactNode }) {
   // React Query composition stays in a React hook/provider boundary.
   const data = useMasterData(useLiveData);
   const feeds = data.feeds;
-  const isSuccessOrcahello = data.isSuccessOrcahello;
 
   const filteredData = useFilteredData(data.combined, filters);
 
@@ -132,7 +130,7 @@ function DataProviderInner({ children }: { children: React.ReactNode }) {
       : filteredData;
     const whaleReports = reports.filter(
       (d) =>
-        d.newCategory === "WHALE" ||
+        d.newCategory === "WHALE (HUMAN)" ||
         d.newCategory === "WHALE (AI)" ||
         d.newCategory === "SIGHTING",
     );
@@ -251,7 +249,6 @@ function DataProviderInner({ children }: { children: React.ReactNode }) {
         sortedCandidates,
         filters,
         setFilters,
-        isSuccessOrcahello,
         autoPlayOnReady,
         lastWhaleReport,
         lastWhaleReportFeed,

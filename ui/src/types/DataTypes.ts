@@ -6,7 +6,7 @@ export interface AudioDetection extends Omit<Detection, "candidate"> {
   type: "audio";
   hydrophone: string;
   comments: string | null | undefined;
-  newCategory: "WHALE" | "VESSEL" | "OTHER" | "WHALE (AI)" | string;
+  newCategory: "WHALE (HUMAN)" | "VESSEL" | "OTHER" | "WHALE (AI)" | string;
   timestampString: string;
 }
 
