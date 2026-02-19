@@ -34,6 +34,12 @@ defmodule Orcasite.Radio.Detection do
     attribute :description, :string, public?: true
     attribute :visible, :boolean, default: true, public?: true
 
+    attribute :source, __MODULE__.Types.Source do
+      default :human
+      allow_nil? false
+      public? true
+    end
+
     attribute :category, Orcasite.Types.DetectionCategory do
       # TODO: Figure out what to do with old detections
       # without a category
