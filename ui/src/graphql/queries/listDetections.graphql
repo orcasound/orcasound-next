@@ -23,6 +23,7 @@ query detections(
       playerOffset
       playlistTimestamp
       timestamp
+      source
       candidate {
         id
       }
