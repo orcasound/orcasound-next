@@ -523,3 +523,17 @@
 - Next step: Restart running Phoenix server process and re-check `/graphiql` introspection/query results from host browser.
 - Blockers/risks: Existing running server instance may still be stale until restarted.
 - Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-19, `NewMap` union-narrowing diagnosis)
+- Current objective: Explain why `CombinedData` in `NewMap` does not expose sighting-only fields (`created`, `latitude`, `longitude`) despite filtering sightings.
+- What changed: Confirmed TS errors in `NewMap` are due to insufficient union narrowing: `AudioDetection.newCategory` includes a broad `string`, so checking `newCategory === "SIGHTING"` does not prove the value is `Sighting`.
+- Next step: Narrow by discriminant (`type === "sightings"`) via type-guard predicate, and/or tighten `AudioDetection.newCategory` to literal union without broad `string`.
+- Blockers/risks: Keeping `| string` on `AudioDetection.newCategory` will keep undermining reliable type narrowing across the codebase.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `useMasterData-refactor` @ `7879f022ce5447be8f9f9684f139b7f3ece3e226` (short: `7879f02`).
+
+## Milestone Update (2026-02-19, reports detection typing fix)
+- Current objective: Fix TypeScript error in `src/pages/reports/[candidateId].tsx` where candidate query detections were not assignable to `DetectionsTable` prop type.
+- What changed: Updated `ui/src/components/DetectionsTable.tsx` to accept a narrowed `TableDetection` shape (`Pick<Detection, ...>`) matching fields actually used by the table, and removed synthetic detection field injection in `ui/src/pages/reports/[candidateId].tsx` so it passes `candidate.detections` directly.
+- Next step: Keep `DetectionsTable` props tied to query/usage fields (not full schema object requirements) to avoid similar operation-type mismatches.
+- Blockers/risks: None; `npx tsc --noEmit` now passes.
+- Branch and latest commit hash: `useMasterData-refactor` @ `e02c2433465fabc3286c6600fc00072e4fea5f5f` (short: `e02c243`).
