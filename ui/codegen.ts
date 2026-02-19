@@ -1,8 +1,8 @@
 import { CodegenConfig } from "@graphql-codegen/cli";
 
 const config: CodegenConfig = {
-  schema: "http://localhost:4000/graphql",
-  // schema: "https://live.orcasound.net/graphql",
+  // schema: "http://localhost:4000/graphql",
+  schema: "https://live.orcasound.net/graphql",
   documents: [
     "src/**/*.{graphql,js,ts,jsx,tsx}",
     "!src/graphql/generated/**/*",

@@ -403,3 +403,123 @@
 - Next step: Provide either build env var in production build context (`.env.production`/`.env.local`) or move env guard from module scope into runtime-safe path.
 - Blockers/risks: Similar module-scope env guards exist (`NEXT_PUBLIC_GQL_ENDPOINT`, `NEXT_PUBLIC_SOCKET_ENDPOINT`) and can cause additional page-data collection failures if unset during build.
 - Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `6b512f7acbe518f59eeaa6331032b4c1c9209ac2` (short: `6b512f7`).
+
+## Milestone Update (2026-02-17, step-4 feature-track integration design completed)
+- Current objective: Complete Step 4 of the architecture walkthrough in parallel for `orcasound-next` and `esp32_ui`.
+- What changed: Added `docs/architecture/feature-track-integration-design.md` in both repos with explicit current->target data boundary design, page/hook/store mapping matrices, hook/client inventories, store ownership rules, and manual migration checklists. Updated both `docs/architecture/README.md` files to link the Step 4 deliverable, mark Step 4 complete, and set Step 5 as the active focus.
+- Next step: Execute Step 5 by documenting AI boundary orchestration (UI route/server boundary/backend streaming contract) in mirrored docs.
+- Blockers/risks: Several mappings still depend on unresolved endpoint contract details (especially telemetry/alerts and AI-adjacent fields), so Step 6 contract hygiene remains a prerequisite for final implementation sequencing.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `6b512f7acbe518f59eeaa6331032b4c1c9209ac2` (short: `6b512f7`).
+
+## Milestone Update (2026-02-17, Step 4 deep-dive: adapter vs backend integration)
+- Current objective: Answer architecture questions on DTO/domain adapters, frontend-vs-backend transforms, and `orcasite/server` Orcahello machine-detection integration.
+- What changed: Re-validated backend implementation details in `orcasite/server` (`Detection` resource, JSON:API routes, machine submission policy/tests, feed `orcahello_id` metadata) and confirmed the current pattern is authenticated machine-ingestion into `/api/json/detections` with `source: machine`, not an obvious server-side Orcahello polling client in the inspected code.
+- Next step: Provide a decision-ready frontend/backend boundary recommendation and PR strategy for `orcasite` and `esp32_ui` with parallel architecture.
+- Blockers/risks: Need backend-team confirmation on where Orcahello client jobs run if outside this repo/process.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `8b88858f6f7e6b4d6683b4f4f76f9108f7769c87` (short: `8b88858`).
+- Correction: latest commit hash for this milestone is `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-17, detailed `useMasterData` refactor guidance)
+- Current objective: Provide detailed, implementation-level guidance for `orcasound-next` adapter refactor checklist questions (`DataTypes`, `masterDataTransforms`, unified detections, testing approach).
+- What changed: Verified current code state: canonical types exist in `ui/src/types/DataTypes.ts`, pure transforms exist in `ui/src/utils/masterDataTransforms.ts`, orchestration exists in `ui/src/hooks/beta/useMasterData.ts`, and there is currently no app-level unit test harness in `ui` (only `node_modules` tests discovered).
+- Next step: Use this baseline to define precise changes for unified detection stream and add adapter unit tests before behavior changes.
+- Blockers/risks: Existing type model still reflects old split human/AI shape and will require careful migration to avoid downstream breakage.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-17, orcasite no-data + `/seed` 404 diagnosis)
+- Current objective: Explain why `orcasite` UI/server show no data and why `/seed` resolves to 404 without changing repo `.env.development`.
+- What changed: Verified `/workspaces/orcasite/ui/src/pages/seed.tsx` exists and intentionally returns `notFound` unless `process.env.ENABLE_SEED_FROM_PROD === "true"` in `getStaticProps`. Confirmed GraphQL data endpoint in this session responds on `http://localhost:4000/graphql` (not `4001`) and currently returns empty `feeds`.
+- Next step: Run UI with explicit runtime env (`ENABLE_SEED_FROM_PROD=true`) and align UI GraphQL endpoint to the actual server port for the active workspace/session.
+- Blockers/risks: Current `.env.development` uses shell-style default expansion (`${SERVER_PORT:-4000}`), which may not be expanded by the UI runtime depending on launch path.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-17, root-cause found for orcasite seed no-data)
+- Current objective: Resolve why `/seed` reports success but no data appears in `orcasite` UI/GraphQL.
+- What changed: Reproduced seed pipeline directly and found hard failure in `Orcasite.Radio.Seed.feeds!()` due to `maintainer_emails` being present in upstream feed payload but not accepted by local `Orcasite.Radio.Feed.create` action (`No such input maintainer_emails`). Verified upstream prod GraphQL feed data is reachable and non-empty.
+- Next step: Patch feed seeding compatibility (either accept `maintainer_emails` in `Feed.create` or filter to action-accepted attrs in seed conversion), then rerun feed seed followed by resource seed.
+- Blockers/risks: `seed_all` currently calls `feeds()` non-bang and proceeds, which can mask feed seed failure and produce apparent success with no local data.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-17, GraphiQL detections query mismatch guidance)
+- Current objective: Explain why a manually pasted detections GraphQL query failed in GraphiQL.
+- What changed: Compared user query to repo-generated operations in `ui/src/graphql/queries/listDetections.graphql` and generated types. Confirmed canonical query shape includes `count`, `hasNextPage`, and `candidate { id }`; user-added nested fields (`candidate.feedId`, `feed { ... }`) may fail on some schema snapshots.
+- Next step: Use the exact generated query first, then add extra nested fields incrementally while checking schema docs for each field.
+- Blockers/risks: Cannot directly inspect the user's running GraphiQL schema endpoint from this execution environment.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-18, ReverseProxyPlug econnrefused root cause)
+- Current objective: Diagnose `localhost:4001` reverse proxy failures while running `orcasound-next/server`.
+- What changed: Confirmed `OrcasiteWeb.Router` proxies `/` to `http://localhost:${UI_PORT}` and current env has `UI_PORT=3000`, while Next UI process is running on port `3001` (`next dev -p 3001`). This mismatch causes `ReverseProxyPlug network error :econnrefused` and HTTP 502 on `/`.
+- Next step: Align server proxy target with actual Next port (set `UI_PORT=3001` when starting server, or update router fallback logic to use `ORCASOUND_NEXT_UI_PORT`).
+- Blockers/risks: If only one of the two vars is changed, future restarts can regress to port mismatch.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-18, reverse proxy port precedence fix)
+- Current objective: Eliminate repeated `ReverseProxyPlug :econnrefused` on `/` caused by UI port mismatch in `orcasound-next`.
+- What changed: Updated `server/lib/orcasite_web/router.ex` so reverse proxy now resolves UI port in this order: `ORCASOUND_NEXT_UI_PORT`, then `UI_PORT`, then `3000`. This aligns server proxy behavior with `ui/package.json` (`next dev -p ${ORCASOUND_NEXT_UI_PORT:-3001}`). Verified compile succeeds.
+- Next step: Restart Phoenix and Next processes so the new router code and env selection take effect.
+- Blockers/risks: Existing running server process may still be using old compiled/router state until restarted.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-18, detection `source` typing gap diagnosis)
+- Current objective: Explain how to get new `Detection.source` from `orcasite` schema into `orcasound-next` and why TS behavior differs across hooks/transforms.
+- What changed: Verified `orcasound-next/ui/codegen.ts` still points to `http://localhost:4000/graphql`; generated `Detection` type lacks `source` (only `sourceIp`). Confirmed ad-hoc `graphql-request` hooks (`useLiveDetections*`) include `source` in query string but cast response to `Detection[]`, so extra fields are accepted yet inaccessible on the `Detection` type.
+- Next step: Regenerate codegen against a schema that includes `Detection.source` (no git pull required), then update affected transforms/hooks to use updated generated types or operation-level result types.
+- Blockers/risks: If codegen runs against stale local schema, `source` will remain absent and TS errors in transforms will persist.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-18, codegen validation fix + detection source regen)
+- Current objective: Unblock GraphQL codegen in `orcasound-next/ui` and regenerate types with new `Detection.source` field.
+- What changed: Renamed four anonymous ad-hoc query documents to named operations in `useFeedSegments.tsx`, `useFeedStreams.tsx`, `useLiveDetections.ts`, and `useLiveFeeds.ts`. Re-ran `npm run codegen` successfully against `https://live.orcasound.net/graphql`; generated `Detection` now includes `source: DetectionSource`.
+- Next step: Update transform/hook logic to branch on `detection.source` and replace temporary assumptions around AI-vs-human source handling.
+- Blockers/risks: `typescript-react-query` still ignores subscription operations (existing warning), unrelated to this fix.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-18, hook type fixes for optional detection category)
+- Current objective: Resolve TypeScript errors in `useFilteredData` and `useSortedCandidates`.
+- What changed: Updated both hooks to safely handle optional `newCategory` values introduced by current `AudioDetection` typing. `useFilteredData` now normalizes category via fallback string before comparisons/search. `useSortedCandidates` now accepts optional category values in `countCategories` and `toBucket`.
+- Next step: Continue cleaning remaining repo-wide TypeScript errors unrelated to these two hooks (`DataTypes`/transform naming drift, report-page fragment typing, etc.).
+- Blockers/risks: Project still has additional TS errors outside the two requested files.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-18, `masterDataTransforms` type-alignment fix)
+- Current objective: Resolve TypeScript errors in `ui/src/utils/masterDataTransforms.ts` after data-model migration.
+- What changed: Replaced stale `AIData`/`AIDetection`/`HumanData` imports with current `AudioDetection` model, removed unused `transformAI`, and updated `transformHuman` output to `type: "audio"` plus `newCategory` mapping from backend `source` (`MACHINE` whale -> `WHALE (AI)`). Restored `standardizeFeedName` import used by sightings transform. Verified no remaining TS errors for `masterDataTransforms`.
+- Next step: Continue resolving remaining repo-wide TS errors unrelated to this file (context/report-page typing, deprecated AI hook imports).
+- Blockers/risks: `useAIDetections` and other files still reference removed `AIData` types and need cleanup.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-18, `masterDataTransforms` current-error recheck and fix)
+- Current objective: Re-check and resolve current TypeScript error in `ui/src/utils/masterDataTransforms.ts` after user noted stale analysis.
+- What changed: Re-ran focused typecheck and confirmed current error was `newCategory` possibly undefined in `transformHuman`. Added `toAudioCategory` normalizer that maps backend `Detection` safely to `AudioDetection["newCategory"]` with machine-source handling and fallback to `OTHER`. Verified no remaining TS error in `masterDataTransforms`.
+- Next step: Continue resolving remaining project-wide TypeScript errors outside this file as needed.
+- Blockers/risks: None for this file; other files still have independent TS issues.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-18, local GraphiQL vs UI schema mismatch)
+- Current objective: Explain why `source` appears in `/json` after codegen but not in local `/graphiql`.
+- What changed: Verified `ui/codegen.ts` currently targets `https://live.orcasound.net/graphql`, while local backend resource file `server/lib/orcasite/radio/detection.ex` does not currently define a `source` attribute (only `source_ip`).
+- Next step: Either point runtime/UI to live API consistently, or backport server-side `Detection.source` changes into local `orcasound-next/server` and restart Phoenix so local GraphiQL schema includes `source`.
+- Blockers/risks: Frontend-generated types can drift from local backend schema when codegen source and runtime backend are different endpoints.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-18, server update strategy for `Detection.source`)
+- Current objective: Recommend how to update local server schema so GraphiQL exposes `Detection.source`.
+- What changed: Provided a low-risk git strategy: prefer selective cherry-pick of server schema/migration commits from `main` (or manual backport) over broad branch merge, with validation steps.
+- Next step: Identify commit(s) on `main` that add detection `source`, cherry-pick onto feature branch, run migrations, restart server, and introspect `Detection` fields in GraphiQL.
+- Blockers/risks: Full merge may pull unrelated frontend/docs changes and increase conflict surface.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-18, cross-repo server diff inventory)
+- Current objective: Determine whether `orcasound-next/server` and `orcasite/server` are effectively identical.
+- What changed: Ran directory-level file-hash diff (excluding build artifacts). Result: `61` changed shared files, `52` files only in `orcasite/server`, `6` files only in `orcasound-next/server`. Verified key divergence includes `Detection.source`/machine-ingest implementation and multiple newer migrations present only in `orcasite`.
+- Next step: Prefer selective cherry-pick/backport of specific server commits (e.g., detection source + dependent migrations/types) rather than copying full server directory.
+- Blockers/risks: Full folder copy would import many unrelated backend/auth/seed/listener-count changes and migrations, raising conflict and runtime risk.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).
+
+## Milestone Update (2026-02-19, targeted server backport applied for `Detection.source`)
+- Current objective: Execute minimal backend backport so local `orcasound-next/server` GraphQL exposes `Detection.source`.
+- What changed: Added `Detection.Types.Source` enum module, added `source` attribute to `lib/orcasite/radio/detection.ex`, and added migration `20250630015604_add_source_to_detections.exs` to create `detections.source` with default `human`. Ran `mix compile` and `mix ecto.migrate` successfully. Verified schema fields include `:source` via Absinthe introspection.
+- Next step: Restart running Phoenix server process and re-check `/graphiql` introspection/query results from host browser.
+- Blockers/risks: Existing running server instance may still be stale until restarted.
+- Branch and latest commit hash: `/workspaces/orcasound-next` `main` @ `b283a4da9b94dd95c2ba565c6b0eabb3f831b862` (short: `b283a4d`).

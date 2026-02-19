@@ -21,17 +21,17 @@ export default function useFilteredData(
     const min = Date.now() - filters.timeRange;
 
     return data.filter((el: CombinedData) => {
+      const category = (el.newCategory ?? "").toLowerCase();
+
       return (
         // uncomment this to block Orcahello data
         // el.type === "human" &&
         (filters.hydrophone === "All hydrophones" ||
           el.hydrophone === filters.hydrophone) &&
         (filters.category === "All categories" ||
-          el.newCategory.toLowerCase() === filters.category ||
+          category === filters.category ||
           (filters.category === "whale + whale (ai) + sightings" &&
-            ["whale", "whale (ai)", "sighting"].includes(
-              el.newCategory.toLowerCase(),
-            ))) &&
+            ["whale (human)", "whale (ai)", "sighting"].includes(category))) &&
         (filters.timeRange === allTime ||
           filters.timeRange === customRange ||
           Date.parse(el.timestampString) >= min) &&
@@ -40,7 +40,7 @@ export default function useFilteredData(
         dayjs(el.timestampString).isSameOrBefore(filters.endDate, "day") &&
         (searchQuery === "" ||
           (el.comments && el.comments.toLowerCase().includes(searchQuery)) ||
-          el.newCategory.toLowerCase().includes(searchQuery) ||
+          category.includes(searchQuery) ||
           el.hydrophone.toLowerCase().includes(searchQuery))
       );
     });

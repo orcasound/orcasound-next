@@ -7,7 +7,7 @@ import { Feed } from "@/graphql/generated";
 const orcasoundEndpoint = "https://live.orcasound.net/graphql/";
 
 const FEEDS_QUERY = gql`
-  {
+  query GetLiveFeeds {
     feeds {
       id
       name

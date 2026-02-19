@@ -16,7 +16,7 @@ const GET_SEGMENTS = (
   startTime: string,
   endTime: string,
 ) => gql`
-  {
+  query GetFeedSegments {
     feedSegments(
       feedId: "${feedId}",
       filter: {

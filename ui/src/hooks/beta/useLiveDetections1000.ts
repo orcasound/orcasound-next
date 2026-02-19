@@ -21,6 +21,7 @@ const DETECTIONS_QUERY = gql`
         playerOffset
         playlistTimestamp
         timestamp
+        source
         candidate {
           id
           feedId

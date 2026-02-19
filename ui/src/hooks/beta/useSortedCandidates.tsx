@@ -4,11 +4,12 @@ import { Candidate, CombinedData } from "@/types/DataTypes";
 import { cleanSightingsDescription } from "@/utils/masterDataHelpers";
 
 export const countCategories = (
-  arr: { newCategory: string }[],
+  arr: { newCategory?: string | null }[],
   cat: string,
 ) => {
-  return arr.filter((d) => d.newCategory.toLowerCase() === cat.toLowerCase())
-    .length;
+  return arr.filter(
+    (d) => (d.newCategory ?? "").toLowerCase() === cat.toLowerCase(),
+  ).length;
 };
 
 const offsetPadding = 15;
@@ -29,11 +30,11 @@ const subtractSeconds = (dateString: string, secondsToAdd: number) => {
   return originalDate?.toISOString();
 };
 
-// --- NEW: map per-detection category to a 3-way bucket
+// --- NEW: map per-detection category to a 3-way bucket of "whale"-like
 type BucketType = "whale" | "vessel" | "other";
-const WHALE_BUCKET = new Set(["whale", "whale (ai)", "sighting"]);
-const toBucket = (cat: string): BucketType => {
-  const c = cat.toLowerCase();
+const WHALE_BUCKET = new Set(["whale (human)", "whale (ai)", "sighting"]);
+const toBucket = (cat?: string | null): BucketType => {
+  const c = (cat ?? "").toLowerCase();
   if (WHALE_BUCKET.has(c)) return "whale";
   if (c === "vessel") return "vessel";
   // treat anything else as "other" by design
@@ -101,7 +102,13 @@ const createCandidates = (
     const startTimestamp = subtractSeconds(firstReport, offsetPadding);
     const endTimestamp = addSeconds(lastReport, offsetPadding);
 
-    const countString = ["whale", "whale (AI)", "vessel", "other", "sighting"]
+    const countString = [
+      "whale (human)",
+      "whale (AI)",
+      "vessel",
+      "other",
+      "sighting",
+    ]
       .map((category) => {
         const count = countCategories(candidate, category);
         let mutableCategory = category;
@@ -122,7 +129,7 @@ const createCandidates = (
       array: candidate,
       startTimestamp,
       endTimestamp,
-      whale: countCategories(candidate, "whale"),
+      whale: countCategories(candidate, "whale (human)"),
       vessel: countCategories(candidate, "vessel"),
       other: countCategories(candidate, "other"),
       "whale (AI)": countCategories(candidate, "whale (ai)"),

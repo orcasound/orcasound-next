@@ -70,8 +70,8 @@ const categorySelect = [
     value: "All categories",
   },
   {
-    label: "Whale",
-    value: "whale",
+    label: "Whale (human)",
+    value: "whale (human)",
   },
   {
     label: "Vessel",
@@ -86,8 +86,8 @@ const categorySelect = [
     value: "whale (ai)",
   },
   {
-    label: "Whale + Whale (AI) + Sightings",
-    value: "whale + whale (ai) + sightings",
+    label: "Whale (Human) + Whale (AI) + Sightings",
+    value: "whale (human) + whale (ai) + sightings",
   },
   {
     label: "Sightings",

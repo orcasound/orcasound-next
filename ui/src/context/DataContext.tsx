@@ -46,7 +46,6 @@ interface DataContextType {
   sortedCandidates: Candidate[];
   filters: CandidateFilters;
   setFilters: React.Dispatch<React.SetStateAction<CandidateFilters>>;
-  isSuccessOrcahello: boolean;
   autoPlayOnReady: MutableRefObject<boolean>;
   lastWhaleReport: (feed?: Feed | null) => CombinedData | undefined;
   lastWhaleReportFeed: Feed | null;
@@ -69,7 +68,6 @@ export const DataProvider = ({
   const data = useMasterData(useLiveData);
 
   const feeds = data.feeds;
-  const isSuccessOrcahello = data.isSuccessOrcahello;
   const { nowPlayingCandidate } = useNowPlaying();
 
   const [filters, setFilters] = useState<CandidateFilters>({
@@ -93,7 +91,7 @@ export const DataProvider = ({
       : filteredData;
     const whaleReports = reports.filter(
       (d) =>
-        d.newCategory === "WHALE" ||
+        d.newCategory === "WHALE (HUMAN)" ||
         d.newCategory === "WHALE (AI)" ||
         d.newCategory === "SIGHTING",
     );
@@ -180,7 +178,11 @@ export const DataProvider = ({
         other: 0,
       };
       for (const key of Object.keys(obj)) {
-        if (key === "WHALE" || key === "WHALE (AI)" || key === "SIGHTING") {
+        if (
+          key === "WHALE (HUMAN)" ||
+          key === "WHALE (AI)" ||
+          key === "SIGHTING"
+        ) {
           shortCount.whale += obj[key];
         } else if (key === "VESSEL") {
           shortCount.vessel += obj[key];
@@ -222,7 +224,6 @@ export const DataProvider = ({
         sortedCandidates,
         filters,
         setFilters,
-        isSuccessOrcahello,
         autoPlayOnReady,
         lastWhaleReport,
         lastWhaleReportFeed,
