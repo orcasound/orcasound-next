@@ -6,7 +6,7 @@ import { Detection } from "@/graphql/generated";
 // get data on human detections using endpoint directly (gives live data in dev)
 const orcasoundEndpoint = "https://live.orcasound.net/graphql/";
 const DETECTIONS_QUERY = gql`
-  {
+  query GetLiveDetections {
     detections(limit: 250) {
       results {
         id
@@ -17,6 +17,7 @@ const DETECTIONS_QUERY = gql`
         playerOffset
         playlistTimestamp
         timestamp
+        source
         candidate {
           id
           feedId

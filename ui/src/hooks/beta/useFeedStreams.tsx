@@ -13,7 +13,7 @@ type FeedStreamResponse = {
 };
 
 const GET_STREAMS = (feedId: string, playlistTimestamp: string) => gql`
-  {
+  query GetFeedStreams {
   feedStreams(
     feedId: "${feedId}",
     filter: {playlistTimestamp: {eq: "${playlistTimestamp}"}}) {
