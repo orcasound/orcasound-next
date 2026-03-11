@@ -47,24 +47,72 @@ export interface Sighting extends CascadiaSighting {
   timestampString: string;
 }
 
-export type CombinedData = AudioDetection | Sighting;
+export type CombinedData = AudioDetection | AIDetection | Sighting;
 
 export interface Dataset {
   audio: AudioDetection[];
+  ai: AIDetection[];
   sightings: Sighting[];
   combined: CombinedData[];
   feeds: Feed[];
   setNowPlaying?: Dispatch<SetStateAction<Candidate>>;
 }
 
-interface Location {
+export interface AIDetectionLocation {
   name: string;
+  longitude: number;
+  latitude: number;
 }
-interface Annotation {
+
+export interface AIDetectionAnnotation {
   id: number;
   startTime: number;
   endTime: number;
   confidence: number;
+}
+
+export type AIDetectionFound = "yes" | "no" | "don't know" | null;
+
+export type AIDetectionReviewState =
+  | "confirmed"
+  | "falsepositive"
+  | "unknown"
+  | "unreviewed";
+
+// Raw shape returned by the AI For Orcas / OrcaHello REST API.
+// `tags` arrives as a semicolon-delimited string and `found` may require
+// case-normalization before app use.
+export interface AIDetectionRaw {
+  id: string | null;
+  audioUri: string | null;
+  spectrogramUri: string | null;
+  location: AIDetectionLocation;
+  timestamp: string;
+  annotations: AIDetectionAnnotation[] | null;
+  reviewed: boolean;
+  found: string | null;
+  comments: string | null;
+  confidence: number;
+  moderator: string | null;
+  moderated: string | null;
+  tags: string | null;
+}
+
+// Normalized app shape for filtering and downstream transforms.
+export interface AIDetection
+  extends Omit<AIDetectionRaw, "id" | "annotations" | "found" | "tags"> {
+  id: string;
+  type: "ai";
+  source: "orcahello";
+  hydrophone: string;
+  feedId?: string;
+  comments: string | null;
+  newCategory: "WHALE (AI)";
+  timestampString: string;
+  annotations: AIDetectionAnnotation[];
+  found: AIDetectionFound;
+  reviewState: AIDetectionReviewState;
+  tags: string[];
 }
 
 export interface Candidate {

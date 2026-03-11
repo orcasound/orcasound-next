@@ -13,9 +13,9 @@ import {
   Marker,
   TileLayer,
   Tooltip,
+  useMap,
   ZoomControl,
 } from "react-leaflet";
-import { useMap } from "react-leaflet";
 
 import { useData } from "@/context/DataContext";
 import { useLayout } from "@/context/LayoutContext";

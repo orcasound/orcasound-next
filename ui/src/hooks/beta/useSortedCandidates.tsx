@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { Candidate, CombinedData } from "@/types/DataTypes";
+import { AIDetection, Candidate, CombinedData } from "@/types/DataTypes";
 import { cleanSightingsDescription } from "@/utils/masterDataHelpers";
 
 export const countCategories = (
@@ -40,6 +40,9 @@ const toBucket = (cat?: string | null): BucketType => {
   // treat anything else as "other" by design
   return "other";
 };
+
+const isAIDetection = (item: CombinedData): item is AIDetection =>
+  item.type === "ai";
 
 const createCandidates = (
   dataset: CombinedData[],
@@ -102,23 +105,48 @@ const createCandidates = (
     const startTimestamp = subtractSeconds(firstReport, offsetPadding);
     const endTimestamp = addSeconds(lastReport, offsetPadding);
 
-    const countString = [
-      "whale (human)",
-      "whale (AI)",
-      "vessel",
-      "other",
-      "sighting",
-    ]
-      .map((category) => {
-        const count = countCategories(candidate, category);
-        let mutableCategory = category;
-        if (count === 0) return;
-        if (category === "sighting" && count > 1) {
-          mutableCategory = mutableCategory + "s";
-        }
-        return `${count} ${mutableCategory}`;
-      })
-      .filter((c) => c)
+    const aiDetections = candidate.filter(isAIDetection);
+    const humanAndSightingItems = [
+      {
+        count: countCategories(candidate, "whale (human)"),
+        label: "whale (human)",
+      },
+      { count: countCategories(candidate, "vessel"), label: "vessel (human)" },
+      { count: countCategories(candidate, "other"), label: "other (human)" },
+      {
+        count: countCategories(candidate, "sighting"),
+        label:
+          countCategories(candidate, "sighting") === 1
+            ? "sighting in audible range"
+            : "sightings in audible range",
+      },
+    ];
+    const machineItems = [
+      {
+        count: aiDetections.filter((item) => item.reviewState === "confirmed")
+          .length,
+        label: "confirmed SRKW (machine)",
+      },
+      {
+        count: aiDetections.filter((item) => item.reviewState === "unknown")
+          .length,
+        label: "confirmed other (machine)",
+      },
+      {
+        count: aiDetections.filter(
+          (item) => item.reviewState === "falsepositive",
+        ).length,
+        label: "false positives (machine)",
+      },
+      {
+        count: aiDetections.filter((item) => item.reviewState === "unreviewed")
+          .length,
+        label: "unreviewed (machine)",
+      },
+    ];
+    const countString = [...humanAndSightingItems, ...machineItems]
+      .filter((item) => item.count > 0)
+      .map((item) => `${item.count} ${item.label}`)
       .join(" • ");
 
     // include the 3-way bucket in the id to avoid id collisions between types

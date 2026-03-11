@@ -6,18 +6,26 @@ import {
   useDetectionsQuery,
   useFeedsQuery,
 } from "@/graphql/generated";
-import { AudioDetection, CombinedData, Sighting } from "@/types/DataTypes";
+import {
+  AIDetection,
+  AudioDetection,
+  CombinedData,
+  Sighting,
+} from "@/types/DataTypes";
+import { lookupFeedId } from "@/utils/masterDataHelpers";
 
 import {
   transformHuman,
   transformSightings,
 } from "../../utils/masterDataTransforms";
+import { useAIDetections } from "./useAIDetections";
 import { useLiveDetections1000 } from "./useLiveDetections1000";
 import { useLiveFeeds } from "./useLiveFeeds";
 import { useSightings } from "./useSightings";
 
 export type MasterData = {
   audio: AudioDetection[];
+  ai: AIDetection[];
   sightings: Sighting[];
   combined: CombinedData[];
   feeds: Feed[];
@@ -38,11 +46,29 @@ export function useMasterData(useLiveData: boolean): MasterData {
   const seedFeeds = useFeedsQuery().data?.feeds ?? [];
   const feeds = useLiveData ? liveFeeds : (seedFeeds as Feed[]);
 
-  // standardize data
-  const datasetAudio = useMemo(
-    () => transformHuman(audioDetections, feeds),
-    [audioDetections, feeds],
+  //// ORCAHELLO detections
+  const { returnData: aiDetections = [], isSuccess: isSuccessOrcahello } =
+    useAIDetections();
+  const datasetAi = useMemo(
+    () =>
+      aiDetections.map((detection) => ({
+        ...detection,
+        feedId: lookupFeedId(detection.hydrophone, feeds),
+      })),
+    [aiDetections, feeds],
   );
+
+  // standardize human detections
+  const datasetAudio = useMemo(() => {
+    if (!isSuccessOrcahello) {
+      return transformHuman(audioDetections, feeds);
+    } else {
+      return transformHuman(
+        audioDetections.filter((d) => d.source === "HUMAN"),
+        feeds,
+      );
+    }
+  }, [audioDetections, feeds, isSuccessOrcahello]);
 
   //// ACARTIA sightings
   // get detections
@@ -51,24 +77,32 @@ export function useMasterData(useLiveData: boolean): MasterData {
     () => sightingsData?.results ?? [],
     [sightingsData],
   );
-  // standardize data
+  // standardize sightings
   const datasetSightings = useMemo(
     () => transformSightings(dataSightings, feeds),
     [dataSightings, feeds],
   );
 
   const combined: CombinedData[] = useMemo(() => {
-    return [...datasetAudio, ...datasetSightings];
-  }, [datasetAudio, datasetSightings]);
+    return [...datasetAudio, ...datasetAi, ...datasetSightings];
+  }, [datasetAudio, datasetAi, datasetSightings]);
 
   const dataset = useMemo(() => {
     return {
       audio: datasetAudio,
+      ai: datasetAi,
       sightings: datasetSightings,
       combined: combined,
       feeds: feeds,
       isSuccessSightings: isSuccessSightings,
     };
-  }, [datasetAudio, datasetSightings, combined, feeds, isSuccessSightings]);
+  }, [
+    datasetAudio,
+    datasetAi,
+    datasetSightings,
+    combined,
+    feeds,
+    isSuccessSightings,
+  ]);
   return dataset;
 }

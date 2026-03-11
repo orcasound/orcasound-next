@@ -15,7 +15,7 @@ import { useData } from "@/context/DataContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Feed } from "@/graphql/generated";
 import { countCategories } from "@/hooks/beta/useSortedCandidates";
-import { CombinedData } from "@/types/DataTypes";
+import { AIDetection, CombinedData } from "@/types/DataTypes";
 
 import Link from "../Link";
 import { timeRangeSelect } from "./CandidateListFilters";
@@ -54,53 +54,130 @@ export const CandidatesStack = ({
     (d) => d.hydrophone !== "out of range",
   );
 
+  const isAIDetection = (detection: CombinedData): detection is AIDetection =>
+    detection.type === "ai";
+
   function countString(detectionArray: CombinedData[]) {
-    const categories = [
-      "whale (human)",
-      "whale (AI)",
-      "vessel",
-      "other",
-      "sighting",
+    const humanItems = [
+      {
+        key: "whale-human",
+        label: "whale",
+        count: countCategories(detectionArray, "whale (human)"),
+      },
+      {
+        key: "vessel",
+        label: "vessel",
+        count: countCategories(detectionArray, "vessel"),
+      },
+      {
+        key: "other",
+        label: "other",
+        count: countCategories(detectionArray, "other"),
+      },
+      {
+        key: "sighting",
+        label: "sightings in audible range",
+        count: countCategories(detectionArray, "sighting"),
+      },
     ];
 
-    const items = categories
-      .map((category) => {
-        const count = countCategories(detectionArray, category);
+    const aiDetections = detectionArray.filter(isAIDetection);
+    const machineFallbackCount = countCategories(detectionArray, "whale (AI)");
+    const confirmedCount = aiDetections.filter(
+      (d) => d.reviewState === "confirmed",
+    ).length;
+    const confirmedOtherCount = aiDetections.filter(
+      (d) => d.reviewState === "unknown",
+    ).length;
+    const falsePositiveCount = aiDetections.filter(
+      (d) => d.reviewState === "falsepositive",
+    ).length;
+    const unreviewedCount = aiDetections.filter(
+      (d) => d.reviewState === "unreviewed",
+    ).length;
+    const sectionWithDots = (
+      keyPrefix: string,
+      heading: string,
+      items: Array<{ key: string; label: string; count: number | string }>,
+    ) => {
+      const renderedItems = items.map((item) => (
+        <Link
+          key={`${keyPrefix}-${item.key}`}
+          href="#"
+          color="rgba(255,255,255,.7)"
+        >
+          {item.count} {item.label}
+        </Link>
+      ));
 
-        // if (count === 0) return null;
+      const interleavedItems = renderedItems.flatMap((item, index) =>
+        index < renderedItems.length - 1
+          ? [item, <span key={`${keyPrefix}-dot-${index}`}> · </span>]
+          : [item],
+      );
 
-        let label = category;
-        if (category === "sighting" && count !== 1) {
-          label += "s in audible range";
-        } else if (category === "sighting") {
-          label += " in audible range";
-        }
-
-        return (
-          <Link key={category} href="#" color="rgba(255,255,255,.7)">
-            {count} {label}
-          </Link>
-        );
-      })
-      .filter((c) => c); // filters out the null items
-
-    // Interleave with separators
-    const interleaved = items.flatMap((item, index) =>
-      index < items.length - 1
-        ? [item, <span key={`dot-${index}`}> · </span>]
-        : [item],
-    );
+      return (
+        <div
+          key={keyPrefix}
+          style={{
+            display: "flex",
+            columnGap: "8px",
+            flexWrap: "wrap",
+            lineHeight: 1.6,
+            marginTop: "6px",
+          }}
+        >
+          <Typography
+            component="span"
+            sx={{ color: "rgba(255,255,255,.9)", lineHeight: "inherit" }}
+          >
+            {heading}
+          </Typography>
+          <span></span>
+          {interleavedItems}
+        </div>
+      );
+    };
 
     return (
       <div
         style={{
           display: "flex",
-          columnGap: "8px",
-          flexWrap: "wrap",
-          lineHeight: 1.6,
+          flexDirection: "column",
+          rowGap: "4px",
         }}
       >
-        {interleaved}
+        {sectionWithDots("human", "Human", humanItems)}
+        {aiDetections.length > 0
+          ? sectionWithDots("machine", "Machine", [
+              {
+                key: "confirmed",
+                label: "confirmed SRKW",
+                count: confirmedCount,
+              },
+              {
+                key: "confirmed-other",
+                label: "confirmed other",
+                count: confirmedOtherCount,
+              },
+              {
+                key: "false-positives",
+                label: "false positives",
+                count: falsePositiveCount,
+              },
+              {
+                key: "unreviewed",
+                label: "unreviewed",
+                count: unreviewedCount,
+              },
+            ])
+          : sectionWithDots("machine-fallback", "Machine", [
+              {
+                key: "pending",
+                label: "detections pending Orcahello review details",
+                count: machineFallbackCount,
+              },
+            ])}
       </div>
     );
   }
