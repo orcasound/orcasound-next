@@ -12,4 +12,5 @@ services:
       - ../orcasite:/workspaces/orcasite
       - ../../postoccupancy/esp32_ui:/workspaces/esp32_ui
       - ../../postoccupancy/esp32_api:/workspaces/esp32_api
+      - ../../postoccupancy/b2b-dashboard-demo:/workspaces/b2b-dashboard-demo
 
