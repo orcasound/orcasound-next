@@ -13,4 +13,8 @@ services:
       - ../../postoccupancy/esp32_ui:/workspaces/esp32_ui
       - ../../postoccupancy/esp32_api:/workspaces/esp32_api
       - ../../postoccupancy/b2b-dashboard-demo:/workspaces/b2b-dashboard-demo
+      - ../../orcasound/ambient-sound-analysis:/workspaces/ambient-sound-analysis
+      - ../../orcasound/ambient-sound-analysis-api:/workspaces/ambient-sound-analysis-api
+      - ../../adrmac.github.io:/workspaces/adrmac.github.io
+      
 

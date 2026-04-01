@@ -15,7 +15,7 @@ import { useData } from "@/context/DataContext";
 import { useNowPlaying } from "@/context/NowPlayingContext";
 import { Feed } from "@/graphql/generated";
 import { countCategories } from "@/hooks/beta/useSortedCandidates";
-import { AIDetection, CombinedData } from "@/types/DataTypes";
+import { CombinedData } from "@/types/DataTypes";
 
 import Link from "../Link";
 import { timeRangeSelect } from "./CandidateListFilters";
@@ -51,11 +51,8 @@ export const CandidatesStack = ({
     : filteredData;
 
   const detectionsAudible = detections.filter(
-    (d) => d.hydrophone !== "out of range",
+    (d) => d.standardizedFeedName !== "out of range",
   );
-
-  const isAIDetection = (detection: CombinedData): detection is AIDetection =>
-    detection.type === "ai";
 
   function countString(detectionArray: CombinedData[]) {
     const humanItems = [
@@ -77,16 +74,17 @@ export const CandidatesStack = ({
       {
         key: "sighting",
         label: "sightings in audible range",
-        count: countCategories(detectionArray, "sighting"),
+        count: countCategories(detectionsAudible, "sighting"),
       },
     ];
 
-    const aiDetections = detectionArray.filter(isAIDetection);
+    const aiDetections = detectionArray.filter((d) => d.type === "ai");
     const machineFallbackCount = countCategories(detectionArray, "whale (AI)");
+
     const confirmedCount = aiDetections.filter(
       (d) => d.reviewState === "confirmed",
     ).length;
-    const confirmedOtherCount = aiDetections.filter(
+    const unknownCount = aiDetections.filter(
       (d) => d.reviewState === "unknown",
     ).length;
     const falsePositiveCount = aiDetections.filter(
@@ -95,7 +93,8 @@ export const CandidatesStack = ({
     const unreviewedCount = aiDetections.filter(
       (d) => d.reviewState === "unreviewed",
     ).length;
-    const sectionWithDots = (
+
+    const createCountString = (
       keyPrefix: string,
       heading: string,
       items: Array<{ key: string; label: string; count: number | string }>,
@@ -147,18 +146,19 @@ export const CandidatesStack = ({
           rowGap: "4px",
         }}
       >
-        {sectionWithDots("human", "Human", humanItems)}
+        {createCountString("human", "Human", humanItems)}
+
         {aiDetections.length > 0
-          ? sectionWithDots("machine", "Machine", [
+          ? createCountString("machine", "Machine", [
               {
                 key: "confirmed",
                 label: "confirmed SRKW",
                 count: confirmedCount,
               },
               {
-                key: "confirmed-other",
-                label: "confirmed other",
-                count: confirmedOtherCount,
+                key: "unknown",
+                label: "unknown",
+                count: unknownCount,
               },
               {
                 key: "false-positives",
@@ -171,7 +171,7 @@ export const CandidatesStack = ({
                 count: unreviewedCount,
               },
             ])
-          : sectionWithDots("machine-fallback", "Machine", [
+          : createCountString("machine-fallback", "Machine", [
               {
                 key: "pending",
                 label: "detections pending Orcahello review details",

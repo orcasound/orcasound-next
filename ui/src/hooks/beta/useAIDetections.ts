@@ -1,12 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-import { AIDetection, AIDetectionRaw } from "@/types/DataTypes";
-import {
-  constructUrl,
-  normalizeAIDetection,
-  sevenDays,
-} from "@/utils/masterDataHelpers";
+import { AIDetectionRaw } from "@/types/DataTypes";
+import { constructUrl, sevenDays } from "@/utils/masterDataHelpers";
 
 const endpointOrcahello =
   "https://aifororcasdetections.azurewebsites.net/api/detections";
@@ -24,10 +20,6 @@ const paramsOrcahello = {
 
 const CACHE_KEY = "orcahello-ai-detections-v2";
 
-type OrcahelloPageResult = {
-  rows: AIDetectionRaw[];
-};
-
 export type AIDetectionsFetchMeta = {
   requestedStart: string;
   requestedEnd: string;
@@ -39,14 +31,11 @@ export type AIDetectionsFetchMeta = {
 };
 
 type AIDetectionsQueryPayload = {
-  rawRows: AIDetectionRaw[];
-  detections: AIDetection[];
+  detections: AIDetectionRaw[];
   meta: AIDetectionsFetchMeta;
 };
 
-const fetchOrcahelloPage = async (
-  page: number,
-): Promise<OrcahelloPageResult> => {
+const fetchOrcahelloPage = async (page: number): Promise<AIDetectionRaw[]> => {
   const url = constructUrl(endpointOrcahello, {
     ...paramsOrcahello,
     page,
@@ -58,7 +47,7 @@ const fetchOrcahelloPage = async (
   }
 
   const rows = (await response.json()) as AIDetectionRaw[];
-  return { rows };
+  return rows;
 };
 
 const withinRequestedRange = (row: AIDetectionRaw) =>
@@ -102,8 +91,7 @@ const toQueryPayload = (
   failedPage: number | null,
   loadError: string | null,
 ): AIDetectionsQueryPayload => ({
-  rawRows: rows,
-  detections: rows.map(normalizeAIDetection),
+  detections: rows,
   meta: buildFetchMeta(rows, failedPage, loadError),
 });
 
@@ -130,7 +118,7 @@ const fetchOrcahelloData = async (
 ): Promise<AIDetectionsQueryPayload> => {
   const cachedIds = new Set(cachedRows.map((row) => row.id).filter(Boolean));
 
-  let firstPage: OrcahelloPageResult;
+  let firstPage: AIDetectionRaw[];
 
   try {
     firstPage = await fetchOrcahelloPage(1);
@@ -140,12 +128,10 @@ const fetchOrcahelloData = async (
     return toQueryPayload(cachedRows, 1, message);
   }
 
-  const firstPageHasCachedRows = firstPage.rows.some(
+  const firstPageHasCachedRows = firstPage.some(
     (row) => row.id && cachedIds.has(row.id),
   );
-  let freshRows = firstPage.rows.filter(
-    (row) => !(row.id && cachedIds.has(row.id)),
-  );
+  let freshRows = firstPage.filter((row) => !(row.id && cachedIds.has(row.id)));
   onProgress?.(toQueryPayload(mergeRows(freshRows, cachedRows), null, null));
 
   if (firstPageHasCachedRows) {
@@ -153,7 +139,7 @@ const fetchOrcahelloData = async (
   }
 
   for (let page = 2; page <= 100; page += 1) {
-    let nextPage: OrcahelloPageResult;
+    let nextPage: AIDetectionRaw[];
 
     try {
       nextPage = await fetchOrcahelloPage(page);
@@ -163,14 +149,14 @@ const fetchOrcahelloData = async (
       return toQueryPayload(mergeRows(freshRows, cachedRows), page, message);
     }
 
-    if (nextPage.rows.length === 0) {
+    if (nextPage.length === 0) {
       break;
     }
 
-    const hitCachedRow = nextPage.rows.some(
+    const hitCachedRow = nextPage.some(
       (row) => row.id && cachedIds.has(row.id),
     );
-    const freshPageRows = nextPage.rows.filter(
+    const freshPageRows = nextPage.filter(
       (row) => !(row.id && cachedIds.has(row.id)),
     );
 
@@ -181,7 +167,7 @@ const fetchOrcahelloData = async (
       );
     }
 
-    if (hitCachedRow || nextPage.rows.length < paramsOrcahello.recordsPerPage) {
+    if (hitCachedRow || nextPage.length < paramsOrcahello.recordsPerPage) {
       break;
     }
   }
@@ -205,9 +191,9 @@ export function useAIDetections() {
   }, []);
 
   const { data, isSuccess, isFetching, isPending, error } = useQuery({
-    queryKey: ["ai-detections", requestedStartOrcahello],
+    queryKey: ["ai-detections", { timeframe: "1w", location: "all" }],
     queryFn: () =>
-      fetchOrcahelloData(cachedPayload?.rawRows ?? [], setProgressPayload),
+      fetchOrcahelloData(cachedPayload?.detections ?? [], setProgressPayload),
     initialData: cachedPayload,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -215,8 +201,18 @@ export function useAIDetections() {
   });
 
   const resolvedPayload = data ?? progressPayload ?? cachedPayload;
-  const returnData = resolvedPayload?.detections;
+  const aiDetections = resolvedPayload?.detections;
   const fetchMeta = resolvedPayload?.meta;
+  const unreviewed = aiDetections?.filter((el: AIDetectionRaw) => !el.reviewed);
+  const confirmed = aiDetections?.filter(
+    (el: AIDetectionRaw) => el.reviewed && el.found === "yes",
+  );
+  const falsepositives = aiDetections?.filter(
+    (el: AIDetectionRaw) => el.reviewed && el.found === "no",
+  );
+  const unknown = aiDetections?.filter(
+    (el: AIDetectionRaw) => el.reviewed && el.found === "don't know",
+  );
 
   useEffect(() => {
     if (!data || typeof window === "undefined") {
@@ -227,21 +223,11 @@ export function useAIDetections() {
     setCachedPayload(data);
   }, [data]);
 
-  const unreviewed = returnData?.filter((el: AIDetection) => !el.reviewed);
-  const confirmed = returnData?.filter(
-    (el: AIDetection) => el.reviewed && el.found === "yes",
-  );
-  const falsepositives = returnData?.filter(
-    (el: AIDetection) => el.reviewed && el.found === "no",
-  );
-  const unknown = returnData?.filter(
-    (el: AIDetection) => el.reviewed && el.found === "don't know",
-  );
-
   return {
-    returnData,
-    confirmed,
+    aiDetections,
+    returnData: aiDetections,
     unreviewed,
+    confirmed,
     falsepositives,
     unknown,
     fetchMeta,

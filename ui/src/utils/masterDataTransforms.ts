@@ -1,14 +1,20 @@
 import { Detection, Feed } from "@/graphql/generated";
-import { AudioDetection, CascadiaSighting, Sighting } from "@/types/DataTypes";
+import {
+  AIDetection,
+  AIDetectionRaw,
+  AudioDetection,
+  CascadiaSighting,
+  DetectionsResult,
+  Sighting,
+} from "@/types/DataTypes";
 import {
   lookupFeedId,
   lookupFeedName,
+  lookupFeedSlug,
   standardizeFeedName,
 } from "@/utils/masterDataHelpers";
 
-const toAudioCategory = (
-  detection: Detection,
-): AudioDetection["newCategory"] => {
+const toNewCategory = (detection: Detection): AudioDetection["newCategory"] => {
   if (detection.source === "MACHINE") return "WHALE (AI)";
 
   switch (detection.category) {
@@ -22,18 +28,20 @@ const toAudioCategory = (
   }
 };
 
-export function transformHuman(
-  detections: Detection[],
+export function transformAudioDetections(
+  detections: DetectionsResult[],
   feeds: Feed[],
 ): AudioDetection[] {
-  if (!feeds.length) return [];
+  if (!feeds.length || !detections.length) return [];
 
   return detections.map((el) => ({
     ...el,
     type: "audio",
+    standardizedFeedName: lookupFeedName(el.feedId!, feeds),
     hydrophone: lookupFeedName(el.feedId!, feeds),
+    feedSlug: lookupFeedSlug(el.feedId!, feeds),
     comments: el.description,
-    newCategory: toAudioCategory(el),
+    newCategory: toNewCategory(el as Detection),
     timestampString: el.timestamp.toString(),
   }));
 }
@@ -79,9 +87,48 @@ export function transformSightings(
     ...el,
     type: "sightings",
     newCategory: "SIGHTING",
+    standardizedFeedName: assignSightingHydrophone(el),
     hydrophone: assignSightingHydrophone(el),
     feedId: lookupFeedId(assignSightingHydrophone(el), feeds ?? []),
     timestampString: el.created.replace(" ", "T") + "Z",
     timestamp: new Date(el.created.replace(" ", "T") + "Z"),
   }));
 }
+
+export const transformAIDetection = (
+  raw: AIDetectionRaw,
+  feeds: Feed[],
+): AIDetection => ({
+  ...raw,
+  id: raw.id ?? crypto.randomUUID(),
+  type: "ai",
+  source: "orcahello",
+  standardizedFeedName: standardizeFeedName(raw.location?.name ?? "unknown"),
+  hydrophone: standardizeFeedName(raw.location?.name ?? "unknown"),
+  feedId: lookupFeedId(standardizeFeedName(raw.location.name), feeds),
+  comments: raw.comments,
+  newCategory: "WHALE (AI)",
+  timestampString: raw.timestamp,
+  annotations: raw.annotations ?? [],
+  found:
+    raw.found?.toLowerCase() === "yes"
+      ? "yes"
+      : raw.found?.toLowerCase() === "no"
+        ? "no"
+        : raw.found?.toLowerCase() === "don't know"
+          ? "don't know"
+          : null,
+  reviewState: !raw.reviewed
+    ? "unreviewed"
+    : raw.found?.toLowerCase() === "yes"
+      ? "confirmed"
+      : raw.found?.toLowerCase() === "no"
+        ? "falsepositive"
+        : "unknown",
+  tags: raw.tags
+    ? raw.tags
+        .split(";")
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : [],
+});

@@ -130,7 +130,7 @@ const createCandidates = (
       {
         count: aiDetections.filter((item) => item.reviewState === "unknown")
           .length,
-        label: "confirmed other (machine)",
+        label: "unknown (machine)",
       },
       {
         count: aiDetections.filter(

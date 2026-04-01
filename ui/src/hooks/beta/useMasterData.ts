@@ -1,26 +1,19 @@
 import { useMemo } from "react";
 
-import {
-  Detection,
-  Feed,
-  useDetectionsQuery,
-  useFeedsQuery,
-} from "@/graphql/generated";
+import { Feed, useDetectionsQuery, useFeedsQuery } from "@/graphql/generated";
 import {
   AIDetection,
   AudioDetection,
   CombinedData,
   Sighting,
 } from "@/types/DataTypes";
-import { lookupFeedId } from "@/utils/masterDataHelpers";
 
 import {
-  transformHuman,
+  transformAIDetection,
+  transformAudioDetections,
   transformSightings,
 } from "../../utils/masterDataTransforms";
 import { useAIDetections } from "./useAIDetections";
-import { useLiveDetections1000 } from "./useLiveDetections1000";
-import { useLiveFeeds } from "./useLiveFeeds";
 import { useSightings } from "./useSightings";
 
 export type MasterData = {
@@ -33,76 +26,74 @@ export type MasterData = {
 
 export function useMasterData(useLiveData: boolean): MasterData {
   //// ORCASOUND
-  // get feeds and detections based on live/seed toggle in development UI
-  const seedDetections = useDetectionsQuery().data?.detections?.results ?? [];
-  // const liveDetections = useLiveDetections().data?.detections?.results ?? [];
-  const liveDetections = useLiveDetections1000().data ?? [];
-
-  const audioDetections = useLiveData
-    ? liveDetections
-    : (seedDetections as Detection[]);
-
-  const liveFeeds = useLiveFeeds().data?.feeds ?? [];
-  const seedFeeds = useFeedsQuery().data?.feeds ?? [];
-  const feeds = useLiveData ? liveFeeds : (seedFeeds as Feed[]);
-
-  //// ORCAHELLO detections
-  const { returnData: aiDetections = [], isSuccess: isSuccessOrcahello } =
-    useAIDetections();
-  const datasetAi = useMemo(
-    () =>
-      aiDetections.map((detection) => ({
-        ...detection,
-        feedId: lookupFeedId(detection.hydrophone, feeds),
-      })),
-    [aiDetections, feeds],
+  const detectionsResults = useDetectionsQuery().data?.detections?.results;
+  const audioDetections = useMemo(
+    () => detectionsResults ?? [],
+    [detectionsResults],
   );
 
-  // standardize human detections
+  const seedFeeds = useFeedsQuery().data?.feeds ?? ([] as Feed[]);
+  const feeds = seedFeeds as Feed[];
+
+  //// Transform ORCAHELLO detections
+  const { aiDetections: aiDetectionsRaw = [], isSuccess: isSuccessOrcahello } =
+    useAIDetections();
+  const aiDetections = aiDetectionsRaw.map((d) => {
+    return transformAIDetection(d, feeds);
+  });
+
+  // Use machine detections from Orcasound API until more detailed Orcahello data comes through
   const datasetAudio = useMemo(() => {
     if (!isSuccessOrcahello) {
-      return transformHuman(audioDetections, feeds);
+      return transformAudioDetections(audioDetections, feeds);
     } else {
-      return transformHuman(
+      return transformAudioDetections(
         audioDetections.filter((d) => d.source === "HUMAN"),
         feeds,
       );
     }
   }, [audioDetections, feeds, isSuccessOrcahello]);
 
-  //// ACARTIA sightings
-  // get detections
-  const { data: sightingsData, isSuccess: isSuccessSightings } = useSightings();
-  const dataSightings = useMemo(
-    () => sightingsData?.results ?? [],
-    [sightingsData],
+  //// Filter out categories of Orcahello detections
+  const unreviewed = aiDetections?.filter((el: AIDetection) => !el.reviewed);
+  const confirmed = aiDetections?.filter(
+    (el: AIDetection) => el.reviewed && el.found === "yes",
   );
-  // standardize sightings
-  const datasetSightings = useMemo(
-    () => transformSightings(dataSightings, feeds),
-    [dataSightings, feeds],
+  const falsepositives = aiDetections?.filter(
+    (el: AIDetection) => el.reviewed && el.found === "no",
+  );
+  const unknown = aiDetections?.filter(
+    (el: AIDetection) => el.reviewed && el.found === "don't know",
   );
 
+  //// Transform ACARTIA sightings
+  const sightingResults = useSightings().data?.results || [];
+  const sightings = useMemo(
+    () => transformSightings(sightingResults, feeds),
+    [sightingResults, feeds],
+  );
+
+  //// COMBINED all three
   const combined: CombinedData[] = useMemo(() => {
-    return [...datasetAudio, ...datasetAi, ...datasetSightings];
-  }, [datasetAudio, datasetAi, datasetSightings]);
+    return [...datasetAudio, ...sightings, ...aiDetections];
+  }, [datasetAudio, sightings, aiDetections]);
 
-  const dataset = useMemo(() => {
+  // Construct result object
+  const dataset: MasterData = useMemo(() => {
     return {
       audio: datasetAudio,
-      ai: datasetAi,
-      sightings: datasetSightings,
+      sightings: sightings,
+      ai: aiDetections,
+      unreviewed: unreviewed,
+      confirmed: confirmed,
+      falsepositives: falsepositives,
+      unknown: unknown,
       combined: combined,
       feeds: feeds,
-      isSuccessSightings: isSuccessSightings,
+      isSuccessSightings: !!sightingResults,
+      isSuccessOrcahello: !!aiDetections,
     };
-  }, [
-    datasetAudio,
-    datasetAi,
-    datasetSightings,
-    combined,
-    feeds,
-    isSuccessSightings,
-  ]);
+  }, [datasetAudio, sightings, combined, feeds, sightingResults, aiDetections]);
+
   return dataset;
 }

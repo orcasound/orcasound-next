@@ -946,7 +946,7 @@
 
 ## Milestone Update (2026-03-11, CandidatesStack human/machine summary split)
 - Current objective: Replace the old flat category count string with separate human and machine summary text in `CandidatesStack`.
-- What changed: Updated `ui/src/components/CandidateList/CandidatesStack.tsx` so the summary now renders `Human` and `Machine` sections. Human shows whale/vessel/other/sightings-in-audible-range counts. Machine reads OrcaHello review-state counts from `AIDetection` rows for confirmed SRKW, confirmed other (`unknown`), false positive rate, and unreviewed. Added fallback text when only GraphQL machine detections are present and OrcaHello review details are not yet available.
+- What changed: Updated `ui/src/components/CandidateList/CandidatesStack.tsx` so the summary now renders `Human` and `Machine` sections. Human shows whale/vessel/other/sightings-in-audible-range counts. Machine reads OrcaHello review-state counts from `AIDetection` rows for confirmed SRKW, unknown (`unknown`), false positive rate, and unreviewed. Added fallback text when only GraphQL machine detections are present and OrcaHello review details are not yet available.
 - Next step: Check the visual result on `/beta`/`/index` and decide whether the fallback wording should be shorter or hidden entirely until OrcaHello data loads.
 - Blockers/risks: Counts are derived from whatever is in `filteredData`; if the OrcaHello swap/fallback logic in `useMasterData` changes again, this summary may need to be adjusted.
 - Branch and latest commit hash: `main` @ `944f866`.
@@ -960,7 +960,7 @@
 
 ## Milestone Update (2026-03-11, candidate clipCount AI review-state breakdown)
 - Current objective: Replace the old `WHALE (AI)` category label in candidate clip-count strings with OrcaHello review-state counts.
-- What changed: Updated `ui/src/hooks/beta/useSortedCandidates.tsx` so `clipCount` now shows machine candidates as confirmed SRKW / confirmed other / false positives / unreviewed, and human candidates as whale/vessel/other/sighting-in-audible-range. Added an `isAIDetection` type guard for the per-candidate breakdown.
+- What changed: Updated `ui/src/hooks/beta/useSortedCandidates.tsx` so `clipCount` now shows machine candidates as confirmed SRKW / unknown / false positives / unreviewed, and human candidates as whale/vessel/other/sighting-in-audible-range. Added an `isAIDetection` type guard for the per-candidate breakdown.
 - Next step: Validate the new clip-count wording in `CandidateCard` and any other consumer of `candidate.clipCount`.
 - Blockers/risks: Mixed candidates are currently bucketed separately, so this assumes a candidate is either AI-driven or human/sighting-driven; if cross-type grouping rules change, `clipCount` logic will need revisiting.
 - Branch and latest commit hash: `main` @ `944f866`.
@@ -971,3 +971,10 @@
 - Next step: Spot-check mixed candidates with comments to confirm human whale counts now appear alongside machine counts.
 - Blockers/risks: None beyond the deliberate design choice that whale-like detections share one candidate bucket.
 - Branch and latest commit hash: `main` @ `944f866`.
+
+## Milestone Update (2026-04-01, local hydrophone type mismatch resolved)
+- Current objective: Explain and unblock the local `CombinedData`/`hydrophone` TypeScript error in `useSortedCandidates.tsx`.
+- What changed: Restored `hydrophone` as a compatibility field on the normalized DTOs in `ui/src/types/DataTypes.ts`, kept `standardizedFeedName` alongside it, and updated `ui/src/utils/masterDataTransforms.ts` plus `ui/src/hooks/beta/useAIDetections.ts` to return the legacy aliases expected by older consumers. Verified with `./node_modules/.bin/tsc -p tsconfig.json --noEmit` in `ui` that the TypeScript build is clean.
+- Next step: If desired, continue the broader rename cleanup by gradually moving remaining consumers from `hydrophone` to `standardizedFeedName` instead of relying on the alias.
+- Blockers/risks: The repo still has unrelated local edits, so any future cleanup should be careful not to overwrite other in-progress work.
+- Branch and latest commit hash: `main` @ `01af3ab3d75bb45e9201d4f8ec629f246017563f` (short: `01af3ab`).

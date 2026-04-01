@@ -1,12 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { CascadiaSighting } from "@/types/DataTypes";
-import { apiTodayUTC, constructUrl } from "@/utils/masterDataHelpers";
+import {
+  apiTodayUTC,
+  constructUrl,
+  sevenDays,
+} from "@/utils/masterDataHelpers";
 
 const endpointCascadia =
   "https://maplify.com/waseak/php/search-all-sightings.php";
 
-const startDateCascadia = "2025-01-01";
+const startDateCascadia = new Date(Date.now() - sevenDays)
+  .toISOString()
+  .split("T")[0];
 const paramsCascadia = {
   BBOX: "-136,36,-120,54",
   start: startDateCascadia,

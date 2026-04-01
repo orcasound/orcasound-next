@@ -1,5 +1,4 @@
 import { Feed } from "@/graphql/generated";
-import { AIDetection, AIDetectionRaw } from "@/types/DataTypes";
 
 export function constructUrl(endpoint: string, paramsObj: object) {
   let params = "";
@@ -33,40 +32,6 @@ export default function formatDuration(startOffset: number, endOffset: number) {
     return `${daysDown} day${daysDown === 1 ? "" : "s"}`;
   }
 }
-
-export const normalizeAIDetection = (raw: AIDetectionRaw): AIDetection => ({
-  ...raw,
-  id: raw.id ?? crypto.randomUUID(),
-  type: "ai",
-  source: "orcahello",
-  hydrophone: standardizeFeedName(raw.location?.name ?? "unknown"),
-  feedId: undefined,
-  comments: raw.comments,
-  newCategory: "WHALE (AI)",
-  timestampString: raw.timestamp,
-  annotations: raw.annotations ?? [],
-  found:
-    raw.found?.toLowerCase() === "yes"
-      ? "yes"
-      : raw.found?.toLowerCase() === "no"
-        ? "no"
-        : raw.found?.toLowerCase() === "don't know"
-          ? "don't know"
-          : null,
-  reviewState: !raw.reviewed
-    ? "unreviewed"
-    : raw.found?.toLowerCase() === "yes"
-      ? "confirmed"
-      : raw.found?.toLowerCase() === "no"
-        ? "falsepositive"
-        : "unknown",
-  tags: raw.tags
-    ? raw.tags
-        .split(";")
-        .map((t) => t.trim())
-        .filter(Boolean)
-    : [],
-});
 
 export const cleanSightingsDescription = (
   description: string | null | undefined,
@@ -103,6 +68,16 @@ export const lookupFeedName = (id: string, feedList: Feed[]) => {
     }
   });
   return standardizeFeedName(name);
+};
+
+export const lookupFeedSlug = (id: string, feedList: Feed[]) => {
+  let slug = "feed slug not found";
+  feedList.forEach((feed) => {
+    if (id === feed.id) {
+      slug = feed.slug;
+    }
+  });
+  return slug;
 };
 
 export const lookupFeedId = (name: string, feedList: Feed[]) => {

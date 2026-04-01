@@ -1,9 +1,22 @@
 import { Dispatch, SetStateAction } from "react";
 
-import { Detection, Feed } from "@/graphql/generated";
+import { Feed } from "@/graphql/generated";
+import { DetectionsQuery } from "@/graphql/generated";
 
-export interface AudioDetection extends Omit<Detection, "candidate"> {
+// Data Transfer Objects (DTOs) come from specific query results and may omit fields from full schema models.
+// DetectionsResultList is a DTO alias so adapters match query output (listDetections) rather than requiring every field on the GraphQL `Detection` model type.
+
+// NonNullable is a built-in TypeScript utility type that removes null and undefined from a type, ensuring that the resulting type is always defined.
+type DetectionsResultList = NonNullable<
+  NonNullable<DetectionsQuery["detections"]>["results"]
+>;
+
+// [number] means 'type of one item in the DetectionsQuery["detections"]>["results"] array'
+export type DetectionsResult = DetectionsResultList[number];
+
+export interface AudioDetection extends Omit<DetectionsResult, "candidate"> {
   type: "audio";
+  standardizedFeedName: string;
   hydrophone: string;
   comments: string | null | undefined;
   newCategory:
@@ -40,6 +53,7 @@ export interface CascadiaSighting {
 
 export interface Sighting extends CascadiaSighting {
   type: "sightings";
+  standardizedFeedName: string;
   hydrophone: string;
   feedId: string;
   newCategory: "SIGHTING";
@@ -104,6 +118,7 @@ export interface AIDetection
   id: string;
   type: "ai";
   source: "orcahello";
+  standardizedFeedName: string;
   hydrophone: string;
   feedId?: string;
   comments: string | null;
