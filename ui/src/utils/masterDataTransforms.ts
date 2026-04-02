@@ -28,6 +28,19 @@ const toNewCategory = (detection: Detection): AudioDetection["newCategory"] => {
   }
 };
 
+const normalizeTags = (rawTags: AIDetectionRaw["tags"]): string[] => {
+  if (!rawTags) return [];
+
+  if (Array.isArray(rawTags)) {
+    return rawTags.map((tag) => tag.trim()).filter(Boolean);
+  }
+
+  return rawTags
+    .split(";")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+};
+
 export function transformAudioDetections(
   detections: DetectionsResult[],
   feeds: Feed[],
@@ -125,10 +138,5 @@ export const transformAIDetection = (
       : raw.found?.toLowerCase() === "no"
         ? "falsepositive"
         : "unknown",
-  tags: raw.tags
-    ? raw.tags
-        .split(";")
-        .map((t) => t.trim())
-        .filter(Boolean)
-    : [],
+  tags: normalizeTags(raw.tags),
 });

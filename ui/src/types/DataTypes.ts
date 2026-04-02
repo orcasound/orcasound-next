@@ -94,8 +94,8 @@ export type AIDetectionReviewState =
   | "unreviewed";
 
 // Raw shape returned by the AI For Orcas / OrcaHello REST API.
-// `tags` arrives as a semicolon-delimited string and `found` may require
-// case-normalization before app use.
+// `tags` has arrived both as a semicolon-delimited string and as an array.
+// `found` may require case-normalization before app use.
 export interface AIDetectionRaw {
   id: string | null;
   audioUri: string | null;
@@ -109,7 +109,7 @@ export interface AIDetectionRaw {
   confidence: number;
   moderator: string | null;
   moderated: string | null;
-  tags: string | null;
+  tags: string | string[] | null;
 }
 
 // Normalized app shape for filtering and downstream transforms.
